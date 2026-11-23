@@ -1,0 +1,4 @@
+# se guardan tal cual (CRLF y BOM), que es lo que necesita PowerShell 5.1
+*.ps1 -text
+*.cmd -text
+*.json -text

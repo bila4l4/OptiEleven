@@ -1,0 +1,10 @@
+﻿name: Feature or tweak request
+description: Suggest a new tweak, page or improvement
+labels: [enhancement]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What you'd like
+      description: What it should do, and what it costs or breaks if you know. Links to sources are welcome.
+    validations: { required: true }

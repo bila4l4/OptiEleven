@@ -1,0 +1,10 @@
+﻿Iconos de OptiEleven (assets\icons.json)
+
+Iconos de funciones: Phosphor Icons 2.1.1, peso "regular"
+  https://phosphoricons.com - Licencia MIT, Copyright (c) 2023 Phosphor Icons
+
+Logotipos de marcas: Simple Icons 13.21.0
+  https://simpleicons.org - Licencia CC0 1.0 (dominio público)
+  Los logotipos son marcas de sus respectivos dueños; se usan solo para identificar cada programa.
+
+Los SVG se han convertido a geometría de WPF (mismo dibujo, sin cambios de forma).

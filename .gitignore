@@ -1,0 +1,11 @@
+﻿# herramientas locales y notas personales
+.hallmark/
+.taste-skill/
+.claude/
+GUIA-NTLITE.md
+
+# lo que genera el panel al probarlo
+OptiEleven/_snap.ps1
+*.log
+Thumbs.db
+desktop.ini

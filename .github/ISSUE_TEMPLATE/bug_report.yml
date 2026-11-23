@@ -1,0 +1,22 @@
+﻿name: Bug report
+description: Something doesn't work or a tweak broke something
+labels: [bug]
+body:
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version
+      description: Run `winver` (for example 11 Pro 24H2, build 26100.4061)
+    validations: { required: true }
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected and what happened instead. Name the tweak or page if you know it.
+    validations: { required: true }
+  - type: textarea
+    id: log
+    attributes:
+      label: Log
+      description: The relevant lines of %ProgramData%\OptiEleven\panel.log (System → Backups → Open folder)
+      render: text
