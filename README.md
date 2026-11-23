@@ -12,6 +12,10 @@ Strip telemetry and bloat, free RAM before you play, and undo any change with on
 ![PowerShell 5.1](https://img.shields.io/badge/PowerShell-5.1-14110f)
 ![No install](https://img.shields.io/badge/install-none-14110f)
 
+### [⬇ Download OptiEleven.zip](https://github.com/bilal1122c/OptiEleven/releases/latest/download/OptiEleven.zip)
+
+Ready to use. Extract it and double-click `OptiEleven.cmd`. Nothing to build or install.
+
 English · [Español](README.es.md)
 
 <img src="docs/screenshots/settings-dark.png" alt="OptiEleven settings page with the change preview and the change sheet">
@@ -58,12 +62,14 @@ Most "debloat" scripts are a wall of registry edits you run once and hope for th
 
 ## Get started
 
-1. Download the latest release (or **Code → Download ZIP**) and extract it.
-2. Double-click **`OptiEleven\OptiEleven.cmd`** and accept the administrator prompt.
-3. Go to **System → Restore point**, then pick the **Recommended** preset, review the change sheet and press **Apply changes**.
+1. **[Download OptiEleven.zip](https://github.com/bilal1122c/OptiEleven/releases/latest/download/OptiEleven.zip)** and extract it anywhere.
+2. Double-click **`OptiEleven.cmd`** and accept the administrator prompt.
+3. Read the start notice, go to **System → Restore point**, then pick the **Recommended** preset, review the change sheet and press **Apply changes**.
 4. Restart if the panel asks you to.
 
-Without administrator rights the panel opens in read-only mode, so you can look around safely first.
+Requirements: Windows 11. PowerShell 5.1 and .NET are already part of Windows. Without administrator rights the panel opens in read-only mode, so you can look around safely first.
+
+<img src="docs/screenshots/start-warning.png" alt="Start notice explaining that Advanced settings should be used carefully" width="640">
 
 ### Command line
 

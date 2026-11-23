@@ -1267,8 +1267,10 @@ $BrandColors = @{
         </StackPanel>
         <StackPanel x:Name="PresetBar" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Bottom" Margin="20,0,0,0">
           <TextBlock Text="Preset" Foreground="{DynamicResource Muted}" FontSize="13" VerticalAlignment="Center" Margin="0,0,10,0"/>
-          <Button x:Name="BtnRec" Style="{StaticResource Btn}" Content="Recomendado" Margin="0,0,8,0"/>
-          <Button x:Name="BtnComp" Style="{StaticResource Btn}" Content="Avanzado"/>
+          <Button x:Name="BtnRec" Style="{StaticResource BtnPrimary}" Margin="0,0,10,0" MinHeight="46" Padding="20,0" FontSize="15" FontWeight="Bold"
+                  ToolTip="Seguro para casi todos los equipos. Quita casi todo lo que no sirve."/>
+          <Button x:Name="BtnComp" Style="{StaticResource BtnPrimary}" MinHeight="46" Padding="20,0" FontSize="15" FontWeight="Bold"
+                  ToolTip="Más agresivo: puede quitar funciones que uses. Lee cada ajuste antes de aplicar."/>
         </StackPanel>
       </Grid>
       <ScrollViewer x:Name="TabScroll" Grid.Row="1" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" Margin="30,0,26,10">
@@ -1600,6 +1602,67 @@ try {
     }
     $ui.BtnLang.ContextMenu = $langMenu
     $ui.BtnLang.Add_Click({ $ui.BtnLang.ContextMenu.IsOpen = $true })
+
+    # ---------- botones de preset: grandes, con icono, como el de Boost FPS
+    foreach ($pb in @(@($ui.BtnRec, 'shield-check', 'Recomendado'), @($ui.BtnComp, 'lightning', 'Avanzado'))) {
+        $c = New-Object Windows.Controls.StackPanel; $c.Orientation = 'Horizontal'
+        $i = New-Icon $pb[1] 19 'AccentInk'; $i.Margin = '0,0,9,0'
+        $l = New-Object Windows.Controls.TextBlock; $l.Text = T $pb[2]; $l.VerticalAlignment = 'Center'
+        [void]$c.Children.Add($i); [void]$c.Children.Add($l); $pb[0].Content = $c
+    }
+
+    # ---------- aviso al abrir
+    $script:WarnFile = Join-Path $script:Root 'warning.ok'
+    function Show-StartWarning {
+        $ov = New-Object Windows.Controls.Grid
+        [Windows.Controls.Grid]::SetRowSpan($ov, 10); [Windows.Controls.Grid]::SetColumnSpan($ov, 10); [Windows.Controls.Panel]::SetZIndex($ov, 100)
+        $ov.Background = [Windows.Media.SolidColorBrush]::new([Windows.Media.Color]::FromArgb(0xC0, 0x05, 0x04, 0x02))
+        $card = New-Object Windows.Controls.Border; $card.CornerRadius = 14; $card.Padding = '30,26,30,24'; $card.MaxWidth = 580; $card.Margin = '24'
+        $card.HorizontalAlignment = 'Center'; $card.VerticalAlignment = 'Center'; $card.BorderThickness = 1.5
+        $card.SetResourceReference($BgProp, 'Paper2'); $card.SetResourceReference([Windows.Controls.Border]::BorderBrushProperty, 'Accent')
+        $sp = New-Object Windows.Controls.StackPanel
+        $hd = New-Cols @('Auto', '*')
+        $well = New-Object Windows.Controls.Border; $well.Width = 48; $well.Height = 48; $well.CornerRadius = 11; $well.SetResourceReference($BgProp, 'Accent')
+        $wi = New-Icon 'warning-octagon' 26 'AccentInk'; $wi.HorizontalAlignment = 'Center'; $well.Child = $wi
+        [void](Add-At $hd $well 0)
+        $ht = New-Text 'Antes de empezar' 24 'Ink' 'Bold'; $ht.FontFamily = $window.FindResource('Display'); $ht.VerticalAlignment = 'Center'; $ht.Margin = '16,0,0,0'
+        [void](Add-At $hd $ht 1)
+        [void]$sp.Children.Add($hd)
+        $lines = @(
+            @('arrow-counter-clockwise', 'OptiEleven cambia ajustes de Windows. Casi todo se puede revertir desde el panel; lo que no, va marcado como "Sin vuelta atrás".'),
+            @('shield-check', 'El preset Recomendado es seguro para casi todos los equipos.'),
+            @('lightning', 'Avanzado y los ajustes marcados como Moderado o Avanzado pueden quitar funciones que uses (Xbox, impresoras, búsqueda...). Lee la descripción de cada uno y aplícalos con cuidado, mejor de uno en uno.'),
+            @('clock-counter-clockwise', 'Crea un punto de restauración antes del primer cambio: Sistema > Punto de restauración.'))
+        foreach ($ln in $lines) {
+            $r = New-Cols @('Auto', '*'); $r.Margin = '0,16,0,0'
+            $ic = New-Icon $ln[0] 20 'Accent'; $ic.VerticalAlignment = 'Top'; $ic.Margin = '2,1,14,0'
+            [void](Add-At $r $ic 0); [void](Add-At $r (New-Text $ln[1] 14.5 'Ink2') 1)
+            [void]$sp.Children.Add($r)
+        }
+        $fine = New-Text 'Usas OptiEleven bajo tu responsabilidad.' 13 'Muted'; $fine.Margin = '36,16,0,0'
+        [void]$sp.Children.Add($fine)
+        $ft = New-Cols @('*', 'Auto'); $ft.Margin = '0,22,0,0'
+        $chk = New-Object Windows.Controls.StackPanel; $chk.Orientation = 'Horizontal'; $chk.VerticalAlignment = 'Center'
+        $sw = New-Switch; $sw.Margin = '0,0,10,0'
+        $swl = New-Text 'No volver a mostrar' 13.5 'Ink2'; $swl.VerticalAlignment = 'Center'
+        [Windows.Automation.AutomationProperties]::SetName($sw, (T 'No volver a mostrar'))
+        [void]$chk.Children.Add($sw); [void]$chk.Children.Add($swl)
+        [void](Add-At $ft $chk 0)
+        $ok = New-Btn 'Entendido' -Primary; $ok.MinHeight = 44; $ok.Padding = '28,0'; $ok.FontSize = 15; $ok.FontWeight = 'Bold'; $ok.IsDefault = $true; $ok.IsCancel = $true
+        $ok.Tag = @{ Overlay = $ov; Switch = $sw }
+        $ok.Add_Click({
+            param($src)
+            if ($src.Tag.Switch.IsChecked) { try { Set-Content -LiteralPath $script:WarnFile -Value (Get-Date -Format s) } catch {} }
+            [void]$window.Content.Children.Remove($src.Tag.Overlay)
+        })
+        [void](Add-At $ft $ok 1)
+        [void]$sp.Children.Add($ft)
+        $card.Child = $sp
+        [void]$ov.Children.Add($card)
+        [void]$window.Content.Children.Add($ov)
+        $window.Add_ContentRendered({ $ok.Focus() }.GetNewClosure())
+    }
+    if (-not (Test-Path -LiteralPath $script:WarnFile)) { Show-StartWarning }
     $window.Add_SourceInitialized({ Set-Theme $script:ThemeName })
     $ui.BtnTheme.Add_Click({ if ($script:ThemeName -eq 'Furrow') { Set-Theme 'FurrowNoche' } else { Set-Theme 'Furrow' } })
 

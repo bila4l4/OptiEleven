@@ -12,6 +12,10 @@ Quita telemetría y basura, libera RAM antes de jugar y deshaz cualquier cambio 
 ![PowerShell 5.1](https://img.shields.io/badge/PowerShell-5.1-14110f)
 ![Sin instalación](https://img.shields.io/badge/instalaci%C3%B3n-ninguna-14110f)
 
+### [⬇ Descargar OptiEleven.zip](https://github.com/bilal1122c/OptiEleven/releases/latest/download/OptiEleven.zip)
+
+Listo para usar. Descomprímelo y haz doble clic en `OptiEleven.cmd`. No hay nada que compilar ni instalar.
+
 [English](README.md) · Español
 
 <img src="docs/screenshots/settings-dark.png" alt="Página de ajustes de OptiEleven con la vista previa de cambios y la hoja de cambios">
@@ -47,9 +51,9 @@ La mayoría de scripts de "debloat" son un montón de cambios en el registro que
 
 ## Empezar
 
-1. Descarga la última versión (o **Code → Download ZIP**) y descomprímela.
-2. Haz doble clic en **`OptiEleven\OptiEleven.cmd`** y acepta el permiso de administrador.
-3. Ve a **Sistema → Punto de restauración**, elige el preset **Recomendado**, revisa la hoja de cambios y pulsa **Aplicar cambios**.
+1. **[Descarga OptiEleven.zip](https://github.com/bilal1122c/OptiEleven/releases/latest/download/OptiEleven.zip)** y descomprímelo donde quieras.
+2. Haz doble clic en **`OptiEleven.cmd`** y acepta el permiso de administrador.
+3. Lee el aviso del inicio, ve a **Sistema → Punto de restauración**, elige el preset **Recomendado**, revisa la hoja de cambios y pulsa **Aplicar cambios**.
 4. Reinicia si el panel te lo pide.
 
 Sin permisos de administrador el panel se abre en modo solo lectura, para que puedas mirarlo todo antes.
