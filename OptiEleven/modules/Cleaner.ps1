@@ -143,8 +143,8 @@ function New-CleanerPage {
     $BgP = [Windows.Controls.Border]::BackgroundProperty; $BrP = [Windows.Controls.Border]::BorderBrushProperty
 
     # cabecera grande, como Boost FPS: cuánto se libera y los botones
-    $hero = [Windows.Controls.Border]::new(); $hero.CornerRadius = 14; $hero.Padding = '24,20'; $hero.Margin = '0,0,0,14'; $hero.BorderThickness = 1.5
-    $hero.SetResourceReference($BgP, 'Paper2'); $hero.SetResourceReference($BrP, 'Cat-Interfaz')
+    $hero = [Windows.Controls.Border]::new(); $hero.CornerRadius = 14; $hero.Padding = '24,20'; $hero.Margin = '0,0,0,14'; $hero.BorderThickness = 1
+    $hero.SetResourceReference($BgP, 'Glass'); $hero.SetResourceReference($BrP, 'GlassEdge')
     $hg = New-Cols @('Auto', '*', 'Auto')
     $hw = [Windows.Controls.Border]::new(); $hw.Width = 64; $hw.Height = 64; $hw.CornerRadius = 14; $hw.VerticalAlignment = 'Center'; $hw.SetResourceReference($BgP, 'Cat-Interfaz')
     $hi = New-Icon 'broom' 34 'AccentInk'; $hi.HorizontalAlignment = 'Center'; $hw.Child = $hi

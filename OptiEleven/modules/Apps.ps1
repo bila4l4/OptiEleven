@@ -289,8 +289,8 @@ function New-AppsPage {
     $script:AppRunning = $false
 
     # cabecera como la de Ninite: eliges, y sale un instalador con todo
-    $hero = [Windows.Controls.Border]::new(); $hero.CornerRadius = 12; $hero.Padding = '22,18'; $hero.Margin = '0,0,0,6'; $hero.BorderThickness = 1.5
-    $hero.SetResourceReference([Windows.Controls.Border]::BackgroundProperty, 'Paper2'); $hero.SetResourceReference([Windows.Controls.Border]::BorderBrushProperty, 'Cat-Actualizaciones')
+    $hero = [Windows.Controls.Border]::new(); $hero.CornerRadius = 12; $hero.Padding = '22,18'; $hero.Margin = '0,0,0,6'; $hero.BorderThickness = 1
+    $hero.SetResourceReference([Windows.Controls.Border]::BackgroundProperty, 'Glass'); $hero.SetResourceReference([Windows.Controls.Border]::BorderBrushProperty, 'GlassEdge')
     $hg = New-Cols @('Auto', '*', 'Auto')
     $hw = [Windows.Controls.Border]::new(); $hw.Width = 56; $hw.Height = 56; $hw.CornerRadius = 13; $hw.VerticalAlignment = 'Center'
     $hw.SetResourceReference([Windows.Controls.Border]::BackgroundProperty, 'Cat-Actualizaciones')
@@ -357,7 +357,7 @@ function New-AppsPage {
             $st = New-Text '' 12 'Muted'; $st.Margin = '0,3,0,0'
             [void]$sp.Children.Add($nm); [void]$sp.Children.Add($st)
             [void](Add-At $g $sp 1)
-            $chk = [Windows.Controls.Border]::new(); $chk.Width = 22; $chk.Height = 22; $chk.CornerRadius = 11; $chk.BorderThickness = 1.5
+            $chk = [Windows.Controls.Border]::new(); $chk.Width = 22; $chk.Height = 22; $chk.CornerRadius = 11; $chk.BorderThickness = 1
             $chk.VerticalAlignment = 'Center'; $chk.Margin = '12,0,0,0'
             $gl = New-Icon 'check' 13 'AccentInk'; $gl.HorizontalAlignment = 'Center'; $gl.Visibility = 'Hidden'
             $chk.Child = $gl

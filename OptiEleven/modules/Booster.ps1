@@ -94,7 +94,7 @@ function Invoke-BoostFps {
 
 function New-FpsHero {
     $card = [Windows.Controls.Border]::new(); $card.CornerRadius = 12; $card.Padding = '24,22,24,20'; $card.Margin = '0,0,0,8'
-    $card.SetResourceReference($BgProp, 'Paper2'); $card.SetResourceReference([Windows.Controls.Border]::BorderBrushProperty, 'Accent'); $card.BorderThickness = 1.5
+    $card.SetResourceReference($BgProp, 'Glass'); $card.SetResourceReference([Windows.Controls.Border]::BorderBrushProperty, 'GlassEdge'); $card.BorderThickness = 1
     $outer = [Windows.Controls.StackPanel]::new()
     $top = New-Cols @('Auto', '*', 'Auto')
     $well = [Windows.Controls.Border]::new(); $well.Width = 64; $well.Height = 64; $well.CornerRadius = 14; $well.VerticalAlignment = 'Center'

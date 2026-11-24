@@ -26,8 +26,8 @@ __APPS__
 }
 
 class InstallerForm : Form {
-    static readonly Color Bg = Color.FromArgb(17, 15, 11), Card = Color.FromArgb(26, 24, 19), Ink = Color.FromArgb(238, 235, 229),
-        Muted = Color.FromArgb(168, 164, 156), Accent = Color.FromArgb(255, 118, 67), Good = Color.FromArgb(134, 216, 151), Bad = Color.FromArgb(246, 154, 146);
+    static readonly Color Bg = Color.FromArgb(9, 9, 13), Card = Color.FromArgb(17, 17, 23), Ink = Color.FromArgb(237, 237, 242),
+        Muted = Color.FromArgb(138, 138, 156), Accent = Color.FromArgb(124, 92, 255), Good = Color.FromArgb(74, 222, 128), Bad = Color.FromArgb(248, 113, 113);
     Label header, sub;
     ProgressBar bar;
     Button close;
@@ -53,7 +53,7 @@ class InstallerForm : Form {
             list.Controls.Add(name); list.Controls.Add(states[i]);
         }
         Controls.Add(list);
-        close = new Button { Text = Program.TClose, Enabled = false, FlatStyle = FlatStyle.Flat, BackColor = Accent, ForeColor = Bg,
+        close = new Button { Text = Program.TClose, Enabled = false, FlatStyle = FlatStyle.Flat, BackColor = Accent, ForeColor = Color.White,
             Font = new Font("Segoe UI Semibold", 10f), Bounds = new Rectangle(w - 24 - 140, list.Bottom + 16, 140, 38) };
         close.FlatAppearance.BorderSize = 0;
         close.Click += delegate { Close(); };

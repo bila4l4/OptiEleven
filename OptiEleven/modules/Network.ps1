@@ -234,8 +234,8 @@ function Start-SpeedTest {
 }
 
 function New-SpeedTestCard {
-    $card = [Windows.Controls.Border]::new(); $card.CornerRadius = 14; $card.Padding = '24,20'; $card.Margin = '0,0,0,18'; $card.BorderThickness = 1.5
-    $card.SetResourceReference([Windows.Controls.Border]::BackgroundProperty, 'Paper2'); $card.SetResourceReference([Windows.Controls.Border]::BorderBrushProperty, 'Cat-Privacidad')
+    $card = [Windows.Controls.Border]::new(); $card.CornerRadius = 14; $card.Padding = '24,20'; $card.Margin = '0,0,0,18'; $card.BorderThickness = 1
+    $card.SetResourceReference([Windows.Controls.Border]::BackgroundProperty, 'Glass'); $card.SetResourceReference([Windows.Controls.Border]::BorderBrushProperty, 'GlassEdge')
     $sp = [Windows.Controls.StackPanel]::new()
     $top = New-Cols @('Auto', '*', 'Auto')
     $w = [Windows.Controls.Border]::new(); $w.Width = 56; $w.Height = 56; $w.CornerRadius = 13; $w.VerticalAlignment = 'Center'

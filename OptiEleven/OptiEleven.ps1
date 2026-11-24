@@ -1065,20 +1065,23 @@ if (-not ('GP.Dwm' -as [type])) {
 }
 
 $Themes = @{
-    Furrow      = @{ Dark = $false; Paper = '#f5f1ea'; Paper2 = '#fffdfa'; Paper3 = '#e9e4d9'; Side = '#eee9df'; Ink = '#14110f'; Ink2 = '#2c2825'; Muted = '#5e5751'
-                     Rule = '#dbd7ce'; RuleStrong = '#bcb7ad'; Accent = '#fc6b33'; AccentInk = '#14110f'; AccentSoft = '#fed8c4'; AccentEdge = '#c94c18'
-                     Green = '#0b5d2a'; GreenSoft = '#cfeacf'; Amber = '#6e4600'; AmberSoft = '#f7e3b8'; Red = '#9c2123'; RedSoft = '#fdd9d5'
-                     Grid = '#e2ddd4'; Track = '#cfcac0'; KeyLight = '#ccffffff'; Wash = '#fed8c4'
-                     'Cat-Privacidad' = '#1f5fa8'; 'Cat-Servicios' = '#0f8a74'; 'Cat-Rendimiento' = '#d9480f'; 'Cat-Latencia' = '#b06d00'
-                     'Cat-Juegos' = '#23893a'; 'Cat-Actualizaciones' = '#2a5bd7'; 'Cat-Interfaz' = '#c2255c'; 'Cat-Apps' = '#a0522d'; 'Cat-Tools' = '#2c2825' }
-    FurrowNoche = @{ Dark = $true; Paper = '#110f0b'; Paper2 = '#1a1813'; Paper3 = '#23201b'; Side = '#0c0a06'; Ink = '#eeebe5'; Ink2 = '#d0cdc8'; Muted = '#a8a49c'
-                     Rule = '#2e2b26'; RuleStrong = '#45423b'; Accent = '#ff7643'; AccentInk = '#14110f'; AccentSoft = '#4c2817'; AccentEdge = '#d35d31'
-                     Green = '#86d897'; GreenSoft = '#1a3520'; Amber = '#efc173'; AmberSoft = '#3e2d10'; Red = '#f69a92'; RedSoft = '#4a2321'
-                     Grid = '#24211c'; Track = '#3b3831'; KeyLight = '#14ffffff'; Wash = '#4c2817'
-                     'Cat-Privacidad' = '#6ea8ff'; 'Cat-Servicios' = '#3fd6b8'; 'Cat-Rendimiento' = '#ff8a4c'; 'Cat-Latencia' = '#ffc53d'
-                     'Cat-Juegos' = '#5fd47a'; 'Cat-Actualizaciones' = '#7c9cff'; 'Cat-Interfaz' = '#ff6fae'; 'Cat-Apps' = '#f0a070'; 'Cat-Tools' = '#d0cdc8' }
-}
-# color real de cada marca (Simple Icons); en el tema oscuro, las marcas negras pasan a la tinta clara
+    # claro: blanco frío, tinta casi negra, violeta eléctrico
+    Furrow      = @{ Dark = $false; Paper = '#f6f6f9'; Paper2 = '#ffffff'; Paper3 = '#eeeef4'; Side = '#f1f1f6'; Ink = '#0b0b12'; Ink2 = '#2e2e3a'; Muted = '#6b6b7d'
+                     Rule = '#e3e3ec'; RuleStrong = '#cdcdda'; Accent = '#6d4aff'; AccentInk = '#ffffff'; AccentSoft = '#ece7ff'; AccentEdge = '#5a36f0'
+                     Accent2 = '#3b82f6'; Glass = '#b8ffffff'; GlassEdge = '#14000000'; GlassHi = '#e6ffffff'; Glow = '#226d4aff'; Glow2 = '#143b82f6'
+                     Green = '#15803d'; GreenSoft = '#dcfce7'; Amber = '#a16207'; AmberSoft = '#fef3c7'; Red = '#b91c1c'; RedSoft = '#fee2e2'
+                     Grid = '#e6e6ee'; Track = '#d4d4de'; KeyLight = '#ccffffff'; Wash = '#ece7ff'
+                     'Cat-Privacidad' = '#2563eb'; 'Cat-Servicios' = '#0d9488'; 'Cat-Rendimiento' = '#ea580c'; 'Cat-Latencia' = '#ca8a04'
+                     'Cat-Juegos' = '#16a34a'; 'Cat-Actualizaciones' = '#4f46e5'; 'Cat-Interfaz' = '#db2777'; 'Cat-Apps' = '#9333ea'; 'Cat-Tools' = '#3f3f46' }
+    # oscuro (el principal): casi negro azulado, superficies de cristal, violeta eléctrico con degradado a azul
+    FurrowNoche = @{ Dark = $true; Paper = '#09090d'; Paper2 = '#111117'; Paper3 = '#1a1a23'; Side = '#0c0c11'; Ink = '#ededf2'; Ink2 = '#c3c3cf'; Muted = '#8a8a9c'
+                     Rule = '#22222d'; RuleStrong = '#34344a'; Accent = '#7c5cff'; AccentInk = '#ffffff'; AccentSoft = '#241c4a'; AccentEdge = '#9a82ff'
+                     Accent2 = '#4f8cff'; Glass = '#0affffff'; GlassEdge = '#17ffffff'; GlassHi = '#12ffffff'; Glow = '#2e7c5cff'; Glow2 = '#1c4f8cff'
+                     Green = '#4ade80'; GreenSoft = '#10291b'; Amber = '#fbbf24'; AmberSoft = '#33260a'; Red = '#f87171'; RedSoft = '#361515'
+                     Grid = '#15151d'; Track = '#2a2a38'; KeyLight = '#14ffffff'; Wash = '#241c4a'
+                     'Cat-Privacidad' = '#60a5fa'; 'Cat-Servicios' = '#2dd4bf'; 'Cat-Rendimiento' = '#fb923c'; 'Cat-Latencia' = '#facc15'
+                     'Cat-Juegos' = '#4ade80'; 'Cat-Actualizaciones' = '#818cf8'; 'Cat-Interfaz' = '#f472b6'; 'Cat-Apps' = '#c084fc'; 'Cat-Tools' = '#a1a1aa' }
+}# color real de cada marca (Simple Icons); en el tema oscuro, las marcas negras pasan a la tinta clara
 $BrandColors = @{
     'brand-steam' = '#000000'; 'brand-epicgames' = '#313131'; 'brand-gogdotcom' = '#86328a'; 'brand-ea' = '#000000'; 'brand-ubisoft' = '#000000'
     'brand-battledotnet' = '#148eff'; 'brand-discord' = '#5865f2'; 'brand-obsstudio' = '#302e31'; 'brand-msi' = '#ff0000'; 'brand-7zip' = '#000000'
@@ -1107,26 +1110,28 @@ $BrandColors = @{
     <FontFamily x:Key="Mono">Cascadia Mono, Consolas</FontFamily>
     <FontFamily x:Key="Icons">Segoe Fluent Icons, Segoe MDL2 Assets</FontFamily>
 
-    <!-- botón secundario: relleno suave, brillo arriba, se ilumina el borde al pasar y se encoge un poco al pulsar -->
+    <!-- botón secundario: cristal (relleno translúcido y borde fino); al pasar se ilumina con un fundido suave -->
     <Style x:Key="Btn" TargetType="Button">
-      <Setter Property="Background" Value="{DynamicResource Paper3}"/>
+      <Setter Property="Background" Value="{DynamicResource Glass}"/>
       <Setter Property="Foreground" Value="{DynamicResource Ink}"/>
-      <Setter Property="BorderBrush" Value="{DynamicResource Rule}"/>
-      <Setter Property="Padding" Value="16,0"/>
-      <Setter Property="MinHeight" Value="36"/>
-      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource GlassEdge}"/>
+      <Setter Property="Padding" Value="18,0"/>
+      <Setter Property="MinHeight" Value="38"/>
+      <Setter Property="FontWeight" Value="Medium"/>
       <Setter Property="Cursor" Value="Hand"/>
       <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
       <Setter Property="Template">
         <Setter.Value>
           <ControlTemplate TargetType="Button">
             <Grid x:Name="root" RenderTransformOrigin="0.5,0.5">
-              <Border x:Name="ring" CornerRadius="12" Margin="-3" BorderThickness="2" BorderBrush="{DynamicResource Accent}" Opacity="0"/>
-              <Border x:Name="b" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" CornerRadius="9"/>
-              <Border x:Name="sheen" CornerRadius="9" Margin="1" IsHitTestVisible="False">
+              <Grid.RenderTransform><ScaleTransform x:Name="sc" ScaleX="1" ScaleY="1"/></Grid.RenderTransform>
+              <Border x:Name="ring" CornerRadius="13" Margin="-3" BorderThickness="2" BorderBrush="{DynamicResource Accent}" Opacity="0"/>
+              <Border x:Name="b" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" CornerRadius="10"/>
+              <Border x:Name="hover" CornerRadius="10" Background="{DynamicResource GlassHi}" BorderBrush="{DynamicResource AccentEdge}" BorderThickness="1" Opacity="0" IsHitTestVisible="False"/>
+              <Border x:Name="sheen" CornerRadius="10" Margin="1" IsHitTestVisible="False">
                 <Border.Background>
                   <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                    <GradientStop Color="#1AFFFFFF" Offset="0"/><GradientStop Color="#00FFFFFF" Offset="0.6"/>
+                    <GradientStop Color="#14FFFFFF" Offset="0"/><GradientStop Color="#00FFFFFF" Offset="0.5"/>
                   </LinearGradientBrush>
                 </Border.Background>
               </Border>
@@ -1134,16 +1139,15 @@ $BrandColors = @{
             </Grid>
             <ControlTemplate.Triggers>
               <Trigger Property="IsMouseOver" Value="True">
-                <Setter TargetName="b" Property="BorderBrush" Value="{DynamicResource Accent}"/>
-                <Setter TargetName="b" Property="Background" Value="{DynamicResource Paper2}"/>
+                <Trigger.EnterActions><BeginStoryboard><Storyboard><DoubleAnimation Storyboard.TargetName="hover" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.16"><DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction></DoubleAnimation></Storyboard></BeginStoryboard></Trigger.EnterActions>
+                <Trigger.ExitActions><BeginStoryboard><Storyboard><DoubleAnimation Storyboard.TargetName="hover" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.22"><DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction></DoubleAnimation></Storyboard></BeginStoryboard></Trigger.ExitActions>
               </Trigger>
               <Trigger Property="IsPressed" Value="True">
                 <Setter TargetName="root" Property="RenderTransform"><Setter.Value><ScaleTransform ScaleX="0.97" ScaleY="0.97"/></Setter.Value></Setter>
-                <Setter TargetName="b" Property="Background" Value="{DynamicResource Rule}"/>
               </Trigger>
               <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="ring" Property="Opacity" Value="1"/></Trigger>
               <Trigger Property="IsEnabled" Value="False">
-                <Setter TargetName="root" Property="Opacity" Value="0.45"/>
+                <Setter TargetName="root" Property="Opacity" Value="0.4"/>
                 <Setter TargetName="sheen" Property="Visibility" Value="Hidden"/>
                 <Setter Property="Cursor" Value="No"/>
               </Trigger>
@@ -1152,29 +1156,35 @@ $BrandColors = @{
         </Setter.Value>
       </Setter>
     </Style>
-    <!-- botón principal: naranja con brillo arriba y sombra abajo; al pasar, un halo naranja; desactivado, gris limpio -->
+    <!-- botón principal: degradado violeta a azul, brillo arriba, halo violeta al pasar (con fundido); desactivado, cristal apagado -->
     <Style x:Key="BtnPrimary" TargetType="Button" BasedOn="{StaticResource Btn}">
-      <Setter Property="Background" Value="{DynamicResource Accent}"/>
+      <Setter Property="Background" Value="{DynamicResource AccentGrad}"/>
       <Setter Property="Foreground" Value="{DynamicResource AccentInk}"/>
-      <Setter Property="FontWeight" Value="Bold"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
       <Setter Property="Template">
         <Setter.Value>
           <ControlTemplate TargetType="Button">
             <Grid x:Name="root" RenderTransformOrigin="0.5,0.5">
-              <Border x:Name="ring" CornerRadius="12" Margin="-3" BorderThickness="2" BorderBrush="{DynamicResource Ink}" Opacity="0"/>
-              <Border x:Name="b" Background="{TemplateBinding Background}" CornerRadius="9"/>
-              <Border x:Name="sheen" CornerRadius="9" IsHitTestVisible="False">
+              <Border x:Name="ring" CornerRadius="13" Margin="-3" BorderThickness="2" BorderBrush="{DynamicResource Ink}" Opacity="0"/>
+              <Border x:Name="halo" CornerRadius="10" Background="{DynamicResource Accent}" Opacity="0" IsHitTestVisible="False">
+                <Border.Effect><BlurEffect Radius="18"/></Border.Effect>
+              </Border>
+              <Border x:Name="b" Background="{TemplateBinding Background}" CornerRadius="10">
+                <Border.Effect><DropShadowEffect Color="#000000" BlurRadius="14" ShadowDepth="3" Direction="270" Opacity="0.35"/></Border.Effect>
+              </Border>
+              <Border x:Name="sheen" CornerRadius="10" IsHitTestVisible="False">
                 <Border.Background>
                   <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                    <GradientStop Color="#40FFFFFF" Offset="0"/><GradientStop Color="#08FFFFFF" Offset="0.5"/>
-                    <GradientStop Color="#00000000" Offset="0.55"/><GradientStop Color="#26000000" Offset="1"/>
+                    <GradientStop Color="#38FFFFFF" Offset="0"/><GradientStop Color="#08FFFFFF" Offset="0.5"/>
+                    <GradientStop Color="#00000000" Offset="0.55"/><GradientStop Color="#1F000000" Offset="1"/>
                   </LinearGradientBrush>
                 </Border.Background>
               </Border>
-              <Border x:Name="edge" CornerRadius="9" BorderThickness="1" IsHitTestVisible="False">
+              <Border x:Name="hover" CornerRadius="10" Background="#1FFFFFFF" Opacity="0" IsHitTestVisible="False"/>
+              <Border x:Name="edge" CornerRadius="10" BorderThickness="1" IsHitTestVisible="False">
                 <Border.BorderBrush>
                   <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                    <GradientStop Color="#66FFFFFF" Offset="0"/><GradientStop Color="#33000000" Offset="1"/>
+                    <GradientStop Color="#59FFFFFF" Offset="0"/><GradientStop Color="#14FFFFFF" Offset="1"/>
                   </LinearGradientBrush>
                 </Border.BorderBrush>
               </Border>
@@ -1182,7 +1192,8 @@ $BrandColors = @{
             </Grid>
             <ControlTemplate.Triggers>
               <Trigger Property="IsMouseOver" Value="True">
-                <Setter TargetName="b" Property="Effect"><Setter.Value><DropShadowEffect Color="#FF7643" BlurRadius="20" ShadowDepth="0" Opacity="0.6"/></Setter.Value></Setter>
+                <Trigger.EnterActions><BeginStoryboard><Storyboard><DoubleAnimation Storyboard.TargetName="halo" Storyboard.TargetProperty="Opacity" To="0.55" Duration="0:0:0.18"><DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction></DoubleAnimation></Storyboard></BeginStoryboard><BeginStoryboard><Storyboard><DoubleAnimation Storyboard.TargetName="hover" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.16"><DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction></DoubleAnimation></Storyboard></BeginStoryboard></Trigger.EnterActions>
+                <Trigger.ExitActions><BeginStoryboard><Storyboard><DoubleAnimation Storyboard.TargetName="halo" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.25"><DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction></DoubleAnimation></Storyboard></BeginStoryboard><BeginStoryboard><Storyboard><DoubleAnimation Storyboard.TargetName="hover" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.22"><DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction></DoubleAnimation></Storyboard></BeginStoryboard></Trigger.ExitActions>
               </Trigger>
               <Trigger Property="IsPressed" Value="True">
                 <Setter TargetName="root" Property="RenderTransform"><Setter.Value><ScaleTransform ScaleX="0.97" ScaleY="0.97"/></Setter.Value></Setter>
@@ -1193,6 +1204,7 @@ $BrandColors = @{
                 <Setter TargetName="b" Property="Background" Value="{DynamicResource Paper3}"/>
                 <Setter TargetName="b" Property="Effect" Value="{x:Null}"/>
                 <Setter TargetName="sheen" Property="Visibility" Value="Hidden"/>
+                <Setter TargetName="halo" Property="Visibility" Value="Hidden"/>
                 <Setter TargetName="edge" Property="BorderBrush" Value="{DynamicResource Rule}"/>
                 <Setter Property="Foreground" Value="{DynamicResource Muted}"/>
                 <Setter Property="Cursor" Value="No"/>
@@ -1202,7 +1214,6 @@ $BrandColors = @{
         </Setter.Value>
       </Setter>
     </Style>
-    <!-- interruptor: relleno naranja con tinta encima -->
     <Style x:Key="Switch" TargetType="ToggleButton">
       <Setter Property="Width" Value="46"/>
       <Setter Property="Height" Value="26"/>
@@ -1275,26 +1286,26 @@ $BrandColors = @{
 
     <!-- filas con filete -->
     <Style x:Key="RuleRow" TargetType="Border">
-      <Setter Property="Background" Value="{DynamicResource Paper2}"/>
-      <Setter Property="BorderBrush" Value="Transparent"/>
+      <Setter Property="Background" Value="{DynamicResource Glass}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource GlassEdge}"/>
       <Setter Property="BorderThickness" Value="1"/>
-      <Setter Property="CornerRadius" Value="12"/>
-      <Setter Property="Margin" Value="0,0,0,6"/>
-      <Setter Property="Padding" Value="10,10,14,10"/>
+      <Setter Property="CornerRadius" Value="14"/>
+      <Setter Property="Margin" Value="0,0,0,8"/>
+      <Setter Property="Padding" Value="12,12,16,12"/>
       <Style.Triggers>
-        <Trigger Property="IsMouseOver" Value="True"><Setter Property="Background" Value="{DynamicResource Paper3}"/></Trigger>
+        <Trigger Property="IsMouseOver" Value="True"><Setter Property="Background" Value="{DynamicResource GlassHi}"/><Setter Property="BorderBrush" Value="{DynamicResource RuleStrong}"/></Trigger>
       </Style.Triggers>
     </Style>
     <Style x:Key="Tile" TargetType="Border">
-      <Setter Property="Background" Value="{DynamicResource Paper2}"/>
-      <Setter Property="BorderBrush" Value="{DynamicResource Rule}"/>
+      <Setter Property="Background" Value="{DynamicResource Glass}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource GlassEdge}"/>
       <Setter Property="BorderThickness" Value="1"/>
-      <Setter Property="CornerRadius" Value="10"/>
+      <Setter Property="CornerRadius" Value="14"/>
       <Setter Property="Padding" Value="16,14"/>
     </Style>
     <Style x:Key="Row" TargetType="Border" BasedOn="{StaticResource Tile}">
       <Style.Triggers>
-        <Trigger Property="IsMouseOver" Value="True"><Setter Property="BorderBrush" Value="{DynamicResource Ink}"/></Trigger>
+        <Trigger Property="IsMouseOver" Value="True"><Setter Property="BorderBrush" Value="{DynamicResource AccentEdge}"/><Setter Property="Background" Value="{DynamicResource GlassHi}"/></Trigger>
       </Style.Triggers>
     </Style>
 
@@ -1348,9 +1359,11 @@ $BrandColors = @{
       <ColumnDefinition Width="*"/>
       <ColumnDefinition Width="Auto"/>
     </Grid.ColumnDefinitions>
+    <Border Grid.ColumnSpan="3" Grid.RowSpan="2" Background="{DynamicResource PageGlow}" IsHitTestVisible="False"/>
+    <Border Grid.ColumnSpan="3" Grid.RowSpan="2" Background="{DynamicResource PageGlow2}" IsHitTestVisible="False"/>
 
     <!-- barra lateral -->
-    <Border Background="{DynamicResource Side}" BorderBrush="{DynamicResource Rule}" BorderThickness="0,0,1,0">
+    <Border Background="{DynamicResource Side}" BorderBrush="{DynamicResource GlassEdge}" BorderThickness="0,0,1,0">
       <DockPanel Margin="12,18,12,12">
         <Grid DockPanel.Dock="Top" Margin="10,0,0,16">
           <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
@@ -1398,10 +1411,10 @@ $BrandColors = @{
     <!-- contenido -->
     <Grid Grid.Column="1">
       <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
-      <Grid Margin="30,22,26,12">
+      <Grid Margin="40,30,36,16">
         <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
         <StackPanel>
-          <TextBlock x:Name="PageTitle" FontFamily="{StaticResource Display}" FontSize="28" FontWeight="SemiBold"/>
+          <TextBlock x:Name="PageTitle" FontFamily="{StaticResource Display}" FontSize="30" FontWeight="Bold"/>
           <TextBlock x:Name="PageDesc" Foreground="{DynamicResource Muted}" FontSize="14.5" Margin="0,3,0,0" TextWrapping="Wrap" MaxWidth="560" HorizontalAlignment="Left"/>
         </StackPanel>
         <StackPanel x:Name="PresetBar" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Bottom" Margin="20,0,0,0">
@@ -1412,51 +1425,51 @@ $BrandColors = @{
                   ToolTip="Más agresivo: puede quitar funciones que uses. Lee cada ajuste antes de aplicar."/>
         </StackPanel>
       </Grid>
-      <ScrollViewer x:Name="TabScroll" Grid.Row="1" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" Margin="30,0,26,10">
+      <ScrollViewer x:Name="TabScroll" Grid.Row="1" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" Margin="40,0,36,12">
         <StackPanel x:Name="Tabs" Orientation="Horizontal"/>
       </ScrollViewer>
-      <ScrollViewer x:Name="TweakPage" Grid.Row="2" VerticalScrollBarVisibility="Visible" Padding="30,0,16,20">
+      <ScrollViewer x:Name="TweakPage" Grid.Row="2" VerticalScrollBarVisibility="Visible" Padding="40,0,26,24">
         <StackPanel x:Name="TweakList"/>
       </ScrollViewer>
-      <ScrollViewer x:Name="ToolsPage" Grid.Row="2" VerticalScrollBarVisibility="Visible" Padding="30,0,16,20" Visibility="Collapsed">
+      <ScrollViewer x:Name="ToolsPage" Grid.Row="2" VerticalScrollBarVisibility="Visible" Padding="40,0,26,24" Visibility="Collapsed">
         <StackPanel x:Name="ToolGrid"/>
       </ScrollViewer>
-      <Border x:Name="LogPage" Grid.Row="2" Visibility="Collapsed" Margin="30,0,26,20" Background="{DynamicResource Paper2}"
+      <Border x:Name="LogPage" Grid.Row="2" Visibility="Collapsed" Margin="40,0,36,24" Background="{DynamicResource Paper2}"
               BorderBrush="{DynamicResource Rule}" BorderThickness="0,1,0,0">
         <TextBox x:Name="Log" IsReadOnly="True" Background="Transparent" BorderThickness="0" Foreground="{DynamicResource Ink2}"
                  FontFamily="{StaticResource Mono}" FontSize="12.5" Padding="0,12" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"/>
       </Border>
-      <ScrollViewer x:Name="ModulePage" Grid.Row="2" VerticalScrollBarVisibility="Visible" Padding="30,0,16,20" Visibility="Collapsed">
+      <ScrollViewer x:Name="ModulePage" Grid.Row="2" VerticalScrollBarVisibility="Visible" Padding="40,0,26,24" Visibility="Collapsed">
         <ContentControl x:Name="ModuleHost" Focusable="False"/>
       </ScrollViewer>
     </Grid>
 
     <!-- carril: detalle con diff + hoja de cambios -->
-    <Border x:Name="Rail" Grid.Column="2" Width="322" Background="{DynamicResource Paper}" BorderBrush="{DynamicResource Rule}" BorderThickness="1,0,0,0">
+    <Border x:Name="Rail" Grid.Column="2" Width="330" Background="{DynamicResource Glass}" BorderBrush="{DynamicResource GlassEdge}" BorderThickness="1,0,0,0">
       <DockPanel>
-        <Border x:Name="Ledger" DockPanel.Dock="Bottom" Margin="16,8,16,16" CornerRadius="12" BorderBrush="{DynamicResource Ink}" BorderThickness="1" Background="{DynamicResource Paper2}">
-          <Border.Effect><DropShadowEffect BlurRadius="24" ShadowDepth="8" Direction="270" Opacity="0.2" Color="#14110f"/></Border.Effect>
+        <Border x:Name="Ledger" DockPanel.Dock="Bottom" Margin="16,8,16,16" CornerRadius="16" BorderBrush="{DynamicResource GlassEdge}" BorderThickness="1" Background="{DynamicResource Paper2}">
+          <Border.Effect><DropShadowEffect BlurRadius="32" ShadowDepth="10" Direction="270" Opacity="0.35" Color="#000000"/></Border.Effect>
           <Grid>
             <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-            <Border Background="{DynamicResource Ink}" CornerRadius="11,11,0,0" Padding="14,9">
+            <Border Background="{DynamicResource AccentGrad}" CornerRadius="15,15,0,0" Padding="16,11">
               <Grid>
                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                 <StackPanel VerticalAlignment="Center">
-                  <TextBlock Text="Hoja de cambios" FontWeight="SemiBold" Foreground="{DynamicResource Paper2}"/>
-                  <TextBlock x:Name="LedgerSub" FontSize="12.5" Foreground="{DynamicResource Track}" Margin="0,1,0,0"/>
+                  <TextBlock Text="Hoja de cambios" FontWeight="SemiBold" Foreground="{DynamicResource AccentInk}"/>
+                  <TextBlock x:Name="LedgerSub" FontSize="12.5" Foreground="{DynamicResource AccentInk}" Opacity="0.8" Margin="0,1,0,0"/>
                 </StackPanel>
-                <TextBlock x:Name="LedgerCount" Grid.Column="1" Text="0" FontFamily="{StaticResource Mono}" FontSize="28" Foreground="{DynamicResource Paper2}" VerticalAlignment="Center"/>
+                <TextBlock x:Name="LedgerCount" Grid.Column="1" Text="0" FontFamily="{StaticResource Mono}" FontSize="28" Foreground="{DynamicResource AccentInk}" VerticalAlignment="Center"/>
               </Grid>
             </Border>
             <Grid x:Name="LedgerStats" Grid.Row="1">
               <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-              <Border BorderBrush="{DynamicResource Ink}" BorderThickness="0,0,1,1" Padding="10,6">
+              <Border BorderBrush="{DynamicResource Rule}" BorderThickness="0,0,1,1" Padding="12,8">
                 <StackPanel><TextBlock Text="Aplicar" FontSize="12" Foreground="{DynamicResource Muted}"/><TextBlock x:Name="LedgerApply" Text="0" FontFamily="{StaticResource Mono}" FontSize="16"/></StackPanel>
               </Border>
-              <Border Grid.Column="1" BorderBrush="{DynamicResource Ink}" BorderThickness="0,0,1,1" Padding="10,6">
+              <Border Grid.Column="1" BorderBrush="{DynamicResource Rule}" BorderThickness="0,0,1,1" Padding="12,8">
                 <StackPanel><TextBlock Text="Revertir" FontSize="12" Foreground="{DynamicResource Muted}"/><TextBlock x:Name="LedgerRevert" Text="0" FontFamily="{StaticResource Mono}" FontSize="16"/></StackPanel>
               </Border>
-              <Border Grid.Column="2" BorderBrush="{DynamicResource Ink}" BorderThickness="0,0,0,1" Padding="10,6">
+              <Border Grid.Column="2" BorderBrush="{DynamicResource Rule}" BorderThickness="0,0,0,1" Padding="12,8">
                 <StackPanel><TextBlock Text="Reinicio" FontSize="12" Foreground="{DynamicResource Muted}"/><TextBlock x:Name="LedgerReboot" Text="no" FontSize="14" FontWeight="Medium" Margin="0,1,0,0"/></StackPanel>
               </Border>
             </Grid>
@@ -1477,7 +1490,7 @@ $BrandColors = @{
     </Border>
 
     <!-- barra de estado -->
-    <Border Grid.Row="1" Grid.ColumnSpan="3" Background="{DynamicResource Side}" BorderBrush="{DynamicResource Rule}" BorderThickness="0,1,0,0" Padding="16,0">
+    <Border Grid.Row="1" Grid.ColumnSpan="3" Background="{DynamicResource Side}" BorderBrush="{DynamicResource GlassEdge}" BorderThickness="0,1,0,0" Padding="20,0">
       <Grid MinHeight="32">
         <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
         <StackPanel x:Name="StatList" Orientation="Horizontal" VerticalAlignment="Center"/>
@@ -1552,6 +1565,16 @@ $ToolDefs = @(
 )
 
 try {
+    # tipografía: Inter (assets\fonts, licencia OFL), con Segoe UI de respaldo si no se pudiera cargar
+    $fontDir = Join-Path $PSScriptRoot 'assets\fonts'
+    if (Test-Path (Join-Path $fontDir 'Inter-Regular.ttf')) {
+        $inter = ([Uri]((Resolve-Path $fontDir).Path + '\')).AbsoluteUri + '#Inter'
+        $xaml.DocumentElement.SetAttribute('FontFamily', "$inter, Segoe UI Variable Text, Segoe UI")
+        foreach ($ffNode in $xaml.GetElementsByTagName('FontFamily')) {
+            $key = $ffNode.GetAttribute('Key', 'http://schemas.microsoft.com/winfx/2006/xaml')
+            if ($key -eq 'Display') { $ffNode.InnerText = "$inter, Segoe UI Variable Display, Segoe UI" }
+        }
+    }
     # textos fijos de la ventana: se traducen en el XAML antes de cargarlo (los x:Name no se tocan)
     foreach ($node in $xaml.SelectNodes('//*')) {
         foreach ($a in @($node.Attributes)) {
@@ -1725,9 +1748,22 @@ try {
         }
         catch { $null }
     }
-    function Start-FadeIn($El) {
-        $a = New-Object Windows.Media.Animation.DoubleAnimation 0, 1, ([Windows.Duration][TimeSpan]::FromMilliseconds(160))
-        $El.BeginAnimation([Windows.UIElement]::OpacityProperty, $a)
+    # microanimación de entrada: aparece y sube unos píxeles, con un retraso opcional para escalonar listas
+    $script:EaseOut = [Windows.Media.Animation.CubicEase]::new(); $script:EaseOut.EasingMode = 'EaseOut'; $script:EaseOut.Freeze()
+    function Start-FadeIn($El, [double]$DelayMs = 0, [double]$Rise = 10) {
+        $dur = [Windows.Duration][TimeSpan]::FromMilliseconds(260); $begin = [TimeSpan]::FromMilliseconds($DelayMs)
+        $o = [Windows.Media.Animation.DoubleAnimation]::new(0, 1, $dur); $o.BeginTime = $begin; $o.EasingFunction = $script:EaseOut
+        $El.Opacity = 0
+        $El.BeginAnimation([Windows.UIElement]::OpacityProperty, $o)
+        if ($Rise -gt 0) {
+            $tt = [Windows.Media.TranslateTransform]::new(0, $Rise); $El.RenderTransform = $tt
+            $m = [Windows.Media.Animation.DoubleAnimation]::new($Rise, 0, $dur); $m.BeginTime = $begin; $m.EasingFunction = $script:EaseOut
+            $tt.BeginAnimation([Windows.Media.TranslateTransform]::YProperty, $m)
+        }
+    }
+    function Start-Stagger($Items, [int]$Max = 14) {
+        $i = 0
+        foreach ($it in $Items) { if ($i -ge $Max) { break }; if ($it.Visibility -eq 'Visible') { Start-FadeIn $it ($i * 28) 8; $i++ } }
     }
     foreach ($m in Get-ChildItem -LiteralPath (Join-Path $PSScriptRoot 'modules') -Filter *.ps1 -ErrorAction SilentlyContinue) { . $m.FullName }
 
@@ -1749,6 +1785,14 @@ try {
         foreach ($bk in $BrandColors.Keys) {
             $hex = $BrandColors[$bk]; if ($th.Dark -and (Get-Luma $hex) -lt 0.3) { $hex = $th.Ink }
             $b = [Windows.Media.SolidColorBrush]::new([Windows.Media.Color][Windows.Media.ColorConverter]::ConvertFromString($hex)); $b.Freeze(); $rd["Brand-$bk"] = $b
+        }
+        # degradados: botón principal (violeta a azul) y el resplandor suave detrás del contenido
+        $cA = [Windows.Media.ColorConverter]::ConvertFromString($th.Accent); $cB = [Windows.Media.ColorConverter]::ConvertFromString($th.Accent2)
+        $g = [Windows.Media.LinearGradientBrush]::new($cA, $cB, [Windows.Point]::new(0, 0), [Windows.Point]::new(1, 1)); $g.Freeze(); $rd['AccentGrad'] = $g
+        foreach ($gl in @(@('PageGlow', $th.Glow, 0.12, 0.0), @('PageGlow2', $th.Glow2, 0.95, 0.05))) {
+            $c = [Windows.Media.ColorConverter]::ConvertFromString($gl[1]); $t = $c; $t.A = 0
+            $rg = [Windows.Media.RadialGradientBrush]::new($c, $t); $rg.Center = [Windows.Point]::new($gl[2], $gl[3]); $rg.GradientOrigin = $rg.Center
+            $rg.RadiusX = 0.55; $rg.RadiusY = 0.75; $rg.Freeze(); $rd[$gl[0]] = $rg
         }
         if (-not $script:ThemeDict) { foreach ($k in @($rd.Keys)) { if ($window.Resources.Contains($k)) { $window.Resources.Remove($k) } } }   # los colores por defecto del XAML
         $oldRd = $script:ThemeDict
@@ -1816,8 +1860,9 @@ try {
         [Windows.Controls.Grid]::SetRowSpan($ov, 10); [Windows.Controls.Grid]::SetColumnSpan($ov, 10); [Windows.Controls.Panel]::SetZIndex($ov, 100)
         $ov.Background = [Windows.Media.SolidColorBrush]::new([Windows.Media.Color]::FromArgb(0xC0, 0x05, 0x04, 0x02))
         $card = [Windows.Controls.Border]::new(); $card.CornerRadius = 14; $card.Padding = '30,26,30,24'; $card.MaxWidth = 580; $card.Margin = '24'
-        $card.HorizontalAlignment = 'Center'; $card.VerticalAlignment = 'Center'; $card.BorderThickness = 1.5
-        $card.SetResourceReference($BgProp, 'Paper2'); $card.SetResourceReference([Windows.Controls.Border]::BorderBrushProperty, 'Accent')
+        $card.HorizontalAlignment = 'Center'; $card.VerticalAlignment = 'Center'; $card.BorderThickness = 1
+        $card.SetResourceReference($BgProp, 'Paper2'); $card.SetResourceReference([Windows.Controls.Border]::BorderBrushProperty, 'RuleStrong')
+        $card.Effect = [Windows.Media.Effects.DropShadowEffect]::new(); $card.Effect.BlurRadius = 40; $card.Effect.ShadowDepth = 12; $card.Effect.Direction = 270; $card.Effect.Opacity = 0.5
         $sp = [Windows.Controls.StackPanel]::new()
         $hd = New-Cols @('Auto', '*')
         $well = [Windows.Controls.Border]::new(); $well.Width = 48; $well.Height = 48; $well.CornerRadius = 11; $well.SetResourceReference($BgProp, 'Accent')
@@ -2228,6 +2273,7 @@ try {
     function Show-Page([string]$Key) {
         $pg = $Pages[$Key]; $script:CurrentPage = $Key
         $ui.PageTitle.Text = (T $pg.Title); $ui.PageDesc.Text = (T $pg.Desc)
+        Start-FadeIn $ui.PageTitle 0 6; Start-FadeIn $ui.PageDesc 40 6
         $isModule = [bool]$pg.Module
         $isTweaks = [bool]$pg.Tab
         $ui.TweakPage.Visibility  = if ($isTweaks) { 'Visible' } else { 'Collapsed' }
@@ -2246,6 +2292,7 @@ try {
             }
             foreach ($row in $script:Rows.Values) { $row.Border.Visibility = if ($Key -eq 'all' -or $row.Tweak.Cat -eq $Key) { 'Visible' } else { 'Collapsed' } }
             $ui.TweakPage.ScrollToTop()
+            Start-Stagger @($ui.TweakList.Children) 16
             # no se elige nada solo: el panel derecho explica qué hacer hasta que tocas un ajuste
             if ($script:Selected -and $script:Selected.Border.Visibility -ne 'Visible') { Select-Row $null }
         }
@@ -2260,7 +2307,7 @@ try {
             }
             $ui.ModuleHost.Content = $script:ModuleCache[$Key]
             $ui.ModulePage.ScrollToTop()
-            Start-FadeIn $ui.ModuleHost
+            if ($ui.ModuleHost.Content -is [Windows.Controls.Panel]) { Start-Stagger @($ui.ModuleHost.Content.Children) 10 } else { Start-FadeIn $ui.ModuleHost }
             if ($Key -eq 'm-clean' -and $script:CleanFirstScan) {
                 $script:CleanFirstScan = $false
                 # el análisis bloquea unos segundos: si el panel aún está arrancando, se hace al terminar de comprobar los ajustes
