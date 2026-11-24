@@ -77,14 +77,15 @@ function Invoke-NetLatency {
     $script:NetPinging = $true
     $progress = [hashtable]::Synchronized(@{})
     Start-Bg -Work {
-        param($targets, $P)
+        param($A, $P)
+        $targets = $A.Targets
         $ping = [System.Net.NetworkInformation.Ping]::new()
         foreach ($t in $targets) {
             $times = @()
             if ($t[1]) { for ($i = 0; $i -lt 4; $i++) { try { $r = $ping.Send($t[1], 1000); if ($r.Status -eq 'Success') { $times += $r.RoundtripTime } } catch {} } }
             $P[$t[0]] = if ($times) { [math]::Round(($times | Measure-Object -Average).Average) } else { -1 }
         }
-    } -ArgList @(, $targets) -Progress $progress -OnTick {
+    } -ArgList @(@{ Targets = $targets }) -Progress $progress -OnTick {
         param($P)
         foreach ($id in @($P.Keys)) {
             $tb = if ($id -eq 'gw') { $script:NetGwLatency } else { $script:NetLatency[$id] }

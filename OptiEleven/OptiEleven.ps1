@@ -1681,13 +1681,13 @@ try {
         $ps = [powershell]::Create()
         [void]$ps.AddScript($Work.ToString())
         foreach ($a in $ArgList) { [void]$ps.AddArgument($a) }
-        if ($Progress) { [void]$ps.AddArgument($Progress) }
+        if ($null -ne $Progress) { [void]$ps.AddParameter('P', $Progress) }   # por nombre: los $Work que la usan la llaman $P
         $script:BgJobs.Add(@{ Ps = $ps; Handle = $ps.BeginInvoke(); Done = $Done; Tick = $OnTick; Progress = $Progress })
         if (-not $script:BgTimer) {
             $script:BgTimer = [System.Windows.Threading.DispatcherTimer]::new(); $script:BgTimer.Interval = [TimeSpan]::FromMilliseconds(120)
             $script:BgTimer.Add_Tick({
                 foreach ($j in @($script:BgJobs)) {
-                    if ($j.Tick) { try { & $j.Tick $j.Progress } catch {} }
+                    if ($j.Tick) { try { & $j.Tick $j.Progress } catch { if (-not $j.TickErr) { $j.TickErr = $true; Write-Log "Segundo plano: $($_.Exception.Message)" 'WARN' } } }
                     if (-not $j.Handle.IsCompleted) { continue }
                     [void]$script:BgJobs.Remove($j)
                     $res = $null; $err = $null
