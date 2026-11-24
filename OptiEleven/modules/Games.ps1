@@ -133,7 +133,7 @@ function Update-GamesList {
         [void](Add-At $who $ic 0)
         $sp = New-Object Windows.Controls.StackPanel; $sp.VerticalAlignment = 'Center'
         [void]$sp.Children.Add((New-Text $gm.Name 15 'Ink' 'Medium'))
-        $ex = New-Mono $gm.Exe 12 'Muted'; $ex.TextTrimming = 'CharacterEllipsis'; $ex.ToolTip = $gm.Exe; $ex.Margin = '0,2,0,0'
+        $ex = New-Mono $gm.Exe 12 'Muted'; $ex.TextTrimming = 'CharacterEllipsis'; $ex.ToolTip = $gm.Exe; $ex.Margin = '0,2,0,0'; if (-not $script:Pro) { $ex.Visibility = 'Collapsed' }
         [void]$sp.Children.Add($ex)
         if ($gm.Manual) {
             $rm = New-Text 'Quitar de la lista' 12.5 'Muted'; $rm.Cursor = 'Hand'; $rm.TextDecorations = 'Underline'; $rm.Tag = $gm.Exe; $rm.Margin = '0,4,0,0'

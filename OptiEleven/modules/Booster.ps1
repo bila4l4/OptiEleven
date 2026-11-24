@@ -275,7 +275,7 @@ function New-BoosterPage {
         $stt = New-Text '' 13 'Muted'; $stt.VerticalAlignment = 'Center'; $stt.Margin = '0,0,16,0'
         $act = New-Object Windows.Controls.StackPanel; $act.Orientation = 'Horizontal'
         [void]$act.Children.Add($stt); [void]$act.Children.Add($sw)
-        [void]$root.Children.Add((New-ActionRow $s.Icon $s.Label $s.Name $act))
+        [void]$root.Children.Add((New-ActionRow $s.Icon $s.Label $(if ($script:Pro) { $s.Name } else { $null }) $act))
         $script:BoostSvcRows += @{ Svc = $s; Switch = $sw; State = $stt }
     }
 

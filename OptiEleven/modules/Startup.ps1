@@ -70,7 +70,7 @@ function Update-StartupList {
         else { [void](Add-At $g (New-IconWell 'sign-in') 0) }
         $sp = New-Object Windows.Controls.StackPanel
         $nm = New-Text $it.Name 15 'Ink' 'Medium'
-        $cmd = New-Mono $it.Command 12 'Muted'; $cmd.TextTrimming = 'CharacterEllipsis'; $cmd.Margin = '0,3,0,0'; $cmd.ToolTip = $it.Command
+        $cmd = New-Mono $it.Command 12 'Muted'; $cmd.TextTrimming = 'CharacterEllipsis'; $cmd.Margin = '0,3,0,0'; $cmd.ToolTip = $it.Command; if (-not $script:Pro) { $cmd.Visibility = 'Collapsed' }
         $meta = New-Object Windows.Controls.WrapPanel; $meta.Margin = '0,8,0,0'
         [void]$meta.Children.Add((New-Chip $it.Scope 'Paper3' 'Ink2'))
         foreach ($el in $nm, $cmd, $meta) { [void]$sp.Children.Add($el) }

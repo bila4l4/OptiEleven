@@ -1010,7 +1010,8 @@ if ($NoGui) {
 # Material: papel manila, tinta casi negra en filetes, cifras en mono, un naranja de señal (siempre relleno con tinta encima)
 # y un verde para lo aplicado. Cada categoría lleva un tono propio solo en su icono; las marcas, su color real.
 # Firma: la hoja de cambios (libreta cuadriculada con cabecera de tinta) bajo el diff del ajuste seleccionado.
-# Crítica: con más color el riesgo es el confeti; el color vive solo en iconos, nunca en fondos ni textos largos.
+# Color: cada categoría y apartado tiene su tono, en el icono, en su pozo teñido y en el filete de su grupo.
+# Crítica: con más color el riesgo es el confeti; nunca en textos largos ni en fondos grandes.
 Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase, System.Drawing
 if (-not ('GP.Dwm' -as [type])) {
     Add-Type -Namespace GP -Name Dwm -MemberDefinition '[DllImport("dwmapi.dll")] public static extern int DwmSetWindowAttribute(IntPtr h, int attr, ref int val, int size);'
@@ -1252,6 +1253,18 @@ $BrandColors = @{
             <ContentControl x:Name="ThemeIcon" Focusable="False"/>
           </Button>
         </Grid>
+        <Border x:Name="ProRow" DockPanel.Dock="Bottom" CornerRadius="8" Padding="10,8" Margin="0,10,0,0" Background="{DynamicResource Paper3}" Cursor="Hand"
+                ToolTip="Muestra las claves del registro, servicios y tareas que toca cada ajuste, y el registro de actividad.">
+          <Grid>
+            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <ContentControl x:Name="ProIcon" Focusable="False" VerticalAlignment="Center" Margin="0,0,10,0"/>
+            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+              <TextBlock Text="Vista Pro" FontWeight="SemiBold" FontSize="13"/>
+              <TextBlock Text="Detalles técnicos" FontSize="11.5" Foreground="{DynamicResource Muted}"/>
+            </StackPanel>
+            <ToggleButton x:Name="ProSwitch" Grid.Column="2" Style="{StaticResource Switch}" VerticalAlignment="Center" AutomationProperties.Name="Vista Pro"/>
+          </Grid>
+        </Border>
         <ListBox x:Name="Nav" Background="Transparent" BorderThickness="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled"/>
       </DockPanel>
     </Border>
@@ -1309,7 +1322,7 @@ $BrandColors = @{
                 <TextBlock x:Name="LedgerCount" Grid.Column="1" Text="0" FontFamily="{StaticResource Mono}" FontSize="28" Foreground="{DynamicResource Paper2}" VerticalAlignment="Center"/>
               </Grid>
             </Border>
-            <Grid Grid.Row="1">
+            <Grid x:Name="LedgerStats" Grid.Row="1">
               <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
               <Border BorderBrush="{DynamicResource Ink}" BorderThickness="0,0,1,1" Padding="10,6">
                 <StackPanel><TextBlock Text="Aplicar" FontSize="12" Foreground="{DynamicResource Muted}"/><TextBlock x:Name="LedgerApply" Text="0" FontFamily="{StaticResource Mono}" FontSize="16"/></StackPanel>
@@ -1424,13 +1437,17 @@ try {
     $window.Height = [math]::Min($window.Height, $wa.Height - 24)
     $window.Width  = [math]::Min($window.Width, $wa.Width - 24)
     $ui = @{}
-    foreach ($n in 'Nav', 'BrandMark', 'BtnLang', 'LangIcon', 'LangCode', 'AdminChip', 'AdminIcon', 'AdminTitle', 'BtnTheme', 'ThemeIcon', 'PageTitle', 'PageDesc', 'PresetBar', 'BtnRec', 'BtnComp',
+    foreach ($n in 'Nav', 'BrandMark', 'BtnLang', 'LangIcon', 'LangCode', 'ProRow', 'ProIcon', 'ProSwitch', 'LedgerStats','AdminChip', 'AdminIcon', 'AdminTitle', 'BtnTheme', 'ThemeIcon', 'PageTitle', 'PageDesc', 'PresetBar', 'BtnRec', 'BtnComp',
                    'Tabs', 'TabScroll', 'TweakPage', 'TweakList', 'ToolsPage', 'ToolGrid', 'LogPage', 'Log', 'ModulePage', 'ModuleHost', 'Rail', 'Detail',
                    'Ledger', 'LedgerSub', 'LedgerCount', 'LedgerApply', 'LedgerRevert', 'LedgerReboot', 'LedgerGrid', 'LedgerList', 'BtnDiscard', 'BtnApply',
                    'StatList', 'QueuePill', 'QueueText') {
         $ui[$n] = $window.FindName($n)
     }
     $script:LogBox = $ui.Log
+    # Vista Pro: claves, servicios, tareas y rutas. Sin ella, el panel enseña solo lo que hace falta para decidir.
+    $script:ProFile = Join-Path $script:Root 'pro.txt'
+    $script:Pro = Test-Path -LiteralPath $script:ProFile
+    $script:ProOnly = @()
     $FgProp = [Windows.Controls.TextBlock]::ForegroundProperty
     $BgProp = [Windows.Controls.Border]::BackgroundProperty
     $FillProp = [Windows.Shapes.Shape]::FillProperty
@@ -1472,7 +1489,14 @@ try {
     }
     function New-IconWell($Code, [double]$Box = 38, [string]$Brush = 'Ink2') {
         $w = New-Object Windows.Controls.Border; $w.Width = $Box; $w.Height = $Box; $w.CornerRadius = 8; $w.VerticalAlignment = 'Center'
-        $w.SetResourceReference($BgProp, 'Paper3')
+        # sin color pedido, cada icono toma uno fijo de la paleta (el mismo icono, siempre el mismo color); las marcas, el suyo
+        if ($Brush -eq 'Ink2' -and $Code -is [string] -and $Code -notlike 'brand-*') {
+            $pal = 'Cat-Privacidad', 'Cat-Servicios', 'Cat-Rendimiento', 'Cat-Latencia', 'Cat-Juegos', 'Cat-Actualizaciones', 'Cat-Interfaz', 'Cat-Apps'
+            $h = 0; foreach ($ch in $Code.ToCharArray()) { $h = ($h * 31 + [int]$ch) % 9973 }
+            $Brush = $pal[$h % $pal.Count]
+        }
+        # los iconos de color llevan su fondo teñido del mismo tono
+        $w.SetResourceReference($BgProp, $(if ($Brush -like 'Cat-*') { "Soft$Brush" } else { 'Paper3' }))
         $ic = New-Icon $Code ([math]::Round($Box * 0.55)) $Brush; $ic.HorizontalAlignment = 'Center'; $w.Child = $ic
         $w
     }
@@ -1551,6 +1575,10 @@ try {
         $th = $Themes[$Name]; $script:ThemeName = $Name
         foreach ($k in $th.Keys) {
             if ($k -ne 'Dark') { $window.Resources[$k] = [Windows.Media.SolidColorBrush]::new([Windows.Media.Color][Windows.Media.ColorConverter]::ConvertFromString($th[$k])) }
+            if ($k -like 'Cat-*') {   # fondo suave de cada color, para los pozos de icono
+                $c = [Windows.Media.Color][Windows.Media.ColorConverter]::ConvertFromString($th[$k]); $c.A = $(if ($th.Dark) { 0x30 } else { 0x24 })
+                $window.Resources["Soft$k"] = [Windows.Media.SolidColorBrush]::new($c)
+            }
         }
         foreach ($b in $BrandColors.Keys) {
             $hex = $BrandColors[$b]; if ($th.Dark -and (Get-Luma $hex) -lt 0.3) { $hex = $th.Ink }
@@ -1669,7 +1697,9 @@ try {
     if ($script:IsAdmin) { $ui.AdminIcon.Content = (New-Icon 'shield-check' 18 'Green'); $ui.AdminTitle.Text = (T 'Administrador'); $ui.AdminChip.ToolTip = (T 'Puedes aplicar y revertir ajustes.') }
     else { $ui.AdminIcon.Content = (New-Icon 'lock-simple' 18 'Ink2'); $ui.AdminTitle.Text = (T 'Solo lectura'); $ui.AdminChip.ToolTip = (T 'Ábrelo con OptiEleven.cmd para aplicar cambios.') }
 
-    # ---------- navegación
+    # ---------- navegación: cada apartado con su color
+    $NavColors = @{ 'all' = 'Accent'; 'm-boost' = 'Cat-Rendimiento'; 'm-games' = 'Cat-Juegos'; 'm-apps' = 'Cat-Actualizaciones'; 'm-startup' = 'Cat-Servicios'
+                    'm-clean' = 'Cat-Interfaz'; 'm-net' = 'Cat-Privacidad'; 'm-repair' = 'Cat-Latencia'; 'm-hw' = 'Cat-Apps'; 'tools' = 'Cat-Servicios'; 'log' = 'Ink2' }
     $script:NavParts = @{}
     foreach ($key in $Pages.Keys) {
         $pg = $Pages[$key]
@@ -1681,7 +1711,7 @@ try {
             continue
         }
         $g = New-Cols @('Auto', '*', 'Auto'); $g.Tag = $key
-        $ic = New-Icon $pg.Icon 19 'Ink2'; $ic.Margin = '0,0,11,0'
+        $ic = New-Icon $pg.Icon 19 $NavColors[$key]; $ic.Margin = '0,0,11,0'
         [void](Add-At $g $ic 0)
         $lb = New-Text $pg.Label 14 'Ink'; $lb.VerticalAlignment = 'Center'; $lb.TextWrapping = 'NoWrap'
         [void](Add-At $g $lb 1)
@@ -1694,7 +1724,7 @@ try {
         foreach ($k in $script:NavParts.Keys) {
             $sel = $ui.Nav.SelectedItem -and $ui.Nav.SelectedItem.Tag -eq $k
             $np = $script:NavParts[$k]
-            Set-IconBrush $np.Icon $(if ($sel) { 'AccentInk' } else { 'Ink2' })
+            Set-IconBrush $np.Icon $(if ($sel) { 'AccentInk' } else { $NavColors[$k] })
             $np.Label.SetResourceReference($FgProp, $(if ($sel) { 'AccentInk' } else { 'Ink' }))
             $np.Label.FontWeight = $(if ($sel) { 'SemiBold' } else { 'Normal' })
             if ($np.Count) { $np.Count.SetResourceReference($FgProp, $(if ($sel) { 'AccentInk' } else { 'Muted' })) }
@@ -1705,7 +1735,13 @@ try {
         $pg = $Pages[$key]; if (-not $pg.Tab) { continue }
         $tb = New-Object Windows.Controls.Primitives.ToggleButton; $tb.Style = $window.FindResource('TabToggle'); $tb.Tag = $key
         $n = if ($key -eq 'all') { $Tweaks.Count } else { @($Tweaks | Where-Object Cat -eq $key).Count }
-        $tb.Content = (T $pg.Tab); $tb.ToolTip = (T "$n ajustes")
+        $tc = New-Object Windows.Controls.StackPanel; $tc.Orientation = 'Horizontal'
+        if ($key -ne 'all') {   # punto del color de la categoría
+            $dot = New-Object Windows.Shapes.Ellipse; $dot.Width = 8; $dot.Height = 8; $dot.Margin = '0,0,7,0'; $dot.VerticalAlignment = 'Center'
+            $dot.SetResourceReference($FillProp, "Cat-$key"); [void]$tc.Children.Add($dot)
+        }
+        $tl = New-Object Windows.Controls.TextBlock; $tl.Text = T $pg.Tab; $tl.VerticalAlignment = 'Center'; [void]$tc.Children.Add($tl)
+        $tb.Content = $tc; $tb.ToolTip = (T "$n ajustes")
         $tb.Add_Click({ param($src, $e) Show-Page $src.Tag })
         [void]$ui.Tabs.Children.Add($tb)
         $script:TabParts[$key] = $tb
@@ -1717,7 +1753,7 @@ try {
     $script:Rows = [ordered]@{}
     $script:GroupHeads = @{}
     $script:Selected = $null
-    $riskChip = @{ Seguro = @('Seguro', 'Paper3', 'Ink2'); Moderado = @('Moderado', 'AmberSoft', 'Amber'); Avanzado = @('Avanzado', 'RedSoft', 'Red') }
+    $riskChip = @{ Seguro = @('Seguro', 'GreenSoft', 'Green'); Moderado = @('Moderado', 'AmberSoft', 'Amber'); Avanzado = @('Avanzado', 'RedSoft', 'Red') }
     $cats = @($Pages.Keys | Where-Object { $Pages[$_].Tab -and $_ -ne 'all' })
     foreach ($cat in $cats) {
         $list = @($Tweaks | Where-Object Cat -eq $cat | Sort-Object @{ e = { $_.Name } })
@@ -1727,7 +1763,8 @@ try {
         $ht = New-Text $Pages[$cat].Title 18 'Ink' 'SemiBold'; $ht.FontFamily = $window.FindResource('Display'); [void](Add-At $head $ht 1)
         $hc = New-Text "$($list.Count)" 13 'Muted'; $hc.FontFamily = $window.FindResource('Mono'); $hc.VerticalAlignment = 'Bottom'; [void](Add-At $head $hc 2)
         [void]$ui.TweakList.Children.Add($head)
-        $rule = New-Ruled; [void]$ui.TweakList.Children.Add($rule)
+        $rule = New-Object Windows.Controls.Border; $rule.Height = 2; $rule.CornerRadius = 1; $rule.SetResourceReference($BgProp, "Cat-$cat")
+        [void]$ui.TweakList.Children.Add($rule)
         $script:GroupHeads[$cat] = @($head, $rule)
 
         foreach ($t in $list) {
@@ -1741,6 +1778,7 @@ try {
             $left = New-Object Windows.Controls.StackPanel; $left.VerticalAlignment = 'Center'
             $nm = New-Text $t.Name 14.5 'Ink' 'SemiBold'; $nm.TextWrapping = 'NoWrap'; $nm.TextTrimming = 'CharacterEllipsis'
             $ds = New-Text $t.Desc 13 'Muted'; $ds.TextWrapping = 'NoWrap'; $ds.TextTrimming = 'CharacterEllipsis'; $ds.Margin = '0,1,0,0'
+            if (-not $script:Pro) { $ds.Visibility = 'Collapsed' }
             [void]$left.Children.Add($nm); [void]$left.Children.Add($ds)
             [void](Add-At $grid $left 1)
             $chips = New-Object Windows.Controls.StackPanel; $chips.Orientation = 'Horizontal'; $chips.Margin = '14,0,0,0'
@@ -1764,7 +1802,7 @@ try {
                 if ($e.ClickCount -eq 2) { $row = $script:Rows[$src.Tag]; if ($row.Switch.IsEnabled -and -not $script:Busy) { $row.Switch.IsChecked = -not [bool]$row.Switch.IsChecked; Update-Pending; Select-Row $row } }
             })
             [void]$ui.TweakList.Children.Add($border)
-            $script:Rows[$t.Id] = @{ Tweak = $t; Switch = $sw; Border = $border; State = $state; Mark = $mark; Applied = $null }
+            $script:Rows[$t.Id] = @{ Tweak = $t; Switch = $sw; Border = $border; State = $state; Mark = $mark; Applied = $null; Desc = $ds }
         }
     }
 
@@ -1795,13 +1833,33 @@ try {
         if ($t.Reboot) { [void]$chips.Children.Add((New-Chip 'Reinicio' 'Paper3' 'Ink2')) }
         if ($t.Irreversible) { [void]$chips.Children.Add((New-Chip 'Sin vuelta atrás' 'Paper3' 'Ink2')) }
         [void]$d.Children.Add($chips)
+        $revert = [bool]$row.Applied
+        $diff = try { @(Get-TweakDiff $t $revert) } catch { @() }
+        $changes = @($diff | Where-Object { -not $_.Same }).Count
+        if (-not $script:Pro) {
+            # vista sencilla: sin claves ni valores, solo si cambia algo y cómo verlo
+            $n = $changes
+            $box = New-Object Windows.Controls.Border; $box.CornerRadius = 10; $box.Padding = '14,12'; $box.Margin = '0,16,0,0'
+            $box.SetResourceReference($BgProp, "SoftCat-$($t.Cat)")
+            $bg = New-Cols @('Auto', '*')
+            $bi = New-Icon $(if ($revert -or $n) { 'arrow-counter-clockwise' } else { 'check' }) 20 "Cat-$($t.Cat)"; $bi.Margin = '0,0,12,0'; $bi.VerticalAlignment = 'Top'
+            [void](Add-At $bg $bi 0)
+            $msg = if ($t.Irreversible -and -not $revert) { 'Este no se puede deshacer desde el panel. Lee bien la descripción.' }
+                   elseif ($revert) { 'Está aplicado. Si lo desactivas, Windows vuelve a como estaba.' }
+                   elseif ($n) { 'Al aplicarlo se guarda cómo estaba, para poder revertirlo cuando quieras.' }
+                   else { 'En este equipo ya está así.' }
+            [void](Add-At $bg (New-Text $msg 13.5 'Ink') 1)
+            $box.Child = $bg
+            [void]$d.Children.Add($box)
+            $pro = New-Text 'Activa la Vista Pro para ver qué claves, servicios y tareas cambia.' 12.5 'Muted'; $pro.Margin = '0,12,0,0'
+            [void]$d.Children.Add($pro)
+            Start-FadeIn $d
+            return
+        }
         $bk = Get-Backup $t.Id
         $bkt = New-Text $(if ($bk) { "Copia de seguridad del $($bk.Time -replace 'T', ' a las ')" } else { 'Sin copia todavía: se guarda al aplicar.' }) 12.5 'Muted'
         $bkt.Margin = '0,10,0,0'; [void]$d.Children.Add($bkt)
 
-        $revert = [bool]$row.Applied
-        $diff = try { @(Get-TweakDiff $t $revert) } catch { @() }
-        $changes = @($diff | Where-Object { -not $_.Same }).Count
         $h2 = New-Cols @('*', 'Auto'); $h2.Margin = '0,18,0,6'
         $h2t = New-Text $(if ($revert) { 'Qué vuelve al revertir' } else { 'Qué cambia al aplicar' }) 15 'Ink' 'SemiBold'; $h2t.FontFamily = $window.FindResource('Display')
         [void](Add-At $h2 $h2t 0)
@@ -1883,11 +1941,13 @@ try {
     })
 
     $script:Stats = [ordered]@{}
+    $StatColors = @{ Cpu = 'Cat-Privacidad'; Gpu = 'Cat-Juegos'; Ram = 'Cat-Latencia'; Temp = 'Cat-Rendimiento'; Proc = 'Ink'; Svc = 'Ink'; Tweaks = 'Accent' }
     foreach ($s in @(@('Cpu', 'CPU'), @('Gpu', 'GPU'), @('Ram', 'RAM'), @('Temp', 'Temperatura'), @('Proc', 'Procesos'), @('Svc', 'Servicios'), @('Tweaks', 'Ajustes aplicados'))) {
         $l = New-Text $s[1] 12.5 'Muted'; $l.Margin = '0,0,6,0'; $l.VerticalAlignment = 'Center'
-        $v = New-Mono '--' 13 'Ink'; $v.FontWeight = 'SemiBold'; $v.Margin = '0,0,22,0'; $v.VerticalAlignment = 'Center'
+        $v = New-Mono '--' 13 $StatColors[$s[0]]; $v.FontWeight = 'SemiBold'; $v.Margin = '0,0,22,0'; $v.VerticalAlignment = 'Center'
         [void]$ui.StatList.Children.Add($l); [void]$ui.StatList.Children.Add($v)
         $script:Stats[$s[0]] = $v
+        if ($s[0] -in 'Proc', 'Svc') { $script:ProOnly += $l, $v }   # en la vista sencilla sobran
     }
     $script:Stats.Temp.ToolTip = T 'Windows solo da la temperatura con permisos de administrador, y no en todos los equipos.'
     $updateStats = {
@@ -2060,6 +2120,42 @@ try {
         finally { Set-Busy $false; Update-Status }
         if ($reboot) { [void][Windows.MessageBox]::Show($window, (T 'Algunos cambios necesitan reiniciar el equipo.'), 'OptiEleven', 'OK', 'Information') }
     })
+
+    # ---------- Vista Pro
+    function Update-ProNav {
+        # la Actividad es para la Vista Pro; se oculta el contenedor del ListBox, no solo su contenido
+        foreach ($it in $ui.Nav.Items) {
+            if ($it -is [Windows.Controls.Grid] -and $it.Tag -eq 'log') {
+                $v = if ($script:Pro) { 'Visible' } else { 'Collapsed' }
+                $it.Visibility = $v
+                $c = $ui.Nav.ItemContainerGenerator.ContainerFromItem($it); if ($c) { $c.Visibility = $v }
+            }
+        }
+    }    function Set-ProView([bool]$On) {
+        $script:Pro = $On
+        try { if ($On) { Set-Content -LiteralPath $script:ProFile -Value 'on' } else { Remove-Item -LiteralPath $script:ProFile -ErrorAction SilentlyContinue } } catch {}
+        $vis = if ($On) { 'Visible' } else { 'Collapsed' }
+        foreach ($row in $script:Rows.Values) { $row.Desc.Visibility = $vis }
+        foreach ($el in $script:ProOnly) { $el.Visibility = $vis }
+        $ui.LedgerStats.Visibility = $vis
+        Update-ProNav
+        Set-IconBrush $ui.ProIcon.Content $(if ($On) { 'Accent' } else { 'Ink2' })
+        if ($ui.ProSwitch.IsChecked -ne $On) { $ui.ProSwitch.IsChecked = $On }
+        # los apartados se vuelven a montar con o sin detalles
+        $script:ModuleCache = @{}
+        if (-not $On -and $script:CurrentPage -eq 'log') { Select-NavKey 'all'; return }
+        if ($script:CurrentPage) { Show-Page $script:CurrentPage }
+        Show-Detail $script:Selected
+    }
+    $ui.ProIcon.Content = (New-Icon 'brackets-curly' 18 'Ink2')
+    $ui.ProSwitch.Add_Click({ Set-ProView ([bool]$ui.ProSwitch.IsChecked) })
+    $ui.ProRow.Add_MouseLeftButtonUp({ param($src, $e) if ($e.OriginalSource -isnot [Windows.Controls.Primitives.ToggleButton] -and -not ($e.OriginalSource -is [Windows.FrameworkElement] -and $e.OriginalSource.TemplatedParent -is [Windows.Controls.Primitives.ToggleButton])) { Set-ProView (-not $script:Pro) } })
+    $ui.ProSwitch.IsChecked = $script:Pro
+    $vis0 = if ($script:Pro) { 'Visible' } else { 'Collapsed' }
+    foreach ($el in $script:ProOnly) { $el.Visibility = $vis0 }
+    $ui.LedgerStats.Visibility = $vis0
+    $window.Add_ContentRendered({ Update-ProNav })
+    if ($script:Pro) { Set-IconBrush $ui.ProIcon.Content 'Accent' }
 
     # ---------- arranque
     $ui.BtnApply.IsEnabled = $false; $ui.BtnDiscard.IsEnabled = $false

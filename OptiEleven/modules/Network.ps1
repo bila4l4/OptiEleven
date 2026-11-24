@@ -50,7 +50,7 @@ function Update-NetInfo {
         [void]$meta.Children.Add((New-Chip $a.Speed 'Paper3' 'Ink2'))
         [void]$meta.Children.Add((New-Chip $(if ($a.Static) { 'DNS elegidos a mano' } else { 'DNS automáticos' }) 'Paper3' 'Ink2'))
         [void]$sp.Children.Add($meta)
-        $dn = New-Mono ($(if ($a.Dns) { $a.Dns -join '   ' } else { 'sin DNS' })) 13 'Ink'; $dn.Margin = '0,8,0,0'
+        $dn = New-Mono ($(if ($a.Dns) { $a.Dns -join '   ' } else { 'sin DNS' })) 13 'Ink'; $dn.Margin = '0,8,0,0'; if (-not $script:Pro) { $dn.Visibility = 'Collapsed' }
         [void]$sp.Children.Add($dn)
         [void](Add-At $g $sp 1)
         $lat = New-Object Windows.Controls.StackPanel; $lat.VerticalAlignment = 'Center'; $lat.Margin = '20,0,0,0'
