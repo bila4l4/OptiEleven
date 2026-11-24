@@ -76,6 +76,10 @@ namespace GP {
     public static class Dwm {
         [DllImport("dwmapi.dll")] public static extern int DwmSetWindowAttribute(IntPtr h, int attr, ref int val, int size);
     }
+    public static class Shell {
+        // identidad propia en la barra de tareas: sin ella, Windows agrupa la ventana con PowerShell y muestra su icono
+        [DllImport("shell32.dll", CharSet = CharSet.Unicode)] public static extern int SetCurrentProcessExplicitAppUserModelID(string appId);
+    }
     public static class Ws {
         [DllImport("psapi.dll")] public static extern bool EmptyWorkingSet(IntPtr h);
     }
@@ -1581,6 +1585,8 @@ $ToolDefs = @(
 )
 
 try {
+    # la ventana sale en la barra de tareas como OptiEleven, con su logo, y no como una ventana más de PowerShell
+    try { [void][GP.Shell]::SetCurrentProcessExplicitAppUserModelID('OptiEleven.Panel') } catch {}
     # tipografía: Inter (assets\fonts, licencia OFL), con Segoe UI de respaldo si no se pudiera cargar
     $fontDir = Join-Path $PSScriptRoot 'assets\fonts'
     if (Test-Path (Join-Path $fontDir 'Inter-Regular.ttf')) {

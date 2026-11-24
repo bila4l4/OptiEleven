@@ -152,6 +152,8 @@ function Get-AppMemory($App) {
 function Update-BoostView {
     $st = Get-BoostState
     $on = [bool]$st
+    # al cerrar el panel se puede restaurar el booster sin haber abierto su página: entonces no hay nada que pintar
+    if (-not $script:BoostTitle) { return }
     $script:BoostTitle.Text = T $(if ($on) { 'Booster activado' } else { 'Booster apagado' })
     $script:BoostSub.Text = T $(if ($on) { "Desde las $(([datetime]$st.Inicio).ToString('HH:mm')). Cerradas $(@($st.Apps).Count) apps y pausados $(@($st.Servicios).Count) servicios." }
                             else { 'Marca lo que quieres apartar mientras juegas y actívalo.' })
