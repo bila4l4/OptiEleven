@@ -13,6 +13,19 @@ $AppCatalog = [ordered]@{
         @{ Id = 'HeroicGamesLauncher.HeroicGamesLauncher'; Icon = 'joystick'; Name = 'Heroic Games Launcher' }
         @{ Id = 'Overwolf.CurseForge'; Icon = 'brand-curseforge'; Name = 'CurseForge' }
         @{ Id = 'Modrinth.ModrinthApp'; Icon = 'brand-modrinth'; Name = 'Modrinth App' }
+        @{ Id = 'RiotGames.Valorant.EU'; Icon = 'game-controller'; Name = 'Valorant (Riot Client)' }
+        @{ Id = 'RiotGames.LeagueOfLegends.EUW'; Icon = 'game-controller'; Name = 'League of Legends' }
+        @{ Id = 'Mojang.MinecraftLauncher'; Icon = 'cube'; Name = 'Minecraft Launcher' }
+        @{ Id = 'Roblox.Roblox'; Icon = 'game-controller'; Name = 'Roblox' }
+        @{ Id = 'RockstarGames.Launcher'; Icon = 'game-controller'; Name = 'Rockstar Games Launcher' }
+        @{ Id = 'Amazon.Games'; Icon = 'game-controller'; Name = 'Amazon Games' }
+        @{ Id = 'ItchIo.Itch'; Icon = 'game-controller'; Name = 'itch.io' }
+        @{ Id = 'PrismLauncher.PrismLauncher'; Icon = 'cube'; Name = 'Prism Launcher' }
+    )
+    'Periféricos' = @(
+        @{ Id = 'Logitech.GHUB'; Icon = 'mouse'; Name = 'Logitech G HUB' }
+        @{ Id = 'Corsair.iCUE.5'; Icon = 'keyboard'; Name = 'Corsair iCUE' }
+        @{ Id = 'SteelSeries.GG'; Icon = 'headset'; Name = 'SteelSeries GG' }
     )
     'Navegadores' = @(
         @{ Id = 'Google.Chrome'; Icon = 'brand-googlechrome'; Name = 'Chrome' }
@@ -37,6 +50,7 @@ $AppCatalog = [ordered]@{
         @{ Id = 'Parsec.Parsec'; Icon = 'monitor-play'; Name = 'Parsec' }
         @{ Id = 'ShareX.ShareX'; Icon = 'brand-sharex'; Name = 'ShareX' }
         @{ Id = 'Greenshot.Greenshot'; Icon = 'scissors'; Name = 'Greenshot' }
+        @{ Id = 'Skillbrains.Lightshot'; Icon = 'scissors'; Name = 'Lightshot' }
         @{ Id = 'KDE.Kdenlive'; Icon = 'brand-kdenlive'; Name = 'Kdenlive' }
         @{ Id = 'HandBrake.HandBrake'; Icon = 'film-strip'; Name = 'HandBrake' }
     )
@@ -49,6 +63,7 @@ $AppCatalog = [ordered]@{
         @{ Id = 'Audacity.Audacity'; Icon = 'brand-audacity'; Name = 'Audacity' }
         @{ Id = 'CodecGuide.K-LiteCodecPack.Standard'; Icon = 'play-circle'; Name = 'K-Lite Codecs' }
         @{ Id = 'Plex.Plex'; Icon = 'brand-plex'; Name = 'Plex' }
+        @{ Id = 'Apple.iTunes'; Icon = 'music-notes'; Name = 'iTunes' }
     )
     'Imagen y diseño' = @(
         @{ Id = 'dotPDN.PaintDotNet'; Icon = 'paint-brush'; Name = 'Paint.NET' }
@@ -61,6 +76,8 @@ $AppCatalog = [ordered]@{
     'Documentos' = @(
         @{ Id = 'TheDocumentFoundation.LibreOffice'; Icon = 'brand-libreoffice'; Name = 'LibreOffice' }
         @{ Id = 'SumatraPDF.SumatraPDF'; Icon = 'file-pdf'; Name = 'SumatraPDF' }
+        @{ Id = 'Adobe.Acrobat.Reader.64-bit'; Icon = 'file-pdf'; Name = 'Adobe Acrobat Reader' }
+        @{ Id = 'Foxit.FoxitReader'; Icon = 'file-pdf'; Name = 'Foxit PDF Reader' }
         @{ Id = 'Notion.Notion'; Icon = 'brand-notion'; Name = 'Notion' }
         @{ Id = 'Obsidian.Obsidian'; Icon = 'brand-obsidian'; Name = 'Obsidian' }
         @{ Id = 'Notepad++.Notepad++'; Icon = 'brand-notepadplusplus'; Name = 'Notepad++' }
@@ -70,6 +87,8 @@ $AppCatalog = [ordered]@{
         @{ Id = 'Bitwarden.Bitwarden'; Icon = 'brand-bitwarden'; Name = 'Bitwarden' }
         @{ Id = 'KeePassXCTeam.KeePassXC'; Icon = 'brand-keepassxc'; Name = 'KeePassXC' }
         @{ Id = 'AgileBits.1Password'; Icon = 'brand-1password'; Name = '1Password' }
+        @{ Id = 'Proton.ProtonVPN'; Icon = 'shield-check'; Name = 'Proton VPN' }
+        @{ Id = 'NordSecurity.NordVPN'; Icon = 'shield-check'; Name = 'NordVPN' }
     )
     'Archivos y nube' = @(
         @{ Id = '7zip.7zip'; Icon = 'brand-7zip'; Name = '7-Zip' }
@@ -89,6 +108,11 @@ $AppCatalog = [ordered]@{
         @{ Id = 'WireGuard.WireGuard'; Icon = 'brand-wireguard'; Name = 'WireGuard' }
         @{ Id = 'RevoUninstaller.RevoUninstaller'; Icon = 'trash'; Name = 'Revo Uninstaller' }
         @{ Id = 'Rufus.Rufus'; Icon = 'usb'; Name = 'Rufus' }
+        @{ Id = 'File-New-Project.EarTrumpet'; Icon = 'speaker-high'; Name = 'EarTrumpet' }
+        @{ Id = 'CharlesMilette.TranslucentTB'; Icon = 'app-window'; Name = 'TranslucentTB' }
+        @{ Id = 'Flow-Launcher.Flow-Launcher'; Icon = 'magnifying-glass'; Name = 'Flow Launcher' }
+        @{ Id = 'rocksdanister.LivelyWallpaper'; Icon = 'image'; Name = 'Lively Wallpaper' }
+        @{ Id = 'Google.EarthPro'; Icon = 'globe'; Name = 'Google Earth Pro' }
     )
     'Monitorización' = @(
         @{ Id = 'Guru3D.Afterburner'; Icon = 'brand-msi'; Name = 'MSI Afterburner' }
@@ -111,6 +135,7 @@ $AppCatalog = [ordered]@{
         @{ Id = 'Microsoft.VCRedist.2015+.x64'; Icon = 'brackets-curly'; Name = 'Visual C++ Redistributable' }
         @{ Id = 'Microsoft.DirectX'; Icon = 'cube'; Name = 'DirectX (runtime clásico)' }
         @{ Id = 'Microsoft.DotNet.DesktopRuntime.8'; Icon = 'brand-dotnet'; Name = '.NET Desktop Runtime' }
+        @{ Id = 'Oracle.JavaRuntimeEnvironment'; Icon = 'code'; Name = 'Java' }
     )
 }
 function Update-AppCard([string]$Id) {
@@ -228,6 +253,18 @@ $ps
 }
 function Get-SelectedApps { @(foreach ($grp in $AppCatalog.Values) { foreach ($a in $grp) { if ($script:AppSel.Contains($a.Id)) { $a } } }) }
 
+# logo real de la app (assets\apps\<id>.png, de la base de iconos de UniGetUI y de Dashboard Icons); si no hay, el icono vectorial
+function New-AppLogo($App, [double]$Box = 40) {
+    $file = Join-Path (Split-Path $PSScriptRoot -Parent) "assets\apps\$(($App.Id.ToLower() -replace '[^a-z0-9.-]', '_')).png"
+    if (-not (Test-Path -LiteralPath $file)) { return (New-IconWell $App.Icon $Box) }
+    $w = [Windows.Controls.Border]::new(); $w.Width = $Box; $w.Height = $Box; $w.CornerRadius = 10; $w.VerticalAlignment = 'Center'
+    $w.SetResourceReference([Windows.Controls.Border]::BackgroundProperty, 'Paper3')
+    $bi = [Windows.Media.Imaging.BitmapImage]::new(); $bi.BeginInit(); $bi.CacheOption = 'OnLoad'; $bi.UriSource = [Uri]$file; $bi.DecodePixelWidth = 64; $bi.EndInit(); $bi.Freeze()
+    $img = [Windows.Controls.Image]::new(); $img.Source = $bi; $img.Width = $Box * 0.7; $img.Height = $Box * 0.7
+    [Windows.Media.RenderOptions]::SetBitmapScalingMode($img, 'HighQuality')
+    $w.Child = $img
+    $w
+}
 function New-AppsPage {
     $root = [Windows.Controls.StackPanel]::new()
     $script:AppSel = New-Object 'System.Collections.Generic.HashSet[string]'
@@ -298,7 +335,7 @@ function New-AppsPage {
             $card.Style = $window.FindResource('Row'); $card.RenderTransform = [Windows.Media.TranslateTransform]::new()
             $card.Margin = '0,0,10,10'; $card.Padding = '16,14'; $card.Cursor = 'Hand'; $card.Tag = $app.Id
             $g = New-Cols @('50', '*', 'Auto')
-            [void](Add-At $g (New-IconWell $app.Icon 36) 0)
+            [void](Add-At $g (New-AppLogo $app 40) 0)
             $sp = [Windows.Controls.StackPanel]::new(); $sp.VerticalAlignment = 'Center'
             $nm = New-Text $app.Name 14 'Ink' 'Medium'
             $st = New-Text '' 12 'Muted'; $st.Margin = '0,3,0,0'
