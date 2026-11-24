@@ -63,8 +63,8 @@
 #   irm bila4l4.github.io/OptiEleven | iex
 #
 # First run: downloads the latest release from GitHub into %LOCALAPPDATA%\OptiEleven and opens it.
-# Later runs: opens the panel straight away, then checks GitHub; a newer release is downloaded
-# in the background folder and used the next time. Nothing else is installed.
+# Later runs: a quick check on GitHub; if there's a newer release it's installed first, then the panel
+# opens. If GitHub doesn't answer, the version you have opens. Nothing else is installed.
 # Kept ASCII-only on purpose: it is read as text by Invoke-RestMethod.
 
 & {
@@ -81,9 +81,9 @@
 
     function Write-Step([string]$Text) { Write-Host "  OptiEleven  " -ForegroundColor Black -BackgroundColor DarkYellow -NoNewline; Write-Host " $Text" }
 
-    function Get-Latest {
+    function Get-Latest([int]$Timeout = 15) {
         try {
-            $rel = Invoke-RestMethod "https://api.github.com/repos/$repo/releases/latest" -Headers @{ 'User-Agent' = 'OptiEleven-launcher' } -TimeoutSec 15
+            $rel = Invoke-RestMethod "https://api.github.com/repos/$repo/releases/latest" -Headers @{ 'User-Agent' = 'OptiEleven-launcher' } -TimeoutSec $Timeout
             $url = ($rel.assets | Where-Object name -eq 'OptiEleven.zip' | Select-Object -First 1).browser_download_url
             if ($url) { return [pscustomobject]@{ Tag = $rel.tag_name; Url = $url } }
         }
@@ -139,13 +139,24 @@
 
     $current = if (Test-Path $verFile) { (Get-Content $verFile -Raw).Trim() } else { $null }
     if (Test-Path $entry) {
-        Open-Panel
+        # a quick check first (under a second normally): a new version is installed before opening, so you always
+        # get the latest; if GitHub is slow or unreachable, the version you have opens right away
         Write-Step 'Checking for updates...'
-        $latest = Get-Latest
+        $latest = Get-Latest 4
         if ($latest -and $latest.Tag -ne $current) {
-            if (Save-Release $latest $next) { Write-Step "OptiEleven $($latest.Tag) is downloaded and will open next time." }
+            Write-Step "Updating to OptiEleven $($latest.Tag)..."
+            if (Save-Release $latest $next) {
+                try {
+                    Remove-Item -LiteralPath $app -Recurse -Force
+                    Move-Item -LiteralPath $next -Destination $app
+                    Copy-Item (Join-Path $app 'version.txt') $verFile -Force
+                    Write-Step "Updated to $($latest.Tag)."
+                }
+                catch { Write-Step "Couldn't replace the old version now (is the panel open?). It will update next time." }
+            }
         }
         elseif ($latest) { Write-Step "OptiEleven $current is up to date." }
+        Open-Panel
     }
     else {
         Write-Step 'Downloading OptiEleven...'
