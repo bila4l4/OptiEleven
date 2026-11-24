@@ -56,8 +56,10 @@ function Invoke-CleanItem($Item) {
         if ($Item.Paths) {
             foreach ($p in & $Item.Paths) {
                 if (-not (Test-Path -LiteralPath $p)) { continue }
+                $k = 0
                 Get-ChildItem -LiteralPath $p -Force -ErrorAction SilentlyContinue | ForEach-Object {
                     try { Remove-Item -LiteralPath $_.FullName -Recurse -Force -ErrorAction Stop } catch {}   # lo que está en uso se queda
+                    if ((++$k % 25) -eq 0) { Update-Ui }
                 }
                 Update-Ui
             }
@@ -74,19 +76,42 @@ function Update-CleanTotal {
 }
 
 function Invoke-CleanScan {
-    Set-Busy $true
-    try {
-        foreach ($r in $script:CleanRows.Values) {
-            $r.SizeTb.Text = (T '...'); Update-Ui
-            if ($r.Item.Admin -and -not $script:IsAdmin) { $r.Bytes = $null; $r.SizeTb.Text = (T 'admin'); continue }
-            $r.Bytes = Get-CleanBytes $r.Item
-            $r.SizeTb.Text = Format-Size $r.Bytes
-            Update-CleanTotal; Update-Ui
-        }
+    # medir carpetas de varios GB bloqueaba la ventana: el recuento va en segundo plano y cada tamaño aparece al llegar
+    if ($script:CleanScanning) { return }
+    $script:CleanScanning = $true
+    $jobs = @()
+    foreach ($r in $script:CleanRows.Values) {
+        if ($r.Item.Admin -and -not $script:IsAdmin) { $r.Bytes = $null; $r.SizeTb.Text = (T 'admin'); continue }
+        if ($r.Item.Size) { $r.Bytes = Get-CleanBytes $r.Item; $r.SizeTb.Text = Format-Size $r.Bytes; continue }
+        $r.SizeTb.Text = (T '...')
+        $paths = @(); if ($r.Item.Paths) { $paths += @(& $r.Item.Paths) }; if ($r.Item.Files) { $paths += @(& $r.Item.Files) }
+        $jobs += , @($r.Item.Id, $paths)
     }
-    finally { Set-Busy $false }
+    Update-CleanTotal
+    $progress = [hashtable]::Synchronized(@{})
+    Start-Bg -Work {
+        param($jobs, $P)
+        foreach ($j in $jobs) {
+            $total = 0
+            foreach ($p in $j[1]) {
+                try {
+                    if (-not (Test-Path -LiteralPath $p)) { continue }
+                    $it = Get-Item -LiteralPath $p -Force -ErrorAction Stop
+                    if (-not $it.PSIsContainer) { $total += [double]$it.Length; continue }
+                    $sum = (Get-ChildItem -LiteralPath $p -Recurse -Force -File -ErrorAction SilentlyContinue | Measure-Object Length -Sum).Sum
+                    if ($sum) { $total += [double]$sum }
+                } catch {}
+            }
+            $P[$j[0]] = $total
+        }
+    } -ArgList @(, $jobs) -Progress $progress -OnTick {
+        param($P)
+        foreach ($id in @($P.Keys)) {
+            $r = $script:CleanRows[$id]
+            if ($r -and $r.SizeTb.Text -ne (Format-Size $P[$id])) { $r.Bytes = $P[$id]; $r.SizeTb.Text = Format-Size $r.Bytes; Update-CleanTotal }
+        }
+    } -Done { $script:CleanScanning = $false; Update-CleanTotal }
 }
-
 function New-CleanerPage {
     $root = [Windows.Controls.StackPanel]::new()
     $script:CleanRows = [ordered]@{}

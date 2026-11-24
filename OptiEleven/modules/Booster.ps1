@@ -259,9 +259,11 @@ function New-BoosterPage {
     [void]$root.Children.Add((New-Ruled))
     foreach ($a in $BoostApps) {
         $sw = New-Switch; $sw.IsChecked = $a.On
-        $mem = New-Mono '' 13 'Ink'; $mem.VerticalAlignment = 'Center'; $mem.Margin = '0,0,16,0'
+        $mem = New-Mono '' 12.5 'Ink'; $mem.FontWeight = 'SemiBold'
+        $memB = [Windows.Controls.Border]::new(); $memB.CornerRadius = 9; $memB.Padding = '10,3,10,4'; $memB.Margin = '0,0,14,0'; $memB.VerticalAlignment = 'Center'; $memB.MinWidth = 70
+        $memB.SetResourceReference([Windows.Controls.Border]::BackgroundProperty, 'Paper3'); $mem.HorizontalAlignment = 'Center'; $memB.Child = $mem
         $act = [Windows.Controls.StackPanel]::new(); $act.Orientation = 'Horizontal'
-        [void]$act.Children.Add($mem); [void]$act.Children.Add($sw)
+        [void]$act.Children.Add($memB); [void]$act.Children.Add($sw)
         $row = New-ActionRow $a.Icon $a.Name $a.Desc $act
         [void]$root.Children.Add($row)
         $script:BoostAppRows += @{ App = $a; Switch = $sw; Mem = $mem }

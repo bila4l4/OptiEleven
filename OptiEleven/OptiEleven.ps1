@@ -1084,6 +1084,13 @@ $BrandColors = @{
     'brand-battledotnet' = '#148eff'; 'brand-discord' = '#5865f2'; 'brand-obsstudio' = '#302e31'; 'brand-msi' = '#ff0000'; 'brand-7zip' = '#000000'
     'brand-vlcmediaplayer' = '#ff8800'; 'brand-firefoxbrowser' = '#ff7139'; 'brand-brave' = '#fb542b'; 'brand-dotnet' = '#512bd4'
     'brand-cloudflare' = '#f38020'; 'brand-google' = '#4285f4'; 'brand-docker' = '#2496ed'; 'brand-spotify' = '#1db954'
+    'brand-1password' = '#3b66bc'; 'brand-anydesk' = '#ef443b'; 'brand-audacity' = '#0000cc'; 'brand-bitwarden' = '#175ddc'; 'brand-blender' = '#e87d0d'; 'brand-curseforge' = '#f16436'
+    'brand-dropbox' = '#0061ff'; 'brand-filezilla' = '#bf0000'; 'brand-foobar2000' = '#000000'; 'brand-gimp' = '#5c5543'; 'brand-git' = '#f05032'; 'brand-github' = '#181717'; 'brand-googlechrome' = '#4285f4'
+    'brand-googledrive' = '#4285f4'; 'brand-inkscape' = '#000000'; 'brand-kdenlive' = '#527eb2'; 'brand-keepassxc' = '#6cac4d'; 'brand-krita' = '#3babff'; 'brand-libreoffice' = '#18a303'; 'brand-malwarebytes' = '#0d3ecc'
+    'brand-modrinth' = '#00af5c'; 'brand-mpv' = '#691f69'; 'brand-nodedotjs' = '#5fa04e'; 'brand-notepadplusplus' = '#90e59a'; 'brand-notion' = '#000000'; 'brand-obsidian' = '#7c3aed'; 'brand-opera' = '#ff1b2d'
+    'brand-operagx' = '#ee2950'; 'brand-plex' = '#ebaf00'; 'brand-python' = '#3776ab'; 'brand-qbittorrent' = '#2f67ba'; 'brand-rustdesk' = '#024eff'; 'brand-sharex' = '#2885f1'; 'brand-signal' = '#3b45fd'
+    'brand-slack' = '#4a154b'; 'brand-tailscale' = '#242424'; 'brand-teamspeak' = '#4b69b6'; 'brand-teamviewer' = '#050a52'; 'brand-telegram' = '#26a5e4'; 'brand-thunderbird' = '#0a84ff'; 'brand-vivaldi' = '#ef3939'
+    'brand-wireguard' = '#88171a'; 'brand-zoom' = '#0b5cff'
     'brand-adobecreativecloud' = '#da1f26'; 'brand-amd' = '#ed1c24'; 'brand-nvidia' = '#76b900'; 'brand-steamdeck' = '#1a9fff'
 }
 
@@ -1197,33 +1204,42 @@ $BrandColors = @{
     </Style>
     <!-- interruptor: relleno naranja con tinta encima -->
     <Style x:Key="Switch" TargetType="ToggleButton">
-      <Setter Property="Width" Value="40"/>
-      <Setter Property="Height" Value="22"/>
+      <Setter Property="Width" Value="46"/>
+      <Setter Property="Height" Value="26"/>
       <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
       <Setter Property="Template">
         <Setter.Value>
           <ControlTemplate TargetType="ToggleButton">
             <Grid x:Name="root" Background="Transparent">
-              <Border x:Name="track" CornerRadius="11" Background="{DynamicResource Track}" BorderBrush="{DynamicResource RuleStrong}" BorderThickness="1"/>
-              <Ellipse x:Name="thumb" Width="16" Height="16" HorizontalAlignment="Left" Margin="3,0,0,0" Fill="{DynamicResource Paper2}">
+              <Border x:Name="ring" CornerRadius="16" Margin="-3" BorderThickness="2" BorderBrush="{DynamicResource Accent}" Opacity="0"/>
+              <Border x:Name="track" CornerRadius="13" Background="{DynamicResource Paper3}" BorderBrush="{DynamicResource RuleStrong}" BorderThickness="1"/>
+              <Border x:Name="glow" CornerRadius="13" Opacity="0" IsHitTestVisible="False">
+                <Border.Background>
+                  <LinearGradientBrush StartPoint="0,0" EndPoint="0,1"><GradientStop Color="#33FFFFFF" Offset="0"/><GradientStop Color="#00FFFFFF" Offset="0.6"/></LinearGradientBrush>
+                </Border.Background>
+              </Border>
+              <Ellipse x:Name="thumb" Width="20" Height="20" HorizontalAlignment="Left" Margin="3,0,0,0" Fill="{DynamicResource Muted}" RenderTransformOrigin="0.5,0.5">
                 <Ellipse.RenderTransform><TranslateTransform x:Name="tt" X="0"/></Ellipse.RenderTransform>
+                <Ellipse.Effect><DropShadowEffect BlurRadius="4" ShadowDepth="1" Direction="270" Opacity="0.35" Color="#000000"/></Ellipse.Effect>
               </Ellipse>
             </Grid>
             <ControlTemplate.Triggers>
               <Trigger Property="IsChecked" Value="True">
                 <Setter TargetName="track" Property="Background" Value="{DynamicResource Accent}"/>
-                <Setter TargetName="track" Property="BorderBrush" Value="{DynamicResource AccentEdge}"/>
-                <Setter TargetName="thumb" Property="Fill" Value="{DynamicResource AccentInk}"/>
+                <Setter TargetName="track" Property="BorderBrush" Value="{DynamicResource Accent}"/>
+                <Setter TargetName="glow" Property="Opacity" Value="1"/>
+                <Setter TargetName="thumb" Property="Fill" Value="#FFFFFF"/>
                 <Trigger.EnterActions><BeginStoryboard><Storyboard>
-                  <DoubleAnimation Storyboard.TargetName="tt" Storyboard.TargetProperty="X" To="18" Duration="0:0:0.14"><DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction></DoubleAnimation>
+                  <DoubleAnimation Storyboard.TargetName="tt" Storyboard.TargetProperty="X" To="20" Duration="0:0:0.18"><DoubleAnimation.EasingFunction><BackEase EasingMode="EaseOut" Amplitude="0.4"/></DoubleAnimation.EasingFunction></DoubleAnimation>
                 </Storyboard></BeginStoryboard></Trigger.EnterActions>
                 <Trigger.ExitActions><BeginStoryboard><Storyboard>
-                  <DoubleAnimation Storyboard.TargetName="tt" Storyboard.TargetProperty="X" To="0" Duration="0:0:0.14"><DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction></DoubleAnimation>
+                  <DoubleAnimation Storyboard.TargetName="tt" Storyboard.TargetProperty="X" To="0" Duration="0:0:0.18"><DoubleAnimation.EasingFunction><BackEase EasingMode="EaseOut" Amplitude="0.4"/></DoubleAnimation.EasingFunction></DoubleAnimation>
                 </Storyboard></BeginStoryboard></Trigger.ExitActions>
               </Trigger>
-              <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="track" Property="BorderBrush" Value="{DynamicResource Ink}"/></Trigger>
-              <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="track" Property="BorderBrush" Value="{DynamicResource AccentEdge}"/><Setter TargetName="track" Property="BorderThickness" Value="2"/></Trigger>
-              <Trigger Property="IsEnabled" Value="False"><Setter TargetName="root" Property="Opacity" Value="0.4"/></Trigger>
+              <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="track" Property="BorderBrush" Value="{DynamicResource Accent}"/></Trigger>
+              <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="ring" Property="Opacity" Value="1"/></Trigger>
+              <Trigger Property="IsEnabled" Value="False"><Setter TargetName="root" Property="Opacity" Value="0.35"/></Trigger>
             </ControlTemplate.Triggers>
           </ControlTemplate>
         </Setter.Value>
@@ -1259,12 +1275,14 @@ $BrandColors = @{
 
     <!-- filas con filete -->
     <Style x:Key="RuleRow" TargetType="Border">
-      <Setter Property="Background" Value="Transparent"/>
-      <Setter Property="BorderBrush" Value="{DynamicResource Rule}"/>
-      <Setter Property="BorderThickness" Value="0,0,0,1"/>
-      <Setter Property="Padding" Value="0,10,10,10"/>
+      <Setter Property="Background" Value="{DynamicResource Paper2}"/>
+      <Setter Property="BorderBrush" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="CornerRadius" Value="12"/>
+      <Setter Property="Margin" Value="0,0,0,6"/>
+      <Setter Property="Padding" Value="10,10,14,10"/>
       <Style.Triggers>
-        <Trigger Property="IsMouseOver" Value="True"><Setter Property="Background" Value="{DynamicResource Paper2}"/></Trigger>
+        <Trigger Property="IsMouseOver" Value="True"><Setter Property="Background" Value="{DynamicResource Paper3}"/></Trigger>
       </Style.Triggers>
     </Style>
     <Style x:Key="Tile" TargetType="Border">
@@ -1616,7 +1634,7 @@ try {
         $w
     }
     function New-Chip([string]$Text, [string]$Bg = 'Paper3', [string]$Fg = 'Ink2') {
-        $c = [Windows.Controls.Border]::new(); $c.CornerRadius = 6; $c.Padding = '7,1,7,2'; $c.Margin = '0,0,6,0'; $c.VerticalAlignment = 'Center'
+        $c = [Windows.Controls.Border]::new(); $c.CornerRadius = 9; $c.Padding = '9,2,9,3'; $c.Margin = '0,0,6,0'; $c.VerticalAlignment = 'Center'
         $c.SetResourceReference($BgProp, $Bg)
         $t = New-Text $Text 12.5 $Fg 'SemiBold'; $t.TextWrapping = 'NoWrap'; $c.Child = $t
         $c
@@ -1633,7 +1651,7 @@ try {
     }
     function New-Card { $b = [Windows.Controls.Border]::new(); $b.Style = $window.FindResource('Tile'); $b.Margin = '0,0,0,10'; $b }
     function New-Section([string]$Text) { $t = New-Text $Text 18 'Ink' 'SemiBold'; $t.FontFamily = $window.FindResource('Display'); $t.Margin = '0,22,0,8'; $t }
-    function New-Ruled { $s = [Windows.Controls.Border]::new(); $s.SetResourceReference([Windows.Controls.Border]::BorderBrushProperty, 'Ink'); $s.BorderThickness = '0,1,0,0'; $s }
+    function New-Ruled { $s = [Windows.Controls.Border]::new(); $s.SetResourceReference([Windows.Controls.Border]::BorderBrushProperty, 'Rule'); $s.BorderThickness = '0,1,0,0'; $s.Margin = '0,0,0,8'; $s }
     function New-Cols([string[]]$Widths) {
         $g = [Windows.Controls.Grid]::new()
         foreach ($w in $Widths) {
@@ -1653,6 +1671,35 @@ try {
     }
     function New-Timer([double]$Seconds, [scriptblock]$Tick) {
         $t = New-Object System.Windows.Threading.DispatcherTimer; $t.Interval = [TimeSpan]::FromSeconds($Seconds); $t.Add_Tick($Tick); $t
+    }
+    # Trabajo lento en segundo plano: $Work corre en otro hilo (no ve las funciones del panel: debe bastarse solo) y
+    # $Done recibe su resultado de vuelta en el hilo de la ventana, que mientras tanto no se congela.
+    # $Progress (opcional) es una tabla compartida que $Work puede ir rellenando y $OnTick leer.
+    $script:BgJobs = [Collections.Generic.List[object]]::new()
+    $script:BgTimer = $null
+    function Start-Bg([scriptblock]$Work, [object[]]$ArgList = @(), [scriptblock]$Done, [hashtable]$Progress, [scriptblock]$OnTick) {
+        $ps = [powershell]::Create()
+        [void]$ps.AddScript($Work.ToString())
+        foreach ($a in $ArgList) { [void]$ps.AddArgument($a) }
+        if ($Progress) { [void]$ps.AddArgument($Progress) }
+        $script:BgJobs.Add(@{ Ps = $ps; Handle = $ps.BeginInvoke(); Done = $Done; Tick = $OnTick; Progress = $Progress })
+        if (-not $script:BgTimer) {
+            $script:BgTimer = [System.Windows.Threading.DispatcherTimer]::new(); $script:BgTimer.Interval = [TimeSpan]::FromMilliseconds(120)
+            $script:BgTimer.Add_Tick({
+                foreach ($j in @($script:BgJobs)) {
+                    if ($j.Tick) { try { & $j.Tick $j.Progress } catch {} }
+                    if (-not $j.Handle.IsCompleted) { continue }
+                    [void]$script:BgJobs.Remove($j)
+                    $res = $null; $err = $null
+                    try { $res = @($j.Ps.EndInvoke($j.Handle)) } catch { $err = $_.Exception.InnerException; if (-not $err) { $err = $_.Exception } }
+                    $j.Ps.Dispose()
+                    if ($err) { Write-Log "Segundo plano: $($err.Message)" 'WARN' }
+                    if ($j.Done) { try { & $j.Done $res } catch { Write-Log "Segundo plano: $($_.Exception.Message)" 'ERROR' } }
+                }
+                if ($script:BgJobs.Count -eq 0) { $script:BgTimer.Stop() }
+            })
+        }
+        $script:BgTimer.Start()
     }
     function New-ActionRow($Icon, [string]$Title, [string]$Desc, $Action) {
         $row = [Windows.Controls.Border]::new(); $row.Style = $window.FindResource('RuleRow')
@@ -1887,14 +1934,14 @@ try {
         $ht = New-Text $Pages[$cat].Title 18 'Ink' 'SemiBold'; $ht.FontFamily = $window.FindResource('Display'); [void](Add-At $head $ht 1)
         $hc = New-Text "$($list.Count)" 13 'Muted'; $hc.FontFamily = $window.FindResource('Mono'); $hc.VerticalAlignment = 'Bottom'; [void](Add-At $head $hc 2)
         [void]$ui.TweakList.Children.Add($head)
-        $rule = [Windows.Controls.Border]::new(); $rule.Height = 2; $rule.CornerRadius = 1; $rule.SetResourceReference($BgProp, "Cat-$cat")
+        $rule = [Windows.Controls.Border]::new(); $rule.Height = 2; $rule.CornerRadius = 1; $rule.Margin = '0,0,0,8'; $rule.SetResourceReference($BgProp, "Cat-$cat")
         [void]$ui.TweakList.Children.Add($rule)
         $script:GroupHeads[$cat] = @($head, $rule)
 
         foreach ($t in $list) {
-            $border = [Windows.Controls.Border]::new(); $border.Style = $window.FindResource('RuleRow'); $border.Padding = '0,7,8,7'; $border.Cursor = 'Hand'; $border.Tag = $t.Id
+            $border = [Windows.Controls.Border]::new(); $border.Style = $window.FindResource('RuleRow'); $border.Padding = '4,8,12,8'; $border.Cursor = 'Hand'; $border.Tag = $t.Id
             $outer = New-Cols @('3', '*')
-            $mark = [Windows.Controls.Border]::new(); $mark.SetResourceReference($BgProp, 'Accent'); $mark.Visibility = 'Hidden'; $mark.Margin = '0,-7,0,-7'
+            $mark = [Windows.Controls.Border]::new(); $mark.SetResourceReference($BgProp, 'Accent'); $mark.Visibility = 'Hidden'; $mark.Margin = '0,6,0,6'; $mark.CornerRadius = 2
             [void](Add-At $outer $mark 0)
             $grid = New-Cols @('50', '*', 'Auto', 'Auto'); $grid.Margin = '7,0,0,0'
             $icon = if ($TweakIcons.ContainsKey($t.Id)) { $TweakIcons[$t.Id] } else { 'gear-six' }
@@ -1940,9 +1987,9 @@ try {
 
     # ---------- detalle: qué cambia exactamente
     function Select-Row($row) {
-        if ($script:Selected -and $script:Selected -ne $row) { $script:Selected.Border.ClearValue($BgProp) }
+        if ($script:Selected -and $script:Selected -ne $row) { $script:Selected.Border.ClearValue([Windows.Controls.Border]::BorderBrushProperty); $script:Selected.Border.ClearValue($BgProp) }
         $script:Selected = $row
-        if ($row) { $row.Border.SetResourceReference($BgProp, 'Paper2') }
+        if ($row) { $row.Border.SetResourceReference([Windows.Controls.Border]::BorderBrushProperty, 'Accent'); $row.Border.SetResourceReference($BgProp, 'Paper3') }
         Show-Detail $row
     }
     function Show-Detail($row) {

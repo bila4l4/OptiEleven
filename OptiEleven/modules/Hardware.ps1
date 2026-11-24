@@ -35,15 +35,18 @@ function Get-HardwareReport {
     }
     $d = [ordered]@{}
     $n = 0
-    foreach ($pd in @(Get-PhysicalDisk -ErrorAction SilentlyContinue)) {
-        $n++; $d["Disco $n"] = '{0}, {1:N0} GB, {2}, {3}' -f $pd.FriendlyName, ($pd.Size / 1GB), $pd.MediaType, $pd.BusType
+    # MSFT_PhysicalDisk por CIM directamente: Get-PhysicalDisk carga el módulo Storage y tarda varios segundos
+    $media = @{ 3 = 'HDD'; 4 = 'SSD'; 5 = 'SCM' }; $bus = @{ 1 = 'SCSI'; 3 = 'ATA'; 7 = 'USB'; 8 = 'RAID'; 10 = 'SAS'; 11 = 'SATA'; 12 = 'SD'; 17 = 'NVMe' }
+    foreach ($pd in @(& $q MSFT_PhysicalDisk 'root\Microsoft\Windows\Storage')) {
+        $n++; $d["Disco $n"] = '{0}, {1:N0} GB, {2}, {3}' -f $pd.FriendlyName, ($pd.Size / 1GB), $(if ($media[[int]$pd.MediaType]) { $media[[int]$pd.MediaType] } else { '?' }), $(if ($bus[[int]$pd.BusType]) { $bus[[int]$pd.BusType] } else { '?' })
     }
     $c = Get-PSDrive -Name ($env:SystemDrive.TrimEnd(':')) -ErrorAction SilentlyContinue
     if ($c) { $d["Disco del sistema ($env:SystemDrive)"] = '{0:N0} GB libres de {1:N0} GB' -f ($c.Free / 1GB), (($c.Used + $c.Free) / 1GB) }
     $sections['Almacenamiento'] = $d
 
     $sb = try { if ((Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot\State' -ErrorAction Stop).UEFISecureBootEnabled -eq 1) { 'activado' } else { 'desactivado' } } catch { 'no disponible' }
-    $tpm = & $q Win32_Tpm 'root\cimv2\Security\MicrosoftTpm'
+    # sin administrador Windows niega el TPM, pero tarda unos 5 s en decirlo: ni se pregunta
+    $tpm = if ($script:IsAdmin) { & $q Win32_Tpm 'root\cimv2\Security\MicrosoftTpm' } else { $null }
     $tpmTxt = if ($tpm) { "versión $(($tpm.SpecVersion -split ',')[0]), $(if ($tpm.IsEnabled_InitialValue) { 'activado' } else { 'desactivado' })" } elseif (-not $script:IsAdmin) { 'abre el panel como admin para verlo' } else { 'no encontrado' }
     $dg = & $q Win32_DeviceGuard 'root\Microsoft\Windows\DeviceGuard'
     $vbs = switch ([int]$dg.VirtualizationBasedSecurityStatus) { 2 { 'activa (resta algo de rendimiento)' } 1 { 'configurada, no en marcha' } default { 'desactivada' } }
@@ -69,11 +72,25 @@ function New-HardwarePage {
     [void](Add-At $bar $bCopy 1)
     [void]$root.Children.Add($bar)
 
-    $report = Get-HardwareReport
+    $bCopy.IsEnabled = $false
+    $bCopy.Add_Click({ [Windows.Clipboard]::SetText($script:HwText); Write-Log 'Informe del equipo copiado al portapapeles.' 'OK' })
+    $script:HwBody = [Windows.Controls.StackPanel]::new()
+    [void]$script:HwBody.Children.Add((New-Text 'Leyendo el equipo...' 14 'Muted'))
+    [void]$root.Children.Add($script:HwBody)
+    $script:HwCopy = $bCopy
+    # las consultas de WMI tardan uno o dos segundos: en segundo plano, y la ficha se pinta al llegar
+    $work = [scriptblock]::Create("param(`$isAdmin)`n`$script:IsAdmin = `$isAdmin`nfunction Get-HardwareReport {`n${function:Get-HardwareReport}`n}`nGet-HardwareReport")
+    Start-Bg $work @($script:IsAdmin) { param($r) Show-HardwareReport $r[0] }
+    $root
+}
+
+function Show-HardwareReport($report) {
+    $script:HwBody.Children.Clear()
+    if (-not $report) { [void]$script:HwBody.Children.Add((New-Text 'No se pudo leer el equipo.' 14 'Red')); return }
     $script:HwText = ($report.Keys | ForEach-Object {
         $s = $_; "[$s]"; foreach ($k in $report[$s].Keys) { "  ${k}: $($report[$s][$k])" }; ''
     }) -join "`r`n"
-    $bCopy.Add_Click({ [Windows.Clipboard]::SetText($script:HwText); Write-Log 'Informe del equipo copiado al portapapeles.' 'OK' })
+    $script:HwCopy.IsEnabled = $true
 
     $secIcons = @{ 'Sistema' = 'windows-logo'; 'Procesador' = 'cpu'; 'Gráficos' = 'graphics-card'; 'Memoria' = 'memory'; 'Almacenamiento' = 'hard-drives'; 'Seguridad y juego' = 'shield-check' }
     $grid = New-Cols @('*', '*')   # dos columnas; cada par de secciones en su propia fila de altura automática
@@ -98,6 +115,6 @@ function New-HardwarePage {
         }
         [void]$grid.Children.Add($col)
     }
-    [void]$root.Children.Add($grid)
-    $root
+    [void]$script:HwBody.Children.Add($grid)
+    Start-FadeIn $grid
 }

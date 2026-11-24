@@ -1,38 +1,118 @@
 ﻿# Módulo "Instalar apps": instala y actualiza programas con winget (como el apartado Apps de Optimizer / Install de WinUtil)
 
+# Como Ninite: una versión de cada cosa (la actual), sin variantes por arquitectura ni versiones antiguas.
 $AppCatalog = [ordered]@{
-    'Tiendas y launchers' = @(
+    'Juegos' = @(
         @{ Id = 'Valve.Steam'; Icon = 'brand-steam'; Name = 'Steam' }
         @{ Id = 'EpicGames.EpicGamesLauncher'; Icon = 'brand-epicgames'; Name = 'Epic Games Launcher' }
         @{ Id = 'GOG.Galaxy'; Icon = 'brand-gogdotcom'; Name = 'GOG Galaxy' }
         @{ Id = 'ElectronicArts.EADesktop'; Icon = 'brand-ea'; Name = 'EA app' }
         @{ Id = 'Ubisoft.Connect'; Icon = 'brand-ubisoft'; Name = 'Ubisoft Connect' }
         @{ Id = 'Blizzard.BattleNet'; Icon = 'brand-battledotnet'; Name = 'Battle.net'; Args = '--location "C:\Program Files (x86)\Battle.net"' }
+        @{ Id = 'Playnite.Playnite'; Icon = 'game-controller'; Name = 'Playnite' }
+        @{ Id = 'HeroicGamesLauncher.HeroicGamesLauncher'; Icon = 'joystick'; Name = 'Heroic Games Launcher' }
+        @{ Id = 'Overwolf.CurseForge'; Icon = 'brand-curseforge'; Name = 'CurseForge' }
+        @{ Id = 'Modrinth.ModrinthApp'; Icon = 'brand-modrinth'; Name = 'Modrinth App' }
     )
-    'Comunicación y streaming' = @(
+    'Navegadores' = @(
+        @{ Id = 'Google.Chrome'; Icon = 'brand-googlechrome'; Name = 'Chrome' }
+        @{ Id = 'Mozilla.Firefox'; Icon = 'brand-firefoxbrowser'; Name = 'Firefox' }
+        @{ Id = 'Brave.Brave'; Icon = 'brand-brave'; Name = 'Brave' }
+        @{ Id = 'Opera.OperaGX'; Icon = 'brand-operagx'; Name = 'Opera GX' }
+        @{ Id = 'Opera.Opera'; Icon = 'brand-opera'; Name = 'Opera' }
+        @{ Id = 'Vivaldi.Vivaldi'; Icon = 'brand-vivaldi'; Name = 'Vivaldi' }
+    )
+    'Chat y llamadas' = @(
         @{ Id = 'Discord.Discord'; Icon = 'brand-discord'; Name = 'Discord' }
+        @{ Id = 'TeamSpeakSystems.TeamSpeakClient'; Icon = 'brand-teamspeak'; Name = 'TeamSpeak' }
+        @{ Id = 'Telegram.TelegramDesktop'; Icon = 'brand-telegram'; Name = 'Telegram' }
+        @{ Id = 'OpenWhisperSystems.Signal'; Icon = 'brand-signal'; Name = 'Signal' }
+        @{ Id = 'Zoom.Zoom'; Icon = 'brand-zoom'; Name = 'Zoom' }
+        @{ Id = 'Microsoft.Teams'; Icon = 'microsoft-teams-logo'; Name = 'Teams' }
+        @{ Id = 'SlackTechnologies.Slack'; Icon = 'brand-slack'; Name = 'Slack' }
+        @{ Id = 'Mozilla.Thunderbird'; Icon = 'brand-thunderbird'; Name = 'Thunderbird' }
+    )
+    'Grabar y streaming' = @(
         @{ Id = 'OBSProject.OBSStudio'; Icon = 'brand-obsstudio'; Name = 'OBS Studio' }
         @{ Id = 'Parsec.Parsec'; Icon = 'monitor-play'; Name = 'Parsec' }
+        @{ Id = 'ShareX.ShareX'; Icon = 'brand-sharex'; Name = 'ShareX' }
+        @{ Id = 'Greenshot.Greenshot'; Icon = 'scissors'; Name = 'Greenshot' }
+        @{ Id = 'KDE.Kdenlive'; Icon = 'brand-kdenlive'; Name = 'Kdenlive' }
+        @{ Id = 'HandBrake.HandBrake'; Icon = 'film-strip'; Name = 'HandBrake' }
+    )
+    'Música y vídeo' = @(
+        @{ Id = 'Spotify.Spotify'; Icon = 'brand-spotify'; Name = 'Spotify' }
+        @{ Id = 'VideoLAN.VLC'; Icon = 'brand-vlcmediaplayer'; Name = 'VLC' }
+        @{ Id = 'shinchiro.mpv'; Icon = 'brand-mpv'; Name = 'mpv' }
+        @{ Id = 'AIMP.AIMP'; Icon = 'music-notes'; Name = 'AIMP' }
+        @{ Id = 'PeterPawlowski.foobar2000'; Icon = 'brand-foobar2000'; Name = 'foobar2000' }
+        @{ Id = 'Audacity.Audacity'; Icon = 'brand-audacity'; Name = 'Audacity' }
+        @{ Id = 'CodecGuide.K-LiteCodecPack.Standard'; Icon = 'play-circle'; Name = 'K-Lite Codecs' }
+        @{ Id = 'Plex.Plex'; Icon = 'brand-plex'; Name = 'Plex' }
+    )
+    'Imagen y diseño' = @(
+        @{ Id = 'dotPDN.PaintDotNet'; Icon = 'paint-brush'; Name = 'Paint.NET' }
+        @{ Id = 'GIMP.GIMP.3'; Icon = 'brand-gimp'; Name = 'GIMP' }
+        @{ Id = 'KDE.Krita'; Icon = 'brand-krita'; Name = 'Krita' }
+        @{ Id = 'Inkscape.Inkscape'; Icon = 'brand-inkscape'; Name = 'Inkscape' }
+        @{ Id = 'BlenderFoundation.Blender'; Icon = 'brand-blender'; Name = 'Blender' }
+        @{ Id = 'IrfanSkiljan.IrfanView'; Icon = 'image'; Name = 'IrfanView' }
+    )
+    'Documentos' = @(
+        @{ Id = 'TheDocumentFoundation.LibreOffice'; Icon = 'brand-libreoffice'; Name = 'LibreOffice' }
+        @{ Id = 'SumatraPDF.SumatraPDF'; Icon = 'file-pdf'; Name = 'SumatraPDF' }
+        @{ Id = 'Notion.Notion'; Icon = 'brand-notion'; Name = 'Notion' }
+        @{ Id = 'Obsidian.Obsidian'; Icon = 'brand-obsidian'; Name = 'Obsidian' }
+        @{ Id = 'Notepad++.Notepad++'; Icon = 'brand-notepadplusplus'; Name = 'Notepad++' }
+    )
+    'Seguridad' = @(
+        @{ Id = 'Malwarebytes.Malwarebytes'; Icon = 'brand-malwarebytes'; Name = 'Malwarebytes' }
+        @{ Id = 'Bitwarden.Bitwarden'; Icon = 'brand-bitwarden'; Name = 'Bitwarden' }
+        @{ Id = 'KeePassXCTeam.KeePassXC'; Icon = 'brand-keepassxc'; Name = 'KeePassXC' }
+        @{ Id = 'AgileBits.1Password'; Icon = 'brand-1password'; Name = '1Password' }
+    )
+    'Archivos y nube' = @(
+        @{ Id = '7zip.7zip'; Icon = 'brand-7zip'; Name = '7-Zip' }
+        @{ Id = 'RARLab.WinRAR'; Icon = 'file-zip'; Name = 'WinRAR' }
+        @{ Id = 'voidtools.Everything'; Icon = 'magnifying-glass'; Name = 'Everything' }
+        @{ Id = 'qBittorrent.qBittorrent'; Icon = 'brand-qbittorrent'; Name = 'qBittorrent' }
+        @{ Id = 'Google.GoogleDrive'; Icon = 'brand-googledrive'; Name = 'Google Drive' }
+        @{ Id = 'Dropbox.Dropbox'; Icon = 'brand-dropbox'; Name = 'Dropbox' }
+        @{ Id = 'WinDirStat.WinDirStat'; Icon = 'tree-structure'; Name = 'WinDirStat' }
+        @{ Id = 'CodeSector.TeraCopy'; Icon = 'copy'; Name = 'TeraCopy' }
+    )
+    'Utilidades' = @(
+        @{ Id = 'Microsoft.PowerToys'; Icon = 'magic-wand'; Name = 'PowerToys' }
+        @{ Id = 'AnyDesk.AnyDesk'; Icon = 'brand-anydesk'; Name = 'AnyDesk' }
+        @{ Id = 'TeamViewer.TeamViewer'; Icon = 'brand-teamviewer'; Name = 'TeamViewer' }
+        @{ Id = 'Tailscale.Tailscale'; Icon = 'brand-tailscale'; Name = 'Tailscale' }
+        @{ Id = 'WireGuard.WireGuard'; Icon = 'brand-wireguard'; Name = 'WireGuard' }
+        @{ Id = 'RevoUninstaller.RevoUninstaller'; Icon = 'trash'; Name = 'Revo Uninstaller' }
+        @{ Id = 'Rufus.Rufus'; Icon = 'usb'; Name = 'Rufus' }
     )
     'Monitorización' = @(
         @{ Id = 'Guru3D.Afterburner'; Icon = 'brand-msi'; Name = 'MSI Afterburner' }
+        @{ Id = 'REALiX.HWiNFO'; Icon = 'pulse'; Name = 'HWiNFO' }
         @{ Id = 'CPUID.HWMonitor'; Icon = 'thermometer'; Name = 'HWMonitor' }
         @{ Id = 'CPUID.CPU-Z'; Icon = 'cpu'; Name = 'CPU-Z' }
         @{ Id = 'TechPowerUp.GPU-Z'; Icon = 'graphics-card'; Name = 'GPU-Z' }
+        @{ Id = 'CrystalDewWorld.CrystalDiskInfo'; Icon = 'hard-drive'; Name = 'CrystalDiskInfo' }
     )
-    'Utilidades' = @(
-        @{ Id = '7zip.7zip'; Icon = 'brand-7zip'; Name = '7-Zip' }
-        @{ Id = 'VideoLAN.VLC'; Icon = 'brand-vlcmediaplayer'; Name = 'VLC' }
-        @{ Id = 'Mozilla.Firefox'; Icon = 'brand-firefoxbrowser'; Name = 'Firefox' }
-        @{ Id = 'Brave.Brave'; Icon = 'brand-brave'; Name = 'Brave' }
+    'Programación' = @(
+        @{ Id = 'Microsoft.VisualStudioCode'; Icon = 'code'; Name = 'Visual Studio Code' }
+        @{ Id = 'Git.Git'; Icon = 'brand-git'; Name = 'Git' }
+        @{ Id = 'GitHub.GitHubDesktop'; Icon = 'brand-github'; Name = 'GitHub Desktop' }
+        @{ Id = 'Python.Python.3.13'; Icon = 'brand-python'; Name = 'Python 3' }
+        @{ Id = 'OpenJS.NodeJS.LTS'; Icon = 'brand-nodedotjs'; Name = 'Node.js LTS' }
+        @{ Id = 'Docker.DockerDesktop'; Icon = 'brand-docker'; Name = 'Docker Desktop' }
+        @{ Id = 'PuTTY.PuTTY'; Icon = 'terminal'; Name = 'PuTTY' }
     )
     'Componentes para juegos' = @(
-        @{ Id = 'Microsoft.VCRedist.2015+.x64'; Icon = 'brackets-curly'; Name = 'Visual C++ 2015-2022' }
+        @{ Id = 'Microsoft.VCRedist.2015+.x64'; Icon = 'brackets-curly'; Name = 'Visual C++ Redistributable' }
         @{ Id = 'Microsoft.DirectX'; Icon = 'cube'; Name = 'DirectX (runtime clásico)' }
-        @{ Id = 'Microsoft.DotNet.DesktopRuntime.8'; Icon = 'brand-dotnet'; Name = '.NET Desktop Runtime 8' }
+        @{ Id = 'Microsoft.DotNet.DesktopRuntime.8'; Icon = 'brand-dotnet'; Name = '.NET Desktop Runtime' }
     )
 }
-
 function Update-AppCard([string]$Id) {
     $c = $script:AppCards[$Id]
     $sel = $script:AppSel.Contains($Id)
@@ -179,10 +259,40 @@ function New-AppsPage {
     $hero.Child = $hg
     [void]$root.Children.Add($hero)
 
+    # buscador: filtra las tarjetas mientras escribes
+    $sb = [Windows.Controls.Border]::new(); $sb.CornerRadius = 10; $sb.Padding = '12,0'; $sb.Margin = '0,12,0,0'; $sb.BorderThickness = 1; $sb.MinHeight = 42
+    $sb.SetResourceReference([Windows.Controls.Border]::BackgroundProperty, 'Paper2'); $sb.SetResourceReference([Windows.Controls.Border]::BorderBrushProperty, 'Rule')
+    $sg = New-Cols @('Auto', '*')
+    $si = New-Icon 'magnifying-glass' 17 'Muted'; $si.Margin = '0,0,10,0'; [void](Add-At $sg $si 0)
+    $sgrid = [Windows.Controls.Grid]::new()
+    $script:AppSearch = [Windows.Controls.TextBox]::new(); $script:AppSearch.Background = [Windows.Media.Brushes]::Transparent; $script:AppSearch.BorderThickness = 0
+    $script:AppSearch.FontSize = 14.5; $script:AppSearch.VerticalContentAlignment = 'Center'; $script:AppSearch.VerticalAlignment = 'Center'
+    $script:AppSearch.SetResourceReference([Windows.Controls.Control]::ForegroundProperty, 'Ink'); $script:AppSearch.SetResourceReference([Windows.Controls.TextBox]::CaretBrushProperty, 'Accent')
+    $ph = New-Text "Buscar entre $(@($AppCatalog.Values | ForEach-Object { $_ }).Count) apps..." 14.5 'Muted'; $ph.IsHitTestVisible = $false; $ph.VerticalAlignment = 'Center'; $ph.Margin = '2,0,0,0'
+    [void]$sgrid.Children.Add($ph); [void]$sgrid.Children.Add($script:AppSearch)
+    [void](Add-At $sg $sgrid 1)
+    $sb.Child = $sg
+    $script:AppSearch.Tag = $ph
+    $script:AppSearch.Add_TextChanged({
+        param($src)
+        $q = $src.Text.Trim()
+        $src.Tag.Visibility = if ($q) { 'Hidden' } else { 'Visible' }
+        foreach ($sec in $script:AppSections) {
+            $any = $false
+            foreach ($c in $sec.Cards) { $show = (-not $q) -or ($c.Name -like "*$q*"); $c.Card.Visibility = if ($show) { 'Visible' } else { 'Collapsed' }; if ($show) { $any = $true } }
+            $sec.Head.Visibility = if ($any) { 'Visible' } else { 'Collapsed' }; $sec.Wrap.Visibility = $sec.Head.Visibility
+        }
+    })
+    $script:AppSearch.Add_GotKeyboardFocus({ $sb.SetResourceReference([Windows.Controls.Border]::BorderBrushProperty, 'Accent') }.GetNewClosure())
+    $script:AppSearch.Add_LostKeyboardFocus({ $sb.SetResourceReference([Windows.Controls.Border]::BorderBrushProperty, 'Rule') }.GetNewClosure())
+    [void]$root.Children.Add($sb)
+    $script:AppSections = @()
+
     $groupIcons = @{}
     foreach ($group in $AppCatalog.Keys) {
-        [void]$root.Children.Add((New-Section $group))
+        $secHead = New-Section $group; [void]$root.Children.Add($secHead)
         $wrap = [Windows.Controls.Primitives.UniformGrid]::new(); $wrap.Columns = 4; $wrap.Margin = '0,0,-10,0'
+        $secCards = @()
         foreach ($app in $AppCatalog[$group]) {
             $card = [Windows.Controls.Border]::new()
             $card.Style = $window.FindResource('Row'); $card.RenderTransform = [Windows.Media.TranslateTransform]::new()
@@ -208,9 +318,11 @@ function New-AppsPage {
             })
             [void]$wrap.Children.Add($card)
             $script:AppCards[$app.Id] = @{ App = $app; Border = $card; State = $st; Check = $chk; Glyph = $gl }
+            $secCards += @{ Card = $card; Name = $app.Name }
             Update-AppCard $app.Id
         }
         [void]$root.Children.Add($wrap)
+        $script:AppSections += @{ Head = $secHead; Wrap = $wrap; Cards = $secCards }
     }
 
     $script:AppBtnInstall.Add_Click({
