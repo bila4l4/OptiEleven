@@ -13,7 +13,7 @@
 param(
     [ValidateSet('Recomendado', 'Avanzado', 'Competitivo')] [string]$Preset,
     [string]$Config,
-    [string]$Page = 'all',
+    [string]$Page = 'home',
     [switch]$NoGui,
     [switch]$Status
 )
@@ -1258,26 +1258,41 @@ $BrandColors = @{
     </Style>
 
     <!-- pestaña: la seleccionada es relleno naranja con tinta -->
+    <!-- filtros de categoría: pastillas de cristal; la elegida, en degradado con brillo -->
     <Style x:Key="TabToggle" TargetType="ToggleButton">
       <Setter Property="Foreground" Value="{DynamicResource Ink2}"/>
       <Setter Property="FontWeight" Value="Medium"/>
       <Setter Property="FontSize" Value="13"/>
       <Setter Property="Cursor" Value="Hand"/>
-      <Setter Property="Margin" Value="0,0,1,0"/>
+      <Setter Property="Margin" Value="0,0,8,8"/>
+      <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
       <Setter Property="Template">
         <Setter.Value>
           <ControlTemplate TargetType="ToggleButton">
-            <Border x:Name="b" Background="Transparent" CornerRadius="6" Padding="8,0" MinHeight="30" BorderThickness="2" BorderBrush="Transparent">
-              <ContentPresenter VerticalAlignment="Center"/>
-            </Border>
+            <Grid>
+              <Border x:Name="b" Background="{DynamicResource Glass}" BorderBrush="{DynamicResource GlassEdge}" BorderThickness="1" CornerRadius="17" MinHeight="34"/>
+              <Border x:Name="hover" CornerRadius="17" Background="{DynamicResource GlassHi}" BorderBrush="{DynamicResource RuleStrong}" BorderThickness="1" Opacity="0" IsHitTestVisible="False"/>
+              <Border x:Name="sel" CornerRadius="17" Background="{DynamicResource AccentGrad}" Opacity="0" IsHitTestVisible="False">
+                <Border.Effect><DropShadowEffect Color="#7C5CFF" BlurRadius="16" ShadowDepth="0" Opacity="0.45"/></Border.Effect>
+              </Border>
+              <Border x:Name="selEdge" CornerRadius="17" BorderThickness="1" Opacity="0" IsHitTestVisible="False">
+                <Border.BorderBrush><LinearGradientBrush StartPoint="0,0" EndPoint="0,1"><GradientStop Color="#55FFFFFF" Offset="0"/><GradientStop Color="#10FFFFFF" Offset="1"/></LinearGradientBrush></Border.BorderBrush>
+              </Border>
+              <ContentPresenter Margin="13,0,10,0" VerticalAlignment="Center"/>
+            </Grid>
             <ControlTemplate.Triggers>
-              <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="b" Property="Background" Value="{DynamicResource Paper3}"/></Trigger>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Trigger.EnterActions><BeginStoryboard><Storyboard><DoubleAnimation Storyboard.TargetName="hover" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.14"/></Storyboard></BeginStoryboard></Trigger.EnterActions>
+                <Trigger.ExitActions><BeginStoryboard><Storyboard><DoubleAnimation Storyboard.TargetName="hover" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.2"/></Storyboard></BeginStoryboard></Trigger.ExitActions>
+              </Trigger>
               <Trigger Property="IsChecked" Value="True">
-                <Setter TargetName="b" Property="Background" Value="{DynamicResource Accent}"/>
                 <Setter Property="Foreground" Value="{DynamicResource AccentInk}"/>
                 <Setter Property="FontWeight" Value="SemiBold"/>
+               <Setter TargetName="selEdge" Property="Opacity" Value="1"/>
+                <Trigger.EnterActions><BeginStoryboard><Storyboard><DoubleAnimation Storyboard.TargetName="sel" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.18"/></Storyboard></BeginStoryboard></Trigger.EnterActions>
+                <Trigger.ExitActions><BeginStoryboard><Storyboard><DoubleAnimation Storyboard.TargetName="sel" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.18"/></Storyboard></BeginStoryboard></Trigger.ExitActions>
               </Trigger>
-              <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="b" Property="BorderBrush" Value="{DynamicResource AccentEdge}"/></Trigger>
+              <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="b" Property="BorderBrush" Value="{DynamicResource Accent}"/></Trigger>
             </ControlTemplate.Triggers>
           </ControlTemplate>
         </Setter.Value>
@@ -1398,10 +1413,10 @@ $BrandColors = @{
             <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
             <ContentControl x:Name="ProIcon" Focusable="False" VerticalAlignment="Center" Margin="0,0,10,0"/>
             <StackPanel Grid.Column="1" VerticalAlignment="Center">
-              <TextBlock Text="Vista Pro" FontWeight="SemiBold" FontSize="13"/>
+              <TextBlock Text="Modo experto" FontWeight="SemiBold" FontSize="13"/>
               <TextBlock Text="Detalles técnicos" FontSize="11.5" Foreground="{DynamicResource Muted}"/>
             </StackPanel>
-            <ToggleButton x:Name="ProSwitch" Grid.Column="2" Style="{StaticResource Switch}" VerticalAlignment="Center" AutomationProperties.Name="Vista Pro"/>
+            <ToggleButton x:Name="ProSwitch" Grid.Column="2" Style="{StaticResource Switch}" VerticalAlignment="Center" AutomationProperties.Name="Modo experto"/>
           </Grid>
         </Border>
         <ListBox x:Name="Nav" Background="Transparent" BorderThickness="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled"/>
@@ -1425,8 +1440,8 @@ $BrandColors = @{
                   ToolTip="Más agresivo: puede quitar funciones que uses. Lee cada ajuste antes de aplicar."/>
         </StackPanel>
       </Grid>
-      <ScrollViewer x:Name="TabScroll" Grid.Row="1" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" Margin="40,0,36,12">
-        <StackPanel x:Name="Tabs" Orientation="Horizontal"/>
+      <ScrollViewer x:Name="TabScroll" Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Disabled" Margin="40,2,36,8">
+        <WrapPanel x:Name="Tabs" Orientation="Horizontal"/>
       </ScrollViewer>
       <ScrollViewer x:Name="TweakPage" Grid.Row="2" VerticalScrollBarVisibility="Visible" Padding="40,0,26,24">
         <StackPanel x:Name="TweakList"/>
@@ -1507,6 +1522,7 @@ $BrandColors = @{
 '@
 
 $Pages = [ordered]@{
+    'home'            = @{ Label = 'Inicio'; Icon = 'house-line'; Module = 'New-HomePage'; Title = 'Bienvenido a OptiEleven'; Desc = 'Optimiza Windows 11 para jugar, sin perder la posibilidad de volver atrás.' }
     'all'             = @{ Label = 'Ajustes'; Icon = 'sliders-horizontal'; Tab = 'Todos'; Title = 'Ajustes'; Desc = 'Elige un ajuste para ver qué cambia. Los cambios se apuntan en la hoja y se aplican juntos.' }
     'Privacidad'      = @{ Tab = 'Privacidad';  Icon = 'lock-simple';      Title = 'Privacidad';      Desc = 'Telemetría, publicidad, IA y lo que Windows envía sin pedirlo.' }
     'Servicios'       = @{ Tab = 'Servicios';   Icon = 'gear-six';         Title = 'Servicios';       Desc = 'Servicios que arrancan con Windows y no hacen falta para jugar.' }
@@ -1521,7 +1537,7 @@ $Pages = [ordered]@{
     'm-games'         = @{ Label = 'Mis juegos';    Icon = 'joystick';        Module = 'New-GamesPage';    Title = 'Mis juegos';          Desc = 'Tus juegos de Steam, Epic y GOG, con ajustes de Windows para cada uno.' }
     'h-tools'         = @{ Header = 'Herramientas' }
     'm-apps'          = @{ Label = 'Instalar apps'; Icon = 'download-simple'; Module = 'New-AppsPage';     Title = 'Instalar apps';       Desc = 'Launchers, Discord, monitorización y librerías para juegos, con winget.' }
-    'm-startup'       = @{ Label = 'Inicio';        Icon = 'sign-in';         Module = 'New-StartupPage';  Title = 'Programas de inicio'; Desc = 'Lo que arranca con Windows y se queda en segundo plano mientras juegas.' }
+    'm-startup'       = @{ Label = 'Arranque';        Icon = 'sign-in';         Module = 'New-StartupPage';  Title = 'Programas de inicio'; Desc = 'Lo que arranca con Windows y se queda en segundo plano mientras juegas.' }
     'm-clean'         = @{ Label = 'Limpieza';      Icon = 'broom';           Module = 'New-CleanerPage';  Title = 'Limpieza';            Desc = 'Temporales, cachés y restos de actualizaciones. Primero ves cuánto ocupa cada cosa.' }
     'm-net'           = @{ Label = 'Red';           Icon = 'wifi-high';       Module = 'New-NetworkPage';  Title = 'Red y DNS';           Desc = 'Tu conexión, la latencia al router y a los DNS públicos, y con cuál quedarte.' }
     'm-repair'        = @{ Label = 'Reparar';       Icon = 'wrench';          Module = 'New-RepairPage';   Title = 'Reparar Windows';     Desc = 'Las reparaciones de siempre, cada una en su ventana para que veas lo que hace.' }
@@ -1914,7 +1930,7 @@ try {
     else { $ui.AdminIcon.Content = (New-Icon 'lock-simple' 18 'Ink2'); $ui.AdminTitle.Text = (T 'Solo lectura'); $ui.AdminChip.ToolTip = (T 'Ábrelo con OptiEleven.cmd para aplicar cambios.') }
 
     # ---------- navegación: cada apartado con su color
-    $NavColors = @{ 'all' = 'Accent'; 'm-boost' = 'Cat-Rendimiento'; 'm-games' = 'Cat-Juegos'; 'm-apps' = 'Cat-Actualizaciones'; 'm-startup' = 'Cat-Servicios'
+    $NavColors = @{ 'home' = 'Accent'; 'all' = 'Accent'; 'm-boost' = 'Cat-Rendimiento'; 'm-games' = 'Cat-Juegos'; 'm-apps' = 'Cat-Actualizaciones'; 'm-startup' = 'Cat-Servicios'
                     'm-clean' = 'Cat-Interfaz'; 'm-net' = 'Cat-Privacidad'; 'm-repair' = 'Cat-Latencia'; 'm-hw' = 'Cat-Apps'; 'tools' = 'Cat-Servicios'; 'log' = 'Ink2' }
     $script:NavParts = @{}
     foreach ($key in $Pages.Keys) {
@@ -1957,12 +1973,13 @@ try {
             $dot.SetResourceReference($FillProp, "Cat-$key"); [void]$tc.Children.Add($dot)
         }
         $tl = [Windows.Controls.TextBlock]::new(); $tl.Text = T $pg.Tab; $tl.VerticalAlignment = 'Center'; [void]$tc.Children.Add($tl)
+        $tn = [Windows.Controls.TextBlock]::new(); $tn.Text = "$n"; $tn.FontSize = 11.5; $tn.Opacity = 0.6; $tn.Margin = '8,1,0,0'; $tn.VerticalAlignment = 'Center'
+        $tn.FontFamily = $window.FindResource('Mono'); [void]$tc.Children.Add($tn)
         $tb.Content = $tc; $tb.ToolTip = (T "$n ajustes")
         $tb.Add_Click({ param($src, $e) Show-Page $src.Tag })
         [void]$ui.Tabs.Children.Add($tb)
         $script:TabParts[$key] = $tb
     }
-    $ui.TabScroll.Add_PreviewMouseWheel({ param($src, $e) $src.ScrollToHorizontalOffset($src.HorizontalOffset - $e.Delta / 2); $e.Handled = $true })
     function Update-Tabs([string]$Key) { foreach ($k in $script:TabParts.Keys) { $script:TabParts[$k].IsChecked = ($k -eq $Key) } }
 
     # ---------- filas de ajustes: compactas, agrupadas por categoría
@@ -2081,7 +2098,7 @@ try {
             [void](Add-At $bg (New-Text $msg 13.5 'Ink') 1)
             $box.Child = $bg
             [void]$d.Children.Add($box)
-            $pro = New-Text 'Activa la Vista Pro para ver qué claves, servicios y tareas cambia.' 12.5 'Muted'; $pro.Margin = '0,12,0,0'
+            $pro = New-Text 'Activa el modo experto para ver qué claves, servicios y tareas cambia.' 12.5 'Muted'; $pro.Margin = '0,12,0,0'
             [void]$d.Children.Add($pro)
             Start-FadeIn $d
             return
@@ -2186,6 +2203,7 @@ try {
         $script:Stats.Cpu.Text = (T '{0:N0} %') -f $T.Cpu
         $script:Stats.Gpu.Text = (T '{0:N0} %') -f $T.Gpu
         $script:Stats.Ram.Text = (T '{0:N1} / {1:N0} GB') -f ($T.RamUsed / 1GB), ($T.RamTotal / 1GB)
+        Update-HomeStats
         $script:Stats.Temp.Text = if ($null -ne $T.Temp) { "$($T.Temp) °C" } else { T 'n/d' }
         $script:Stats.Proc.Text = (T "$($T.Proc)")
         $script:Stats.Svc.Text = (T "$($T.Svc)")
@@ -2211,6 +2229,7 @@ try {
             }
         }
         $script:Stats.Tweaks.Text = T "$applied de $($script:Rows.Count)"
+        Update-HomeStats
         $pend = Get-Pending
         $na = @($pend | Where-Object { $_.Switch.IsChecked }).Count; $nr = $pend.Count - $na
         $ui.LedgerCount.Text = (T "$($pend.Count)"); $ui.LedgerApply.Text = (T "$na"); $ui.LedgerRevert.Text = (T "$nr")
