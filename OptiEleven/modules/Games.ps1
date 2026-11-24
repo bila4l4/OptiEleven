@@ -124,14 +124,14 @@ function Update-GamesList {
     [void]$script:GamesList.Children.Add((New-Ruled))
 
     foreach ($gm in $games) {
-        $row = New-Object Windows.Controls.Border; $row.Style = $window.FindResource('RuleRow'); $row.Padding = '0,10'
+        $row = [Windows.Controls.Border]::new(); $row.Style = $window.FindResource('RuleRow'); $row.Padding = '0,10'
         $g = New-Cols $cols
         $who = New-Cols @('40', '*')
         $ic = Get-ExeIcon $gm.Exe 28
         if (-not $ic) { $ic = New-Icon 'game-controller' 24 'Ink2' }
         $ic.VerticalAlignment = 'Center'
         [void](Add-At $who $ic 0)
-        $sp = New-Object Windows.Controls.StackPanel; $sp.VerticalAlignment = 'Center'
+        $sp = [Windows.Controls.StackPanel]::new(); $sp.VerticalAlignment = 'Center'
         [void]$sp.Children.Add((New-Text $gm.Name 15 'Ink' 'Medium'))
         $ex = New-Mono $gm.Exe 12 'Muted'; $ex.TextTrimming = 'CharacterEllipsis'; $ex.ToolTip = $gm.Exe; $ex.Margin = '0,2,0,0'; if (-not $script:Pro) { $ex.Visibility = 'Collapsed' }
         [void]$sp.Children.Add($ex)
@@ -147,7 +147,7 @@ function Update-GamesList {
         }
         [void](Add-At $who $sp 1)
         [void](Add-At $g $who 0)
-        $chipBox = New-Object Windows.Controls.Border; $chipBox.HorizontalAlignment = 'Left'; $chipBox.VerticalAlignment = 'Center'
+        $chipBox = [Windows.Controls.Border]::new(); $chipBox.HorizontalAlignment = 'Left'; $chipBox.VerticalAlignment = 'Center'
         $chipBox.Child = (New-Chip $gm.Store 'Paper3' 'Ink2')
         [void](Add-At $g $chipBox 1)
         [void](Add-At $g (New-GameSwitch $gm.Exe 'gpu' (Test-GameGpu $gm.Exe) $true) 2)
@@ -160,11 +160,11 @@ function Update-GamesList {
 }
 
 function New-GamesPage {
-    $root = New-Object Windows.Controls.StackPanel
+    $root = [Windows.Controls.StackPanel]::new()
     $bar = New-Cols @('*', 'Auto'); $bar.Margin = '0,0,0,16'
     $script:GamesStatus = New-Text '' 14 'Muted'; $script:GamesStatus.VerticalAlignment = 'Center'; $script:GamesStatus.Margin = '0,0,16,0'
     [void](Add-At $bar $script:GamesStatus 0)
-    $btns = New-Object Windows.Controls.StackPanel; $btns.Orientation = 'Horizontal'
+    $btns = [Windows.Controls.StackPanel]::new(); $btns.Orientation = 'Horizontal'
     $bAdd = New-Btn 'Añadir un juego'; $bAdd.Margin = '0,0,8,0'
     $bAdd.Add_Click({
         $dlg = New-Object Microsoft.Win32.OpenFileDialog; $dlg.Filter = T 'Ejecutable del juego (*.exe)|*.exe'
@@ -180,7 +180,7 @@ function New-GamesPage {
     [void]$btns.Children.Add($bAdd); [void]$btns.Children.Add($bScan)
     [void](Add-At $bar $btns 1)
     [void]$root.Children.Add($bar)
-    $script:GamesList = New-Object Windows.Controls.StackPanel
+    $script:GamesList = [Windows.Controls.StackPanel]::new()
     [void]$root.Children.Add($script:GamesList)
     Update-GamesList
     $root

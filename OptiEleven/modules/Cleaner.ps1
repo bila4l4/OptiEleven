@@ -88,16 +88,16 @@ function Invoke-CleanScan {
 }
 
 function New-CleanerPage {
-    $root = New-Object Windows.Controls.StackPanel
+    $root = [Windows.Controls.StackPanel]::new()
     $script:CleanRows = [ordered]@{}
 
     $head = New-Cols @('*', 'Auto'); $head.Margin = '0,0,0,18'
-    $hs = New-Object Windows.Controls.StackPanel
+    $hs = [Windows.Controls.StackPanel]::new()
     [void]$hs.Children.Add((New-Text 'Se puede liberar con lo marcado' 14 'Muted'))
     $script:CleanTotal = New-Mono '...' 40 'Ink'; $script:CleanTotal.Margin = '0,2,0,0'
     [void]$hs.Children.Add($script:CleanTotal)
     [void](Add-At $head $hs 0)
-    $btns = New-Object Windows.Controls.StackPanel; $btns.Orientation = 'Horizontal'; $btns.VerticalAlignment = 'Bottom'
+    $btns = [Windows.Controls.StackPanel]::new(); $btns.Orientation = 'Horizontal'; $btns.VerticalAlignment = 'Bottom'
     $bScan = New-Btn 'Analizar de nuevo'; $bScan.Margin = '0,0,8,0'
     $bClean = New-Btn 'Limpiar lo marcado' -Primary
     if (-not $script:IsAdmin) { $bClean.ToolTip = (T 'Sin administrador solo se limpia lo de tu usuario') }
@@ -107,11 +107,11 @@ function New-CleanerPage {
     [void]$root.Children.Add((New-Ruled))
 
     foreach ($it in $CleanItems) {
-        $card = New-Object Windows.Controls.Border
+        $card = [Windows.Controls.Border]::new()
         $card.Style = $window.FindResource('RuleRow'); $card.Cursor = 'Hand'; $card.Tag = $it.Id
         $g = New-Cols @('52', '*', 'Auto', 'Auto')
         [void](Add-At $g (New-IconWell $it.Icon) 0)
-        $sp = New-Object Windows.Controls.StackPanel; $sp.VerticalAlignment = 'Center'
+        $sp = [Windows.Controls.StackPanel]::new(); $sp.VerticalAlignment = 'Center'
         [void]$sp.Children.Add((New-Text $it.Name 15 'Ink' 'Medium'))
         $ds = New-Text $it.Desc 14 'Muted'; $ds.Margin = '0,2,0,0'; $ds.MaxWidth = 640; $ds.HorizontalAlignment = 'Left'
         [void]$sp.Children.Add($ds)

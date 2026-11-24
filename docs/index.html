@@ -60,10 +60,11 @@
 <!-- Lo de abajo es el mismo run.ps1: esta página es a la vez HTML y PowerShell.
      Para PowerShell, todo el HTML de arriba está dentro de un comentario de bloque. #>
 # OptiEleven one-line launcher
-#   irm https://raw.githubusercontent.com/bila4l4/OptiEleven/main/run.ps1 | iex
+#   irm bila4l4.github.io/OptiEleven | iex
 #
-# Downloads the latest release from GitHub into %LOCALAPPDATA%\OptiEleven, updates it if
-# a newer one exists, and opens the panel as administrator. Nothing else is installed.
+# First run: downloads the latest release from GitHub into %LOCALAPPDATA%\OptiEleven and opens it.
+# Later runs: opens the panel straight away, then checks GitHub; a newer release is downloaded
+# in the background folder and used the next time. Nothing else is installed.
 # Kept ASCII-only on purpose: it is read as text by Invoke-RestMethod.
 
 & {
@@ -74,58 +75,86 @@
     $repo    = 'bila4l4/OptiEleven'
     $home_   = Join-Path $env:LOCALAPPDATA 'OptiEleven'
     $app     = Join-Path $home_ 'app'
+    $next    = Join-Path $home_ 'next'
     $verFile = Join-Path $home_ 'version.txt'
     $entry   = Join-Path $app 'OptiEleven.ps1'
 
     function Write-Step([string]$Text) { Write-Host "  OptiEleven  " -ForegroundColor Black -BackgroundColor DarkYellow -NoNewline; Write-Host " $Text" }
 
-    Write-Host ''
-    Write-Step 'Checking the latest version...'
-    $tag = $null; $zipUrl = $null
-    try {
-        $rel = Invoke-RestMethod "https://api.github.com/repos/$repo/releases/latest" -Headers @{ 'User-Agent' = 'OptiEleven-launcher' } -TimeoutSec 20
-        $tag = $rel.tag_name
-        $zipUrl = ($rel.assets | Where-Object name -eq 'OptiEleven.zip' | Select-Object -First 1).browser_download_url
+    function Get-Latest {
+        try {
+            $rel = Invoke-RestMethod "https://api.github.com/repos/$repo/releases/latest" -Headers @{ 'User-Agent' = 'OptiEleven-launcher' } -TimeoutSec 15
+            $url = ($rel.assets | Where-Object name -eq 'OptiEleven.zip' | Select-Object -First 1).browser_download_url
+            if ($url) { return [pscustomobject]@{ Tag = $rel.tag_name; Url = $url } }
+        }
+        catch { Write-Step "Couldn't reach GitHub: $($_.Exception.Message)" }
+        $null
     }
-    catch { Write-Step "Couldn't reach GitHub: $($_.Exception.Message)" }
 
-    $current = if (Test-Path $verFile) { (Get-Content $verFile -Raw).Trim() } else { $null }
-    if ($zipUrl -and ($tag -ne $current -or -not (Test-Path $entry))) {
-        Write-Step "Downloading OptiEleven $tag..."
+    # downloads a release into $Dest (replacing it) and returns $true if it worked
+    function Save-Release($Latest, [string]$Dest) {
         $tmp = Join-Path $env:TEMP ("optieleven-" + [guid]::NewGuid().ToString('N'))
         New-Item -ItemType Directory -Path $tmp -Force | Out-Null
         try {
             $zip = Join-Path $tmp 'OptiEleven.zip'
-            Invoke-WebRequest $zipUrl -OutFile $zip -UseBasicParsing -TimeoutSec 120
+            Invoke-WebRequest $Latest.Url -OutFile $zip -UseBasicParsing -TimeoutSec 120
             Expand-Archive -LiteralPath $zip -DestinationPath $tmp -Force
             $src = Join-Path $tmp 'OptiEleven'
             if (-not (Test-Path (Join-Path $src 'OptiEleven.ps1'))) { throw 'the download does not look like an OptiEleven release' }
             Get-ChildItem -LiteralPath $src -Recurse -File | Unblock-File
+            Set-Content -LiteralPath (Join-Path $src 'version.txt') -Value $Latest.Tag
             New-Item -ItemType Directory -Path $home_ -Force | Out-Null
-            if (Test-Path $app) { Remove-Item -LiteralPath $app -Recurse -Force }
-            Move-Item -LiteralPath $src -Destination $app
-            Set-Content -LiteralPath $verFile -Value $tag
-            Write-Step "Installed in $app"
+            if (Test-Path $Dest) { Remove-Item -LiteralPath $Dest -Recurse -Force }
+            Move-Item -LiteralPath $src -Destination $Dest
+            return $true
         }
-        catch {
-            Write-Step "Update failed: $($_.Exception.Message)"
-            if (-not (Test-Path $entry)) { Write-Host ''; return }
-            Write-Step 'Opening the version you already have.'
-        }
+        catch { Write-Step "Download failed: $($_.Exception.Message)"; return $false }
         finally { Remove-Item -LiteralPath $tmp -Recurse -Force -ErrorAction SilentlyContinue }
     }
-    elseif (Test-Path $entry) { Write-Step "OptiEleven $current is up to date." }
-    else { Write-Host ''; return }
 
-    $args_ = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-WindowStyle', 'Hidden', '-File', "`"$entry`"")
-    try {
-        Write-Step 'Opening the panel (accept the administrator prompt)...'
-        Start-Process powershell.exe -ArgumentList $args_ -Verb RunAs
+    function Open-Panel {
+        $a = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-WindowStyle', 'Hidden', '-File', "`"$entry`"")
+        try {
+            Write-Step 'Opening the panel (accept the administrator prompt)...'
+            Start-Process powershell.exe -ArgumentList $a -Verb RunAs
+        }
+        catch {
+            # administrator prompt declined: the panel still opens, in read-only mode
+            Write-Step 'No administrator rights: opening in read-only mode.'
+            Start-Process powershell.exe -ArgumentList $a
+        }
     }
-    catch {
-        # administrator prompt declined: the panel still opens, in read-only mode
-        Write-Step 'No administrator rights: opening in read-only mode.'
-        Start-Process powershell.exe -ArgumentList $args_
+
+    Write-Host ''
+    # an update downloaded last time goes in now, before opening
+    if (Test-Path (Join-Path $next 'OptiEleven.ps1')) {
+        try {
+            if (Test-Path $app) { Remove-Item -LiteralPath $app -Recurse -Force }
+            Move-Item -LiteralPath $next -Destination $app
+            Copy-Item (Join-Path $app 'version.txt') $verFile -Force -ErrorAction SilentlyContinue
+            Write-Step "Updated to $((Get-Content $verFile -Raw).Trim())."
+        }
+        catch { Write-Step "Couldn't apply the update now (is the panel open?). It will be tried again next time." }
+    }
+
+    $current = if (Test-Path $verFile) { (Get-Content $verFile -Raw).Trim() } else { $null }
+    if (Test-Path $entry) {
+        Open-Panel
+        Write-Step 'Checking for updates...'
+        $latest = Get-Latest
+        if ($latest -and $latest.Tag -ne $current) {
+            if (Save-Release $latest $next) { Write-Step "OptiEleven $($latest.Tag) is downloaded and will open next time." }
+        }
+        elseif ($latest) { Write-Step "OptiEleven $current is up to date." }
+    }
+    else {
+        Write-Step 'Downloading OptiEleven...'
+        $latest = Get-Latest
+        if (-not $latest) { Write-Host ''; return }
+        if (-not (Save-Release $latest $app)) { Write-Host ''; return }
+        Copy-Item (Join-Path $app 'version.txt') $verFile -Force
+        Write-Step "Installed OptiEleven $($latest.Tag) in $app"
+        Open-Panel
     }
     Write-Host ''
 }

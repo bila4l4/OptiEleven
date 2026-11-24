@@ -39,21 +39,21 @@ function Update-NetInfo {
     [void]$script:NetInfo.Children.Add((New-Ruled))
     if (-not $script:NetAdapters) { [void]$script:NetInfo.Children.Add((New-Text 'No hay ningún adaptador de red conectado.' 14 'Muted')); return }
     foreach ($a in $script:NetAdapters) {
-        $row = New-Object Windows.Controls.Border; $row.Style = $window.FindResource('RuleRow')
+        $row = [Windows.Controls.Border]::new(); $row.Style = $window.FindResource('RuleRow')
         $g = New-Cols @('52', '*', 'Auto')
         $wifi = $a.Desc -match 'Wi-?Fi|Wireless|WLAN|802\.11'
         [void](Add-At $g (New-IconWell $(if ($wifi) { 'wifi-high' } else { 'plugs' })) 0)
-        $sp = New-Object Windows.Controls.StackPanel
+        $sp = [Windows.Controls.StackPanel]::new()
         [void]$sp.Children.Add((New-Text $a.Name 15 'Ink' 'Medium'))
         $ds = New-Text $a.Desc 14 'Muted'; $ds.Margin = '0,2,0,0'; [void]$sp.Children.Add($ds)
-        $meta = New-Object Windows.Controls.WrapPanel; $meta.Margin = '0,8,0,0'
+        $meta = [Windows.Controls.WrapPanel]::new(); $meta.Margin = '0,8,0,0'
         [void]$meta.Children.Add((New-Chip $a.Speed 'Paper3' 'Ink2'))
         [void]$meta.Children.Add((New-Chip $(if ($a.Static) { 'DNS elegidos a mano' } else { 'DNS automáticos' }) 'Paper3' 'Ink2'))
         [void]$sp.Children.Add($meta)
         $dn = New-Mono ($(if ($a.Dns) { $a.Dns -join '   ' } else { 'sin DNS' })) 13 'Ink'; $dn.Margin = '0,8,0,0'; if (-not $script:Pro) { $dn.Visibility = 'Collapsed' }
         [void]$sp.Children.Add($dn)
         [void](Add-At $g $sp 1)
-        $lat = New-Object Windows.Controls.StackPanel; $lat.VerticalAlignment = 'Center'; $lat.Margin = '20,0,0,0'
+        $lat = [Windows.Controls.StackPanel]::new(); $lat.VerticalAlignment = 'Center'; $lat.Margin = '20,0,0,0'
         $l1 = New-Text 'Router' 13 'Muted'; $l1.HorizontalAlignment = 'Right'
         $script:NetGwLatency = New-Mono '-- ms' 22 'Ink'; $script:NetGwLatency.HorizontalAlignment = 'Right'
         [void]$lat.Children.Add($l1); [void]$lat.Children.Add($script:NetGwLatency)
@@ -107,14 +107,14 @@ function Set-DnsPreset($Preset) {
 }
 
 function New-NetworkPage {
-    $root = New-Object Windows.Controls.StackPanel
+    $root = [Windows.Controls.StackPanel]::new()
     $script:NetLatency = @{}
 
     $bar = New-Cols @('*', 'Auto'); $bar.Margin = '0,0,0,16'
     $t = New-Text 'Cambiar de DNS no baja el ping del juego: acelera la búsqueda de servidores y la carga de webs y launchers.' 14 'Muted'
     $t.VerticalAlignment = 'Center'; $t.Margin = '0,0,16,0'
     [void](Add-At $bar $t 0)
-    $btns = New-Object Windows.Controls.StackPanel; $btns.Orientation = 'Horizontal'
+    $btns = [Windows.Controls.StackPanel]::new(); $btns.Orientation = 'Horizontal'
     $bFlush = New-Btn 'Vaciar caché DNS'; $bFlush.Margin = '0,0,8,0'
     $bFlush.Add_Click({ $o = ipconfig /flushdns 2>&1; Write-Log 'Caché DNS vaciada.' 'OK' })
     $bLat = New-Btn 'Medir latencia' -Primary
@@ -123,7 +123,7 @@ function New-NetworkPage {
     [void](Add-At $bar $btns 1)
     [void]$root.Children.Add($bar)
 
-    $script:NetInfo = New-Object Windows.Controls.StackPanel
+    $script:NetInfo = [Windows.Controls.StackPanel]::new()
     [void]$root.Children.Add($script:NetInfo)
     Update-NetInfo
 
@@ -137,10 +137,10 @@ function New-NetworkPage {
     [void]$root.Children.Add((New-Ruled))
     for ($i = 0; $i -lt $DnsPresets.Count; $i++) {
         $p = $DnsPresets[$i]
-        $row = New-Object Windows.Controls.Border; $row.Style = $window.FindResource('RuleRow')
+        $row = [Windows.Controls.Border]::new(); $row.Style = $window.FindResource('RuleRow')
         $g = New-Cols $cols
         [void](Add-At $g (New-IconWell $p.Icon) 0)
-        $sp = New-Object Windows.Controls.StackPanel; $sp.VerticalAlignment = 'Center'
+        $sp = [Windows.Controls.StackPanel]::new(); $sp.VerticalAlignment = 'Center'
         [void]$sp.Children.Add((New-Text $p.Name 15 'Ink' 'Medium'))
         $nt = New-Text $p.Note 14 'Muted'; $nt.Margin = '0,2,0,0'; [void]$sp.Children.Add($nt)
         [void](Add-At $g $sp 1)

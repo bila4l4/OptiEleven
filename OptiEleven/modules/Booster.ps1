@@ -93,24 +93,24 @@ function Invoke-BoostFps {
 }
 
 function New-FpsHero {
-    $card = New-Object Windows.Controls.Border; $card.CornerRadius = 12; $card.Padding = '24,22,24,20'; $card.Margin = '0,0,0,8'
+    $card = [Windows.Controls.Border]::new(); $card.CornerRadius = 12; $card.Padding = '24,22,24,20'; $card.Margin = '0,0,0,8'
     $card.SetResourceReference($BgProp, 'Paper2'); $card.SetResourceReference([Windows.Controls.Border]::BorderBrushProperty, 'Accent'); $card.BorderThickness = 1.5
-    $outer = New-Object Windows.Controls.StackPanel
+    $outer = [Windows.Controls.StackPanel]::new()
     $top = New-Cols @('Auto', '*', 'Auto')
-    $well = New-Object Windows.Controls.Border; $well.Width = 64; $well.Height = 64; $well.CornerRadius = 14; $well.VerticalAlignment = 'Center'
+    $well = [Windows.Controls.Border]::new(); $well.Width = 64; $well.Height = 64; $well.CornerRadius = 14; $well.VerticalAlignment = 'Center'
     $well.SetResourceReference($BgProp, 'Accent')
     $ic = New-Icon 'rocket-launch' 34 'AccentInk'; $ic.HorizontalAlignment = 'Center'; $well.Child = $ic
     [void](Add-At $top $well 0)
-    $tx = New-Object Windows.Controls.StackPanel; $tx.VerticalAlignment = 'Center'; $tx.Margin = '18,0,18,0'
+    $tx = [Windows.Controls.StackPanel]::new(); $tx.VerticalAlignment = 'Center'; $tx.Margin = '18,0,18,0'
     $h = New-Text 'Boost FPS' 30 'Ink' 'Bold'; $h.FontFamily = $window.FindResource('Display')
     $d = New-Text 'Un clic antes de jugar: libera memoria, cierra lo que sobra en segundo plano, pone la energía al máximo y hace la limpieza completa.' 14 'Ink2'; $d.Margin = '0,4,0,0'; $d.MaxWidth = 620; $d.HorizontalAlignment = 'Left'
     [void]$tx.Children.Add($h); [void]$tx.Children.Add($d)
     [void](Add-At $top $tx 1)
     $script:FpsBtn = New-Btn 'Boost FPS' -Primary
     $script:FpsBtn.FontSize = 18; $script:FpsBtn.FontWeight = 'Bold'; $script:FpsBtn.Padding = '34,0'; $script:FpsBtn.MinHeight = 54; $script:FpsBtn.VerticalAlignment = 'Center'
-    $bc = New-Object Windows.Controls.StackPanel; $bc.Orientation = 'Horizontal'
-    $bi = New-Icon 'lightning' 20 'AccentInk'; $bi.Margin = '0,0,10,0'
-    $bl = New-Object Windows.Controls.TextBlock; $bl.Text = 'Boost FPS'; $bl.VerticalAlignment = 'Center'
+    $bc = [Windows.Controls.StackPanel]::new(); $bc.Orientation = 'Horizontal'
+    $bi = New-BtnIcon 'lightning' 20; $bi.Margin = '0,0,10,0'
+    $bl = [Windows.Controls.TextBlock]::new(); $bl.Text = 'Boost FPS'; $bl.VerticalAlignment = 'Center'
     [void]$bc.Children.Add($bi); [void]$bc.Children.Add($bl); $script:FpsBtn.Content = $bc
     if (-not $script:IsAdmin) { $script:FpsBtn.IsEnabled = $false; $script:FpsBtn.ToolTip = (T 'Necesita permisos de administrador') }
     $script:FpsBtn.Add_Click({ Invoke-BoostFps })
@@ -122,12 +122,12 @@ function New-FpsHero {
     $script:FpsSteps = [ordered]@{}
     $i = 0
     foreach ($st in @(@('Ram', 'memory', 'RAM liberada'), @('Apps', 'x-circle', 'Apps cerradas'), @('Svc', 'gear-six','Servicios pausados'), @('Clean', 'broom', 'Disco limpiado'))) {
-        $cell = New-Object Windows.Controls.Border; $cell.CornerRadius = 8; $cell.Padding = '14,10'; $cell.Margin = $(if ($i -lt 3) { '0,0,10,0' } else { '0' })
+        $cell = [Windows.Controls.Border]::new(); $cell.CornerRadius = 8; $cell.Padding = '14,10'; $cell.Margin = $(if ($i -lt 3) { '0,0,10,0' } else { '0' })
         $cell.SetResourceReference($BgProp, 'Paper3')
         $cg = New-Cols @('Auto', '*')
         $ci = New-Icon $st[1] 22 'Accent'; $ci.Margin = '0,0,12,0'
         [void](Add-At $cg $ci 0)
-        $cs = New-Object Windows.Controls.StackPanel
+        $cs = [Windows.Controls.StackPanel]::new()
         $lab = New-Text $st[2] 12.5 'Muted'; $lab.TextWrapping = 'NoWrap'
         $val = New-Mono '--' 18 'Ink'; $val.FontWeight = 'SemiBold'; $val.Margin = '0,2,0,0'
         [void]$cs.Children.Add($lab); [void]$cs.Children.Add($val)
@@ -231,19 +231,19 @@ function Invoke-StandbyPurge {
 }
 
 function New-BoosterPage {
-    $root = New-Object Windows.Controls.StackPanel
+    $root = [Windows.Controls.StackPanel]::new()
     $script:BoostAppRows = @(); $script:BoostSvcRows = @()
     [void]$root.Children.Add((New-FpsHero))
     [void]$root.Children.Add((New-Section 'O a tu manera'))
 
     # cabecera de estado
     $head = New-Cols @('*', 'Auto'); $head.Margin = '0,0,0,6'
-    $hs = New-Object Windows.Controls.StackPanel
+    $hs = [Windows.Controls.StackPanel]::new()
     $script:BoostTitle = New-Text '' 22 'Ink' 'SemiBold'; $script:BoostTitle.FontFamily = $window.FindResource('Display')
     $script:BoostSub = New-Text '' 14 'Muted'; $script:BoostSub.Margin = '0,4,0,0'
     [void]$hs.Children.Add($script:BoostTitle); [void]$hs.Children.Add($script:BoostSub)
     [void](Add-At $head $hs 0)
-    $btns = New-Object Windows.Controls.StackPanel; $btns.Orientation = 'Horizontal'; $btns.VerticalAlignment = 'Center'
+    $btns = [Windows.Controls.StackPanel]::new(); $btns.Orientation = 'Horizontal'; $btns.VerticalAlignment = 'Center'
     $bPurge = New-Btn 'Vaciar memoria en espera'; $bPurge.Margin = '0,0,8,0'
     $bPurge.ToolTip = (T 'Libera la caché de archivos de la RAM, como ISLC. Útil si un juego da tirones tras horas abierto.')
     if (-not $script:IsAdmin) { $bPurge.IsEnabled = $false }
@@ -260,7 +260,7 @@ function New-BoosterPage {
     foreach ($a in $BoostApps) {
         $sw = New-Switch; $sw.IsChecked = $a.On
         $mem = New-Mono '' 13 'Ink'; $mem.VerticalAlignment = 'Center'; $mem.Margin = '0,0,16,0'
-        $act = New-Object Windows.Controls.StackPanel; $act.Orientation = 'Horizontal'
+        $act = [Windows.Controls.StackPanel]::new(); $act.Orientation = 'Horizontal'
         [void]$act.Children.Add($mem); [void]$act.Children.Add($sw)
         $row = New-ActionRow $a.Icon $a.Name $a.Desc $act
         [void]$root.Children.Add($row)
@@ -273,7 +273,7 @@ function New-BoosterPage {
     foreach ($s in $BoostServices) {
         $sw = New-Switch; $sw.IsChecked = $s.On
         $stt = New-Text '' 13 'Muted'; $stt.VerticalAlignment = 'Center'; $stt.Margin = '0,0,16,0'
-        $act = New-Object Windows.Controls.StackPanel; $act.Orientation = 'Horizontal'
+        $act = [Windows.Controls.StackPanel]::new(); $act.Orientation = 'Horizontal'
         [void]$act.Children.Add($stt); [void]$act.Children.Add($sw)
         [void]$root.Children.Add((New-ActionRow $s.Icon $s.Label $(if ($script:Pro) { $s.Name } else { $null }) $act))
         $script:BoostSvcRows += @{ Svc = $s; Switch = $sw; State = $stt }

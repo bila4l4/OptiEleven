@@ -60,7 +60,7 @@ function Get-HardwareReport {
 }
 
 function New-HardwarePage {
-    $root = New-Object Windows.Controls.StackPanel
+    $root = [Windows.Controls.StackPanel]::new()
     $bar = New-Cols @('*', 'Auto'); $bar.Margin = '0,0,0,4'
     $t = New-Text 'Para pedir ayuda en un foro, o comprobar que la RAM va a su velocidad y el driver de la GPU está al día.' 14 'Muted'
     $t.VerticalAlignment = 'Center'; $t.Margin = '0,0,16,0'
@@ -79,9 +79,9 @@ function New-HardwarePage {
     $grid = New-Cols @('*', '*')   # dos columnas; cada par de secciones en su propia fila de altura automática
     $i = 0
     foreach ($sec in $report.Keys) {
-        $col = New-Object Windows.Controls.StackPanel
+        $col = [Windows.Controls.StackPanel]::new()
         $col.Margin = if ($i % 2 -eq 0) { '0,0,20,8' } else { '20,0,0,8' }
-        if ($i % 2 -eq 0) { $rd = New-Object Windows.Controls.RowDefinition; $rd.Height = [Windows.GridLength]::Auto; $grid.RowDefinitions.Add($rd) }
+        if ($i % 2 -eq 0) { $rd = [Windows.Controls.RowDefinition]::new(); $rd.Height = [Windows.GridLength]::Auto; $grid.RowDefinitions.Add($rd) }
         [Windows.Controls.Grid]::SetRow($col, [math]::Floor($i / 2)); [Windows.Controls.Grid]::SetColumn($col, $i % 2); $i++
         $hh = New-Cols @('30', '*'); $hh.Margin = '0,22,0,10'
         $hi = New-Icon $secIcons[$sec] 21 'Ink2'; [void](Add-At $hh $hi 0)
@@ -89,7 +89,7 @@ function New-HardwarePage {
         [void]$col.Children.Add($hh)
         [void]$col.Children.Add((New-Ruled))
         foreach ($k in $report[$sec].Keys) {
-            $rowB = New-Object Windows.Controls.Border; $rowB.SetResourceReference([Windows.Controls.Border]::BorderBrushProperty, 'Rule'); $rowB.BorderThickness = '0,0,0,1'; $rowB.Padding = '0,9'
+            $rowB = [Windows.Controls.Border]::new(); $rowB.SetResourceReference([Windows.Controls.Border]::BorderBrushProperty, 'Rule'); $rowB.BorderThickness = '0,0,0,1'; $rowB.Padding = '0,9'
             $row = New-Cols @('150', '*')
             [void](Add-At $row (New-Text $k 13.5 'Muted') 0)
             [void](Add-At $row (New-Text ([string]$report[$sec][$k]) 14 'Ink' 'Medium') 1)

@@ -61,11 +61,56 @@ if ($script:IsAdmin) {
     catch {}
 }
 
-if (-not ('GP.PowerOverlay' -as [type])) {
-    Add-Type -Namespace GP -Name PowerOverlay -MemberDefinition @'
-[DllImport("powrprof.dll")] public static extern uint PowerSetActiveOverlayScheme(Guid g);
-[DllImport("powrprof.dll")] public static extern uint PowerGetEffectiveOverlayScheme(out Guid g);
+# Llamadas nativas (energía, barra de título oscura, memoria). Compilar C# con Add-Type cuesta ~300 ms cada vez,
+# así que se compila una sola vez a una DLL y las siguientes veces solo se carga. Con permisos de administrador la
+# DLL vive en la carpeta segura (si estuviera en una carpeta del usuario, otro programa podría cambiarla y el panel
+# elevado la cargaría); sin ellos, en la del usuario, que no da más permisos de los que ya tiene.
+$GpSource = @'
+using System;
+using System.Runtime.InteropServices;
+namespace GP {
+    public static class PowerOverlay {
+        [DllImport("powrprof.dll")] public static extern uint PowerSetActiveOverlayScheme(Guid g);
+        [DllImport("powrprof.dll")] public static extern uint PowerGetEffectiveOverlayScheme(out Guid g);
+    }
+    public static class Dwm {
+        [DllImport("dwmapi.dll")] public static extern int DwmSetWindowAttribute(IntPtr h, int attr, ref int val, int size);
+    }
+    public static class Ws {
+        [DllImport("psapi.dll")] public static extern bool EmptyWorkingSet(IntPtr h);
+    }
+    public static class Mem {
+        [DllImport("ntdll.dll")] public static extern int NtSetSystemInformation(int infoClass, ref int info, int length);
+        [DllImport("advapi32.dll", SetLastError = true)] public static extern bool OpenProcessToken(IntPtr h, int access, out IntPtr token);
+        [DllImport("advapi32.dll", SetLastError = true)] public static extern bool LookupPrivilegeValue(string sys, string name, out long luid);
+        [StructLayout(LayoutKind.Sequential, Pack = 4)] public struct TokPriv { public int Count; public long Luid; public int Attr; }
+        [DllImport("advapi32.dll", SetLastError = true)] public static extern bool AdjustTokenPrivileges(IntPtr token, bool disableAll, ref TokPriv newState, int len, IntPtr prev, IntPtr ret);
+        [DllImport("kernel32.dll")] public static extern IntPtr GetCurrentProcess();
+        public static int PurgeStandby() {
+            IntPtr tok; if (!OpenProcessToken(GetCurrentProcess(), 0x28, out tok)) return -1;
+            TokPriv tp = new TokPriv(); tp.Count = 1; tp.Attr = 2;
+            if (!LookupPrivilegeValue(null, "SeProfileSingleProcessPrivilege", out tp.Luid)) return -2;
+            AdjustTokenPrivileges(tok, false, ref tp, 0, IntPtr.Zero, IntPtr.Zero);
+            int cmd = 4; return NtSetSystemInformation(80, ref cmd, 4);
+        }
+    }
+}
 '@
+if (-not ('GP.PowerOverlay' -as [type])) {
+    $loaded = $false
+    try {
+        $sha = [Security.Cryptography.SHA256]::Create()
+        $hash = -join ($sha.ComputeHash([Text.Encoding]::UTF8.GetBytes($GpSource))[0..5] | ForEach-Object { $_.ToString('x2') })
+        $cacheDir = if ($script:IsAdmin) { $script:Secure } else { Join-Path $env:LOCALAPPDATA 'OptiEleven\cache' }
+        $dll = Join-Path $cacheDir "native-$hash.dll"
+        if (-not (Test-Path -LiteralPath $dll)) {
+            if (-not (Test-Path $cacheDir)) { New-Item -ItemType Directory -Path $cacheDir -Force | Out-Null }
+            Add-Type -TypeDefinition $GpSource -OutputAssembly $dll -OutputType Library
+        }
+        Add-Type -LiteralPath $dll; $loaded = $true
+    }
+    catch {}
+    if (-not $loaded -and -not ('GP.PowerOverlay' -as [type])) { Add-Type -TypeDefinition $GpSource }
 }
 
 # ============================================================ utilidades
@@ -574,9 +619,11 @@ function Get-NicKeys {
     } | ForEach-Object { $_.PSPath -replace '^Microsoft\.PowerShell\.Core\\Registry::HKEY_LOCAL_MACHINE', 'HKLM:' }
 }
 function Get-GpuMsiKeys {
-    Get-PnpDevice -Class Display -PresentOnly -ErrorAction SilentlyContinue | Where-Object InstanceId -like 'PCI\*' | ForEach-Object {
-        "HKLM:\SYSTEM\CurrentControlSet\Enum\$($_.InstanceId)\Device Parameters\Interrupt Management\MessageSignaledInterruptProperties"
+    # Win32_VideoController en vez de Get-PnpDevice: cargar el módulo PnpDevice tarda más de un segundo
+    if ($null -eq $script:GpuPnpIds) {
+        $script:GpuPnpIds = @(Get-CimInstance Win32_VideoController -ErrorAction SilentlyContinue | ForEach-Object PNPDeviceID | Where-Object { $_ -like 'PCI\*' })
     }
+    foreach ($id in $script:GpuPnpIds) { "HKLM:\SYSTEM\CurrentControlSet\Enum\$id\Device Parameters\Interrupt Management\MessageSignaledInterruptProperties" }
 }
 function New-DynRegCustom([string]$KeysFn, [string[]]$Names, [int]$Value) {
     # varios valores DWORD en claves que se descubren en el momento (con $KeysFn); guarda y restaura cada uno.
@@ -1053,40 +1100,101 @@ $BrandColors = @{
     <FontFamily x:Key="Mono">Cascadia Mono, Consolas</FontFamily>
     <FontFamily x:Key="Icons">Segoe Fluent Icons, Segoe MDL2 Assets</FontFamily>
 
-    <!-- tecla moldeada: borde superior iluminado, se hunde 1px al pulsar -->
+    <!-- botón secundario: relleno suave, brillo arriba, se ilumina el borde al pasar y se encoge un poco al pulsar -->
     <Style x:Key="Btn" TargetType="Button">
-      <Setter Property="Background" Value="{DynamicResource Paper2}"/>
+      <Setter Property="Background" Value="{DynamicResource Paper3}"/>
       <Setter Property="Foreground" Value="{DynamicResource Ink}"/>
-      <Setter Property="BorderBrush" Value="{DynamicResource RuleStrong}"/>
-      <Setter Property="Padding" Value="14,0"/>
-      <Setter Property="MinHeight" Value="34"/>
-      <Setter Property="FontWeight" Value="Medium"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource Rule}"/>
+      <Setter Property="Padding" Value="16,0"/>
+      <Setter Property="MinHeight" Value="36"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
       <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
       <Setter Property="Template">
         <Setter.Value>
           <ControlTemplate TargetType="Button">
-            <Grid x:Name="root">
-              <Border x:Name="b" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" CornerRadius="6"/>
-              <Border Height="1" VerticalAlignment="Top" Margin="6,1,6,0" Background="{DynamicResource KeyLight}"/>
-              <ContentPresenter Margin="{TemplateBinding Padding}" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center"/>
+            <Grid x:Name="root" RenderTransformOrigin="0.5,0.5">
+              <Border x:Name="ring" CornerRadius="12" Margin="-3" BorderThickness="2" BorderBrush="{DynamicResource Accent}" Opacity="0"/>
+              <Border x:Name="b" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" CornerRadius="9"/>
+              <Border x:Name="sheen" CornerRadius="9" Margin="1" IsHitTestVisible="False">
+                <Border.Background>
+                  <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Color="#1AFFFFFF" Offset="0"/><GradientStop Color="#00FFFFFF" Offset="0.6"/>
+                  </LinearGradientBrush>
+                </Border.Background>
+              </Border>
+              <ContentPresenter Margin="{TemplateBinding Padding}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
             </Grid>
             <ControlTemplate.Triggers>
-              <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="b" Property="BorderBrush" Value="{DynamicResource Ink}"/></Trigger>
-              <Trigger Property="IsPressed" Value="True"><Setter TargetName="root" Property="RenderTransform"><Setter.Value><TranslateTransform Y="1"/></Setter.Value></Setter></Trigger>
-              <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="b" Property="BorderBrush" Value="{DynamicResource AccentEdge}"/><Setter TargetName="b" Property="BorderThickness" Value="2"/></Trigger>
-              <Trigger Property="IsEnabled" Value="False"><Setter TargetName="root" Property="Opacity" Value="0.5"/><Setter Property="Cursor" Value="No"/></Trigger>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="b" Property="BorderBrush" Value="{DynamicResource Accent}"/>
+                <Setter TargetName="b" Property="Background" Value="{DynamicResource Paper2}"/>
+              </Trigger>
+              <Trigger Property="IsPressed" Value="True">
+                <Setter TargetName="root" Property="RenderTransform"><Setter.Value><ScaleTransform ScaleX="0.97" ScaleY="0.97"/></Setter.Value></Setter>
+                <Setter TargetName="b" Property="Background" Value="{DynamicResource Rule}"/>
+              </Trigger>
+              <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="ring" Property="Opacity" Value="1"/></Trigger>
+              <Trigger Property="IsEnabled" Value="False">
+                <Setter TargetName="root" Property="Opacity" Value="0.45"/>
+                <Setter TargetName="sheen" Property="Visibility" Value="Hidden"/>
+                <Setter Property="Cursor" Value="No"/>
+              </Trigger>
             </ControlTemplate.Triggers>
           </ControlTemplate>
         </Setter.Value>
       </Setter>
     </Style>
+    <!-- botón principal: naranja con brillo arriba y sombra abajo; al pasar, un halo naranja; desactivado, gris limpio -->
     <Style x:Key="BtnPrimary" TargetType="Button" BasedOn="{StaticResource Btn}">
       <Setter Property="Background" Value="{DynamicResource Accent}"/>
       <Setter Property="Foreground" Value="{DynamicResource AccentInk}"/>
-      <Setter Property="BorderBrush" Value="{DynamicResource AccentEdge}"/>
-      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="FontWeight" Value="Bold"/>
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <Grid x:Name="root" RenderTransformOrigin="0.5,0.5">
+              <Border x:Name="ring" CornerRadius="12" Margin="-3" BorderThickness="2" BorderBrush="{DynamicResource Ink}" Opacity="0"/>
+              <Border x:Name="b" Background="{TemplateBinding Background}" CornerRadius="9"/>
+              <Border x:Name="sheen" CornerRadius="9" IsHitTestVisible="False">
+                <Border.Background>
+                  <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Color="#40FFFFFF" Offset="0"/><GradientStop Color="#08FFFFFF" Offset="0.5"/>
+                    <GradientStop Color="#00000000" Offset="0.55"/><GradientStop Color="#26000000" Offset="1"/>
+                  </LinearGradientBrush>
+                </Border.Background>
+              </Border>
+              <Border x:Name="edge" CornerRadius="9" BorderThickness="1" IsHitTestVisible="False">
+                <Border.BorderBrush>
+                  <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Color="#66FFFFFF" Offset="0"/><GradientStop Color="#33000000" Offset="1"/>
+                  </LinearGradientBrush>
+                </Border.BorderBrush>
+              </Border>
+              <ContentPresenter Margin="{TemplateBinding Padding}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Grid>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="b" Property="Effect"><Setter.Value><DropShadowEffect Color="#FF7643" BlurRadius="20" ShadowDepth="0" Opacity="0.6"/></Setter.Value></Setter>
+              </Trigger>
+              <Trigger Property="IsPressed" Value="True">
+                <Setter TargetName="root" Property="RenderTransform"><Setter.Value><ScaleTransform ScaleX="0.97" ScaleY="0.97"/></Setter.Value></Setter>
+                <Setter TargetName="sheen" Property="Opacity" Value="0.4"/>
+              </Trigger>
+              <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="ring" Property="Opacity" Value="1"/></Trigger>
+              <Trigger Property="IsEnabled" Value="False">
+                <Setter TargetName="b" Property="Background" Value="{DynamicResource Paper3}"/>
+                <Setter TargetName="b" Property="Effect" Value="{x:Null}"/>
+                <Setter TargetName="sheen" Property="Visibility" Value="Hidden"/>
+                <Setter TargetName="edge" Property="BorderBrush" Value="{DynamicResource Rule}"/>
+                <Setter Property="Foreground" Value="{DynamicResource Muted}"/>
+                <Setter Property="Cursor" Value="No"/>
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
     </Style>
-
     <!-- interruptor: relleno naranja con tinta encima -->
     <Style x:Key="Switch" TargetType="ToggleButton">
       <Setter Property="Width" Value="40"/>
@@ -1454,7 +1562,7 @@ try {
 
     # ---------- piezas comunes (también las usan los módulos)
     function New-Text([string]$Text, [double]$Size = 14, [string]$Brush = 'Ink', [string]$Weight = 'Normal') {
-        $tb = New-Object Windows.Controls.TextBlock
+        $tb = [Windows.Controls.TextBlock]::new()
         $tb.Text = (T $Text); $tb.FontSize = $Size; $tb.FontWeight = $Weight; $tb.TextWrapping = 'Wrap'
         $tb.SetResourceReference($FgProp, $Brush)
         $tb
@@ -1470,25 +1578,32 @@ try {
         if ($Code -is [string] -and $script:IconData -and $script:IconData.PSObject.Properties[$Code]) {
             $ic = $script:IconData.$Code
             if (-not $script:GeoCache.ContainsKey($Code)) { $geo = [Windows.Media.Geometry]::Parse($ic.d); $geo.Freeze(); $script:GeoCache[$Code] = $geo }
-            $p = New-Object Windows.Shapes.Path; $p.Data = $script:GeoCache[$Code]
+            $p = [Windows.Shapes.Path]::new(); $p.Data = $script:GeoCache[$Code]
             if ($BrandColors.ContainsKey($Code) -and $Brush -eq 'Ink2') { $Brush = "Brand-$Code" }
             $p.SetResourceReference($FillProp, $Brush)
-            $c = New-Object Windows.Controls.Canvas; $c.Width = $ic.vb; $c.Height = $ic.vb; [void]$c.Children.Add($p)
-            $v = New-Object Windows.Controls.Viewbox; $v.Width = $Size; $v.Height = $Size; $v.Child = $c; $v.VerticalAlignment = 'Center'
+            $c = [Windows.Controls.Canvas]::new(); $c.Width = $ic.vb; $c.Height = $ic.vb; [void]$c.Children.Add($p)
+            $v = [Windows.Controls.Viewbox]::new(); $v.Width = $Size; $v.Height = $Size; $v.Child = $c; $v.VerticalAlignment = 'Center'
             return $v
         }
         if ($Code -is [string]) { $Code = 0xE713 }
-        $tb = New-Object Windows.Controls.TextBlock
+        $tb = [Windows.Controls.TextBlock]::new()
         $tb.Text = [string][char]$Code; $tb.FontSize = $Size; $tb.FontFamily = $window.FindResource('Icons'); $tb.VerticalAlignment = 'Center'
         $tb.SetResourceReference($FgProp, $Brush)
         $tb
+    }
+    function New-BtnIcon($Code, [double]$Size = 18) {
+        # icono que toma el color del texto del botón (así se apaga igual que el texto cuando el botón está desactivado)
+        $ic = New-Icon $Code $Size 'Ink'
+        $bd = [Windows.Data.Binding]::new('Foreground'); $bd.RelativeSource = [Windows.Data.RelativeSource]::new([Windows.Data.RelativeSourceMode]::FindAncestor, [Windows.Controls.Button], 1)
+        if ($ic -is [Windows.Controls.Viewbox]) { [void]$ic.Child.Children[0].SetBinding($FillProp, $bd) } else { [void]$ic.SetBinding($FgProp, $bd) }
+        $ic
     }
     function Set-IconBrush($Icon, [string]$Brush) {
         if ($Icon -is [Windows.Controls.Viewbox]) { $Icon.Child.Children[0].SetResourceReference($FillProp, $Brush) }
         else { $Icon.SetResourceReference($FgProp, $Brush) }
     }
     function New-IconWell($Code, [double]$Box = 38, [string]$Brush = 'Ink2') {
-        $w = New-Object Windows.Controls.Border; $w.Width = $Box; $w.Height = $Box; $w.CornerRadius = 8; $w.VerticalAlignment = 'Center'
+        $w = [Windows.Controls.Border]::new(); $w.Width = $Box; $w.Height = $Box; $w.CornerRadius = 8; $w.VerticalAlignment = 'Center'
         # sin color pedido, cada icono toma uno fijo de la paleta (el mismo icono, siempre el mismo color); las marcas, el suyo
         if ($Brush -eq 'Ink2' -and $Code -is [string] -and $Code -notlike 'brand-*') {
             $pal = 'Cat-Privacidad', 'Cat-Servicios', 'Cat-Rendimiento', 'Cat-Latencia', 'Cat-Juegos', 'Cat-Actualizaciones', 'Cat-Interfaz', 'Cat-Apps'
@@ -1501,7 +1616,7 @@ try {
         $w
     }
     function New-Chip([string]$Text, [string]$Bg = 'Paper3', [string]$Fg = 'Ink2') {
-        $c = New-Object Windows.Controls.Border; $c.CornerRadius = 6; $c.Padding = '7,1,7,2'; $c.Margin = '0,0,6,0'; $c.VerticalAlignment = 'Center'
+        $c = [Windows.Controls.Border]::new(); $c.CornerRadius = 6; $c.Padding = '7,1,7,2'; $c.Margin = '0,0,6,0'; $c.VerticalAlignment = 'Center'
         $c.SetResourceReference($BgProp, $Bg)
         $t = New-Text $Text 12.5 $Fg 'SemiBold'; $t.TextWrapping = 'NoWrap'; $c.Child = $t
         $c
@@ -1512,26 +1627,26 @@ try {
         $Chip.SetResourceReference($BgProp, $Bg); $Chip.Child.SetResourceReference($FgProp, $Fg)
     }
     function New-Btn([string]$Text, [switch]$Primary) {
-        $b = New-Object Windows.Controls.Button
+        $b = [Windows.Controls.Button]::new()
         $b.Style = $window.FindResource($(if ($Primary) { 'BtnPrimary' } else { 'Btn' })); $b.Content = (T $Text)
         $b
     }
-    function New-Card { $b = New-Object Windows.Controls.Border; $b.Style = $window.FindResource('Tile'); $b.Margin = '0,0,0,10'; $b }
+    function New-Card { $b = [Windows.Controls.Border]::new(); $b.Style = $window.FindResource('Tile'); $b.Margin = '0,0,0,10'; $b }
     function New-Section([string]$Text) { $t = New-Text $Text 18 'Ink' 'SemiBold'; $t.FontFamily = $window.FindResource('Display'); $t.Margin = '0,22,0,8'; $t }
-    function New-Ruled { $s = New-Object Windows.Controls.Border; $s.SetResourceReference([Windows.Controls.Border]::BorderBrushProperty, 'Ink'); $s.BorderThickness = '0,1,0,0'; $s }
+    function New-Ruled { $s = [Windows.Controls.Border]::new(); $s.SetResourceReference([Windows.Controls.Border]::BorderBrushProperty, 'Ink'); $s.BorderThickness = '0,1,0,0'; $s }
     function New-Cols([string[]]$Widths) {
-        $g = New-Object Windows.Controls.Grid
+        $g = [Windows.Controls.Grid]::new()
         foreach ($w in $Widths) {
-            $cd = New-Object Windows.Controls.ColumnDefinition
-            if ($w -eq '*') { $cd.Width = New-Object Windows.GridLength 1, ([Windows.GridUnitType]::Star) }
+            $cd = [Windows.Controls.ColumnDefinition]::new()
+            if ($w -eq '*') { $cd.Width = [Windows.GridLength]::new(1, [Windows.GridUnitType]::Star) }
             elseif ($w -eq 'Auto') { $cd.Width = [Windows.GridLength]::Auto }
-            else { $cd.Width = New-Object Windows.GridLength ([double]$w) }
+            else { $cd.Width = [Windows.GridLength]::new([double]$w) }
             $g.ColumnDefinitions.Add($cd)
         }
         $g
     }
     function Add-At($Grid, $El, [int]$Col) { [Windows.Controls.Grid]::SetColumn($El, $Col); [void]$Grid.Children.Add($El); $El }
-    function New-Switch { $s = New-Object Windows.Controls.Primitives.ToggleButton; $s.Style = $window.FindResource('Switch'); $s.VerticalAlignment = 'Center'; $s }
+    function New-Switch { $s = [Windows.Controls.Primitives.ToggleButton]::new(); $s.Style = $window.FindResource('Switch'); $s.VerticalAlignment = 'Center'; $s }
     function Format-Size([double]$Bytes) {
         if ($Bytes -ge 1GB) { '{0:N1} GB' -f ($Bytes / 1GB) } elseif ($Bytes -ge 1MB) { '{0:N0} MB' -f ($Bytes / 1MB) }
         elseif ($Bytes -gt 0) { '{0:N0} KB' -f ($Bytes / 1KB) } else { '0 MB' }
@@ -1540,10 +1655,10 @@ try {
         $t = New-Object System.Windows.Threading.DispatcherTimer; $t.Interval = [TimeSpan]::FromSeconds($Seconds); $t.Add_Tick($Tick); $t
     }
     function New-ActionRow($Icon, [string]$Title, [string]$Desc, $Action) {
-        $row = New-Object Windows.Controls.Border; $row.Style = $window.FindResource('RuleRow')
+        $row = [Windows.Controls.Border]::new(); $row.Style = $window.FindResource('RuleRow')
         $g = New-Cols @('54', '*', 'Auto')
         [void](Add-At $g (New-IconWell $Icon) 0)
-        $sp = New-Object Windows.Controls.StackPanel; $sp.VerticalAlignment = 'Center'
+        $sp = [Windows.Controls.StackPanel]::new(); $sp.VerticalAlignment = 'Center'
         [void]$sp.Children.Add((New-Text $Title 14.5 'Ink' 'SemiBold'))
         if ($Desc) { $d = New-Text $Desc 13.5 'Muted'; $d.Margin = '0,2,0,0'; [void]$sp.Children.Add($d) }
         [void](Add-At $g $sp 1)
@@ -1558,7 +1673,7 @@ try {
             $ico = [System.Drawing.Icon]::ExtractAssociatedIcon($exe)
             try { $src = [System.Windows.Interop.Imaging]::CreateBitmapSourceFromHIcon($ico.Handle, [Windows.Int32Rect]::Empty, [Windows.Media.Imaging.BitmapSizeOptions]::FromWidthAndHeight($Size, $Size)); $src.Freeze() }
             finally { $ico.Dispose() }   # libera el HICON: el BitmapSource ya tiene su propia copia
-            $img = New-Object Windows.Controls.Image; $img.Source = $src; $img.Width = $Size; $img.Height = $Size
+            $img = [Windows.Controls.Image]::new(); $img.Source = $src; $img.Width = $Size; $img.Height = $Size
             $img
         }
         catch { $null }
@@ -1573,17 +1688,25 @@ try {
     function Get-Luma([string]$Hex) { $c = [Windows.Media.ColorConverter]::ConvertFromString($Hex); (0.2126 * $c.R + 0.7152 * $c.G + 0.0722 * $c.B) / 255 }
     function Set-Theme([string]$Name) {
         $th = $Themes[$Name]; $script:ThemeName = $Name
+        # Todos los colores van en un diccionario nuevo que sustituye al anterior de una vez: cambiar los recursos
+        # uno a uno obliga a WPF a recorrer toda la ventana por cada color (con ~100 colores, varios segundos).
+        $rd = [Windows.ResourceDictionary]::new()
         foreach ($k in $th.Keys) {
-            if ($k -ne 'Dark') { $window.Resources[$k] = [Windows.Media.SolidColorBrush]::new([Windows.Media.Color][Windows.Media.ColorConverter]::ConvertFromString($th[$k])) }
+            if ($k -eq 'Dark') { continue }
+            $b = [Windows.Media.SolidColorBrush]::new([Windows.Media.Color][Windows.Media.ColorConverter]::ConvertFromString($th[$k])); $b.Freeze(); $rd[$k] = $b
             if ($k -like 'Cat-*') {   # fondo suave de cada color, para los pozos de icono
                 $c = [Windows.Media.Color][Windows.Media.ColorConverter]::ConvertFromString($th[$k]); $c.A = $(if ($th.Dark) { 0x30 } else { 0x24 })
-                $window.Resources["Soft$k"] = [Windows.Media.SolidColorBrush]::new($c)
+                $sb = [Windows.Media.SolidColorBrush]::new($c); $sb.Freeze(); $rd["Soft$k"] = $sb
             }
         }
-        foreach ($b in $BrandColors.Keys) {
-            $hex = $BrandColors[$b]; if ($th.Dark -and (Get-Luma $hex) -lt 0.3) { $hex = $th.Ink }
-            $window.Resources["Brand-$b"] = [Windows.Media.SolidColorBrush]::new([Windows.Media.Color][Windows.Media.ColorConverter]::ConvertFromString($hex))
+        foreach ($bk in $BrandColors.Keys) {
+            $hex = $BrandColors[$bk]; if ($th.Dark -and (Get-Luma $hex) -lt 0.3) { $hex = $th.Ink }
+            $b = [Windows.Media.SolidColorBrush]::new([Windows.Media.Color][Windows.Media.ColorConverter]::ConvertFromString($hex)); $b.Freeze(); $rd["Brand-$bk"] = $b
         }
+        if (-not $script:ThemeDict) { foreach ($k in @($rd.Keys)) { if ($window.Resources.Contains($k)) { $window.Resources.Remove($k) } } }   # los colores por defecto del XAML
+        $oldRd = $script:ThemeDict
+        $window.Resources.MergedDictionaries.Add($rd); $script:ThemeDict = $rd
+        if ($oldRd) { [void]$window.Resources.MergedDictionaries.Remove($oldRd) }
         $pen = [Windows.Media.Pen]::new($window.Resources['Grid'], 1)
         $dr = [Windows.Media.GeometryDrawing]::new($null, $pen, [Windows.Media.Geometry]::Parse('M0,0 L8,0 M0,0 L0,8'))
         $nb = [Windows.Media.DrawingBrush]::new($dr); $nb.TileMode = 'Tile'; $nb.Viewport = [Windows.Rect]::new(0, 0, 8, 8); $nb.ViewportUnits = 'Absolute'
@@ -1598,23 +1721,23 @@ try {
     try { $saved = (Get-Content -LiteralPath (Join-Path $script:Root 'theme.txt') -ErrorAction Stop | Select-Object -First 1).Trim(); if ($Themes.ContainsKey($saved)) { $startTheme = $saved } } catch {}
     Set-Theme $startTheme
     # ---------- logo: anillo abierto (el "O" de Opti, como un botón de encendido) con el 11 dentro
-    $logo = New-Object Windows.Controls.Canvas; $logo.Width = 64; $logo.Height = 64
+    $logo = [Windows.Controls.Canvas]::new(); $logo.Width = 64; $logo.Height = 64
     foreach ($p in @(@('M 47.56 18.44 A 22 22 0 1 1 16.44 18.44', 'Paper2'), @('M 23.5 12.5 L 27.5 8.5 L 27.5 31 M 36.5 12.5 L 40.5 8.5 L 40.5 31', 'Accent'))) {
-        $path = New-Object Windows.Shapes.Path; $path.Data = [Windows.Media.Geometry]::Parse($p[0]); $path.SetResourceReference([Windows.Shapes.Shape]::StrokeProperty, $p[1])
+        $path = [Windows.Shapes.Path]::new(); $path.Data = [Windows.Media.Geometry]::Parse($p[0]); $path.SetResourceReference([Windows.Shapes.Shape]::StrokeProperty, $p[1])
         $path.StrokeThickness = 6.5; $path.StrokeStartLineCap = 'Round'; $path.StrokeEndLineCap = 'Round'; $path.StrokeLineJoin = 'Round'
         [void]$logo.Children.Add($path)
     }
-    $vb = New-Object Windows.Controls.Viewbox; $vb.Width = 23; $vb.Height = 23; $vb.Child = $logo; $vb.Margin = '0,1,0,0'
+    $vb = [Windows.Controls.Viewbox]::new(); $vb.Width = 23; $vb.Height = 23; $vb.Child = $logo; $vb.Margin = '0,1,0,0'
     $ui.BrandMark.Content = $vb
     try { $window.Icon = [Windows.Media.Imaging.BitmapFrame]::Create([Uri](Join-Path $PSScriptRoot 'assets\optieleven.ico')) } catch {}
 
     # ---------- idioma (arriba del todo, junto al nombre)
     $ui.LangIcon.Content = (New-Icon 'globe-simple' 16 'Ink2')
     $ui.LangCode.Text = $script:LangCode.ToUpper()
-    $langMenu = New-Object Windows.Controls.ContextMenu
+    $langMenu = [Windows.Controls.ContextMenu]::new()
     $langMenu.PlacementTarget = $ui.BtnLang; $langMenu.Placement = 'Bottom'
     foreach ($l in @(Get-Languages)) {
-        $mi = New-Object Windows.Controls.MenuItem
+        $mi = [Windows.Controls.MenuItem]::new()
         $mi.Header = "$($l.Name)"; $mi.Tag = $l.Code; $mi.IsCheckable = $false
         if ($l.Code -eq $script:LangCode) { $mi.Icon = (New-Icon 'check' 14 'Accent'); $mi.FontWeight = 'SemiBold' }
         $mi.Add_Click({
@@ -1633,24 +1756,24 @@ try {
 
     # ---------- botones de preset: grandes, con icono, como el de Boost FPS
     foreach ($pb in @(@($ui.BtnRec, 'shield-check', 'Recomendado'), @($ui.BtnComp, 'lightning', 'Avanzado'))) {
-        $c = New-Object Windows.Controls.StackPanel; $c.Orientation = 'Horizontal'
-        $i = New-Icon $pb[1] 19 'AccentInk'; $i.Margin = '0,0,9,0'
-        $l = New-Object Windows.Controls.TextBlock; $l.Text = T $pb[2]; $l.VerticalAlignment = 'Center'
+        $c = [Windows.Controls.StackPanel]::new(); $c.Orientation = 'Horizontal'
+        $i = New-BtnIcon $pb[1] 19; $i.Margin = '0,0,9,0'
+        $l = [Windows.Controls.TextBlock]::new(); $l.Text = T $pb[2]; $l.VerticalAlignment = 'Center'
         [void]$c.Children.Add($i); [void]$c.Children.Add($l); $pb[0].Content = $c
     }
 
     # ---------- aviso al abrir
     $script:WarnFile = Join-Path $script:Root 'warning.ok'
     function Show-StartWarning {
-        $ov = New-Object Windows.Controls.Grid
+        $ov = [Windows.Controls.Grid]::new()
         [Windows.Controls.Grid]::SetRowSpan($ov, 10); [Windows.Controls.Grid]::SetColumnSpan($ov, 10); [Windows.Controls.Panel]::SetZIndex($ov, 100)
         $ov.Background = [Windows.Media.SolidColorBrush]::new([Windows.Media.Color]::FromArgb(0xC0, 0x05, 0x04, 0x02))
-        $card = New-Object Windows.Controls.Border; $card.CornerRadius = 14; $card.Padding = '30,26,30,24'; $card.MaxWidth = 580; $card.Margin = '24'
+        $card = [Windows.Controls.Border]::new(); $card.CornerRadius = 14; $card.Padding = '30,26,30,24'; $card.MaxWidth = 580; $card.Margin = '24'
         $card.HorizontalAlignment = 'Center'; $card.VerticalAlignment = 'Center'; $card.BorderThickness = 1.5
         $card.SetResourceReference($BgProp, 'Paper2'); $card.SetResourceReference([Windows.Controls.Border]::BorderBrushProperty, 'Accent')
-        $sp = New-Object Windows.Controls.StackPanel
+        $sp = [Windows.Controls.StackPanel]::new()
         $hd = New-Cols @('Auto', '*')
-        $well = New-Object Windows.Controls.Border; $well.Width = 48; $well.Height = 48; $well.CornerRadius = 11; $well.SetResourceReference($BgProp, 'Accent')
+        $well = [Windows.Controls.Border]::new(); $well.Width = 48; $well.Height = 48; $well.CornerRadius = 11; $well.SetResourceReference($BgProp, 'Accent')
         $wi = New-Icon 'warning-octagon' 26 'AccentInk'; $wi.HorizontalAlignment = 'Center'; $well.Child = $wi
         [void](Add-At $hd $well 0)
         $ht = New-Text 'Antes de empezar' 24 'Ink' 'Bold'; $ht.FontFamily = $window.FindResource('Display'); $ht.VerticalAlignment = 'Center'; $ht.Margin = '16,0,0,0'
@@ -1670,7 +1793,7 @@ try {
         $fine = New-Text 'Usas OptiEleven bajo tu responsabilidad.' 13 'Muted'; $fine.Margin = '36,16,0,0'
         [void]$sp.Children.Add($fine)
         $ft = New-Cols @('*', 'Auto'); $ft.Margin = '0,22,0,0'
-        $chk = New-Object Windows.Controls.StackPanel; $chk.Orientation = 'Horizontal'; $chk.VerticalAlignment = 'Center'
+        $chk = [Windows.Controls.StackPanel]::new(); $chk.Orientation = 'Horizontal'; $chk.VerticalAlignment = 'Center'
         $sw = New-Switch; $sw.Margin = '0,0,10,0'
         $swl = New-Text 'No volver a mostrar' 13.5 'Ink2'; $swl.VerticalAlignment = 'Center'
         [Windows.Automation.AutomationProperties]::SetName($sw, (T 'No volver a mostrar'))
@@ -1691,7 +1814,8 @@ try {
         $window.Add_ContentRendered({ $ok.Focus() }.GetNewClosure())
     }
     if (-not (Test-Path -LiteralPath $script:WarnFile)) { Show-StartWarning }
-    $window.Add_SourceInitialized({ Set-Theme $script:ThemeName })
+    # al tener ventana real solo falta la barra de título oscura; los colores ya están puestos
+    $window.Add_SourceInitialized({ $h = (New-Object Windows.Interop.WindowInteropHelper $window).Handle; $v = [int]$Themes[$script:ThemeName].Dark; [void][GP.Dwm]::DwmSetWindowAttribute($h, 20, [ref]$v, 4) })
     $ui.BtnTheme.Add_Click({ if ($script:ThemeName -eq 'Furrow') { Set-Theme 'FurrowNoche' } else { Set-Theme 'Furrow' } })
 
     if ($script:IsAdmin) { $ui.AdminIcon.Content = (New-Icon 'shield-check' 18 'Green'); $ui.AdminTitle.Text = (T 'Administrador'); $ui.AdminChip.ToolTip = (T 'Puedes aplicar y revertir ajustes.') }
@@ -1705,7 +1829,7 @@ try {
         $pg = $Pages[$key]
         if ($pg.Tab -and $key -ne 'all') { continue }
         if ($pg.Header) {
-            $hi = New-Object Windows.Controls.ListBoxItem; $hi.IsEnabled = $false; $hi.Focusable = $false
+            $hi = [Windows.Controls.ListBoxItem]::new(); $hi.IsEnabled = $false; $hi.Focusable = $false
             $hi.Content = (New-Text $pg.Header 12.5 'Muted' 'SemiBold'); $hi.Margin = '0,14,0,2'
             [void]$ui.Nav.Items.Add($hi)
             continue
@@ -1733,14 +1857,14 @@ try {
     $script:TabParts = [ordered]@{}
     foreach ($key in $Pages.Keys) {
         $pg = $Pages[$key]; if (-not $pg.Tab) { continue }
-        $tb = New-Object Windows.Controls.Primitives.ToggleButton; $tb.Style = $window.FindResource('TabToggle'); $tb.Tag = $key
+        $tb = [Windows.Controls.Primitives.ToggleButton]::new(); $tb.Style = $window.FindResource('TabToggle'); $tb.Tag = $key
         $n = if ($key -eq 'all') { $Tweaks.Count } else { @($Tweaks | Where-Object Cat -eq $key).Count }
-        $tc = New-Object Windows.Controls.StackPanel; $tc.Orientation = 'Horizontal'
+        $tc = [Windows.Controls.StackPanel]::new(); $tc.Orientation = 'Horizontal'
         if ($key -ne 'all') {   # punto del color de la categoría
-            $dot = New-Object Windows.Shapes.Ellipse; $dot.Width = 8; $dot.Height = 8; $dot.Margin = '0,0,7,0'; $dot.VerticalAlignment = 'Center'
+            $dot = [Windows.Shapes.Ellipse]::new(); $dot.Width = 8; $dot.Height = 8; $dot.Margin = '0,0,7,0'; $dot.VerticalAlignment = 'Center'
             $dot.SetResourceReference($FillProp, "Cat-$key"); [void]$tc.Children.Add($dot)
         }
-        $tl = New-Object Windows.Controls.TextBlock; $tl.Text = T $pg.Tab; $tl.VerticalAlignment = 'Center'; [void]$tc.Children.Add($tl)
+        $tl = [Windows.Controls.TextBlock]::new(); $tl.Text = T $pg.Tab; $tl.VerticalAlignment = 'Center'; [void]$tc.Children.Add($tl)
         $tb.Content = $tc; $tb.ToolTip = (T "$n ajustes")
         $tb.Add_Click({ param($src, $e) Show-Page $src.Tag })
         [void]$ui.Tabs.Children.Add($tb)
@@ -1755,33 +1879,33 @@ try {
     $script:Selected = $null
     $riskChip = @{ Seguro = @('Seguro', 'GreenSoft', 'Green'); Moderado = @('Moderado', 'AmberSoft', 'Amber'); Avanzado = @('Avanzado', 'RedSoft', 'Red') }
     $cats = @($Pages.Keys | Where-Object { $Pages[$_].Tab -and $_ -ne 'all' })
-    foreach ($cat in $cats) {
+    function Add-CategoryRows([string]$cat) {
         $list = @($Tweaks | Where-Object Cat -eq $cat | Sort-Object @{ e = { $_.Name } })
-        if (-not $list) { continue }
+        if (-not $list) { return }
         $head = New-Cols @('30', '*', 'Auto'); $head.Margin = '0,20,0,6'
         $hi = New-Icon $Pages[$cat].Icon 20 "Cat-$cat"; [void](Add-At $head $hi 0)
         $ht = New-Text $Pages[$cat].Title 18 'Ink' 'SemiBold'; $ht.FontFamily = $window.FindResource('Display'); [void](Add-At $head $ht 1)
         $hc = New-Text "$($list.Count)" 13 'Muted'; $hc.FontFamily = $window.FindResource('Mono'); $hc.VerticalAlignment = 'Bottom'; [void](Add-At $head $hc 2)
         [void]$ui.TweakList.Children.Add($head)
-        $rule = New-Object Windows.Controls.Border; $rule.Height = 2; $rule.CornerRadius = 1; $rule.SetResourceReference($BgProp, "Cat-$cat")
+        $rule = [Windows.Controls.Border]::new(); $rule.Height = 2; $rule.CornerRadius = 1; $rule.SetResourceReference($BgProp, "Cat-$cat")
         [void]$ui.TweakList.Children.Add($rule)
         $script:GroupHeads[$cat] = @($head, $rule)
 
         foreach ($t in $list) {
-            $border = New-Object Windows.Controls.Border; $border.Style = $window.FindResource('RuleRow'); $border.Padding = '0,7,8,7'; $border.Cursor = 'Hand'; $border.Tag = $t.Id
+            $border = [Windows.Controls.Border]::new(); $border.Style = $window.FindResource('RuleRow'); $border.Padding = '0,7,8,7'; $border.Cursor = 'Hand'; $border.Tag = $t.Id
             $outer = New-Cols @('3', '*')
-            $mark = New-Object Windows.Controls.Border; $mark.SetResourceReference($BgProp, 'Accent'); $mark.Visibility = 'Hidden'; $mark.Margin = '0,-7,0,-7'
+            $mark = [Windows.Controls.Border]::new(); $mark.SetResourceReference($BgProp, 'Accent'); $mark.Visibility = 'Hidden'; $mark.Margin = '0,-7,0,-7'
             [void](Add-At $outer $mark 0)
             $grid = New-Cols @('50', '*', 'Auto', 'Auto'); $grid.Margin = '7,0,0,0'
             $icon = if ($TweakIcons.ContainsKey($t.Id)) { $TweakIcons[$t.Id] } else { 'gear-six' }
             [void](Add-At $grid (New-IconWell $icon 38 "Cat-$cat") 0)
-            $left = New-Object Windows.Controls.StackPanel; $left.VerticalAlignment = 'Center'
+            $left = [Windows.Controls.StackPanel]::new(); $left.VerticalAlignment = 'Center'
             $nm = New-Text $t.Name 14.5 'Ink' 'SemiBold'; $nm.TextWrapping = 'NoWrap'; $nm.TextTrimming = 'CharacterEllipsis'
             $ds = New-Text $t.Desc 13 'Muted'; $ds.TextWrapping = 'NoWrap'; $ds.TextTrimming = 'CharacterEllipsis'; $ds.Margin = '0,1,0,0'
             if (-not $script:Pro) { $ds.Visibility = 'Collapsed' }
             [void]$left.Children.Add($nm); [void]$left.Children.Add($ds)
             [void](Add-At $grid $left 1)
-            $chips = New-Object Windows.Controls.StackPanel; $chips.Orientation = 'Horizontal'; $chips.Margin = '14,0,0,0'
+            $chips = [Windows.Controls.StackPanel]::new(); $chips.Orientation = 'Horizontal'; $chips.Margin = '14,0,0,0'
             $rc = $riskChip[$t.Risk]
             if ($t.Risk -ne 'Seguro') { [void]$chips.Children.Add((New-Chip $rc[0] $rc[1] $rc[2])) }
             $state = New-Chip '...' 'Paper3' 'Muted'; [void]$chips.Children.Add($state)
@@ -1805,6 +1929,14 @@ try {
             $script:Rows[$t.Id] = @{ Tweak = $t; Switch = $sw; Border = $border; State = $state; Mark = $mark; Applied = $null; Desc = $ds }
         }
     }
+    # Solo las dos primeras categorías antes de enseñar la ventana (lo que se ve al abrir); el resto justo después
+    # del primer pintado, para que la ventana aparezca antes. Este evento se registra antes que la comprobación de
+    # estado, así que cuando esa empieza ya están todas las filas.
+    foreach ($cat in @($cats | Select-Object -First 2)) { Add-CategoryRows $cat }
+    $window.Add_ContentRendered({
+        foreach ($cat in @($cats | Select-Object -Skip 2)) { Add-CategoryRows $cat }
+        if ($script:CurrentPage -and $script:CurrentPage -ne 'all' -and $Pages[$script:CurrentPage].Tab) { Show-Page $script:CurrentPage }
+    })
 
     # ---------- detalle: qué cambia exactamente
     function Select-Row($row) {
@@ -1816,8 +1948,14 @@ try {
     function Show-Detail($row) {
         $d = $ui.Detail; $d.Children.Clear()
         if (-not $row) {
-            $e = New-Text 'Elige un ajuste de la lista para ver qué claves, servicios y tareas toca.' 14 'Muted'
-            [void]$d.Children.Add($e); return
+            $well = [Windows.Controls.Border]::new(); $well.Width = 52; $well.Height = 52; $well.CornerRadius = 14; $well.HorizontalAlignment = 'Left'
+            $well.SetResourceReference($BgProp, 'AccentSoft')
+            $wi = New-Icon 'sliders-horizontal' 26 'Accent'; $wi.HorizontalAlignment = 'Center'; $well.Child = $wi
+            [void]$d.Children.Add($well)
+            $et = New-Text 'Elige un ajuste' 20 'Ink' 'SemiBold'; $et.FontFamily = $window.FindResource('Display'); $et.Margin = '0,16,0,6'
+            [void]$d.Children.Add($et)
+            [void]$d.Children.Add((New-Text $(if ($script:Pro) { 'Toca cualquier fila para ver qué claves, servicios y tareas cambia, con el valor de ahora y el de después.' } else { 'Toca cualquier fila para ver qué hace y si es seguro. O pulsa Recomendado para marcar de una vez lo que conviene a casi todos.' }) 14 'Muted'))
+            return
         }
         $t = $row.Tweak
         $hd = New-Cols @('52', '*')
@@ -1827,7 +1965,7 @@ try {
         [void]$d.Children.Add($hd)
         $ds = New-Text $t.Desc 13.5 'Ink2'; $ds.Margin = '0,10,0,10'; [void]$d.Children.Add($ds)
 
-        $chips = New-Object Windows.Controls.WrapPanel
+        $chips = [Windows.Controls.WrapPanel]::new()
         $rc = $riskChip[$t.Risk]; [void]$chips.Children.Add((New-Chip $rc[0] $rc[1] $rc[2]))
         [void]$chips.Children.Add((New-Chip $(if ($t.Presets -contains 'R') { 'En Recomendado' } elseif ($t.Presets -contains 'A') { 'En Avanzado' } else { 'Solo a mano' }) 'Paper3' 'Ink2'))
         if ($t.Reboot) { [void]$chips.Children.Add((New-Chip 'Reinicio' 'Paper3' 'Ink2')) }
@@ -1839,7 +1977,7 @@ try {
         if (-not $script:Pro) {
             # vista sencilla: sin claves ni valores, solo si cambia algo y cómo verlo
             $n = $changes
-            $box = New-Object Windows.Controls.Border; $box.CornerRadius = 10; $box.Padding = '14,12'; $box.Margin = '0,16,0,0'
+            $box = [Windows.Controls.Border]::new(); $box.CornerRadius = 10; $box.Padding = '14,12'; $box.Margin = '0,16,0,0'
             $box.SetResourceReference($BgProp, "SoftCat-$($t.Cat)")
             $bg = New-Cols @('Auto', '*')
             $bi = New-Icon $(if ($revert -or $n) { 'arrow-counter-clockwise' } else { 'check' }) 20 "Cat-$($t.Cat)"; $bi.Margin = '0,0,12,0'; $bi.VerticalAlignment = 'Top'
@@ -1869,11 +2007,11 @@ try {
         $shown = 0
         foreach ($l in $diff) {
             if ($shown -ge 30) { $more = New-Text "y $($diff.Count - 30) más" 12.5 'Muted'; $more.Margin = '0,8,0,0'; [void]$d.Children.Add($more); break }
-            $li = New-Object Windows.Controls.Border; $li.SetResourceReference([Windows.Controls.Border]::BorderBrushProperty, 'Rule'); $li.BorderThickness = '0,0,0,1'; $li.Padding = '0,7'
-            $sp = New-Object Windows.Controls.StackPanel
+            $li = [Windows.Controls.Border]::new(); $li.SetResourceReference([Windows.Controls.Border]::BorderBrushProperty, 'Rule'); $li.BorderThickness = '0,0,0,1'; $li.Padding = '0,7'
+            $sp = [Windows.Controls.StackPanel]::new()
             $tg = New-Mono $l.Target 12 'Ink2'; $tg.TextWrapping = 'Wrap'
             [void]$sp.Children.Add($tg)
-            $vg = New-Object Windows.Controls.WrapPanel; $vg.Margin = '0,3,0,0'
+            $vg = [Windows.Controls.WrapPanel]::new(); $vg.Margin = '0,3,0,0'
             if ($l.Same) { [void]$vg.Children.Add((New-Text "sin cambios: $($l.Before)" 12.5 'Muted')) }
             else {
                 $b4 = New-Text $l.Before 12.5 'Muted'; $b4.TextDecorations = 'Strikethrough'
@@ -2012,8 +2150,10 @@ try {
     function Update-Status {
         $ui.LedgerSub.Text = T 'Comprobando el estado...'; Update-Ui
         $script:AppxNames = @(Get-AppxPackage -ErrorAction SilentlyContinue | ForEach-Object Name)
-        foreach ($row in $script:Rows.Values) {
+        $i = 0
+        foreach ($row in @($script:Rows.Values)) {
             $row.Applied = try { Test-Tweak $row.Tweak } catch { $null }
+            if ((++$i % 4) -eq 0) { Update-Ui }   # la ventana sigue respondiendo mientras comprueba
             if ($null -eq $row.Applied) { $row.Switch.IsEnabled = $false }
             else { $row.Switch.IsEnabled = -not $script:Busy; $row.Switch.IsChecked = [bool]$row.Applied }
         }
@@ -2059,10 +2199,8 @@ try {
             }
             foreach ($row in $script:Rows.Values) { $row.Border.Visibility = if ($Key -eq 'all' -or $row.Tweak.Cat -eq $Key) { 'Visible' } else { 'Collapsed' } }
             $ui.TweakPage.ScrollToTop()
-            if (-not $script:Selected -or $script:Selected.Border.Visibility -ne 'Visible') {
-                $first = @($script:Rows.Values | Where-Object { $_.Border.Visibility -eq 'Visible' }) | Select-Object -First 1
-                Select-Row $first
-            }
+            # no se elige nada solo: el panel derecho explica qué hacer hasta que tocas un ajuste
+            if ($script:Selected -and $script:Selected.Border.Visibility -ne 'Visible') { Select-Row $null }
         }
         if ($isModule) {
             if (-not $script:ModuleCache.ContainsKey($Key)) {

@@ -48,11 +48,11 @@ function Start-ConsoleTask([string]$Title, [string[]]$Commands) {
 }
 
 function New-RepairPage {
-    $root = New-Object Windows.Controls.StackPanel
+    $root = [Windows.Controls.StackPanel]::new()
     [void]$root.Children.Add((New-Ruled))
     for ($i = 0; $i -lt $RepairDefs.Count; $i++) {
         $d = $RepairDefs[$i]
-        $act = New-Object Windows.Controls.StackPanel; $act.Orientation = 'Horizontal'
+        $act = [Windows.Controls.StackPanel]::new(); $act.Orientation = 'Horizontal'
         $tm = New-Text $d.Time 13 'Muted'; $tm.VerticalAlignment = 'Center'; $tm.Margin = '0,0,16,0'; $tm.TextWrapping = 'NoWrap'
         $b = New-Btn 'Ejecutar'; $b.Tag = $i
         if ($d.Admin -and -not $script:IsAdmin) { $b.IsEnabled = $false; $b.ToolTip = (T 'Necesita permisos de administrador') }

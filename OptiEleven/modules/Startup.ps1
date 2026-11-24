@@ -62,16 +62,16 @@ function Update-StartupList {
     if (-not $items) { [void]$script:StartupList.Children.Add((New-Text 'No hay programas de inicio registrados.' 13 'Muted')); return }
     [void]$script:StartupList.Children.Add((New-Ruled))
     foreach ($it in $items) {
-        $card = New-Object Windows.Controls.Border
+        $card = [Windows.Controls.Border]::new()
         $card.Style = $window.FindResource('RuleRow')
         $g = New-Cols @('52', '*', 'Auto')
         $ic = Get-ExeIcon $it.Command 28
         if ($ic) { $ic.VerticalAlignment = 'Top'; $ic.HorizontalAlignment = 'Left'; $ic.Margin = '3,3,0,0'; [void](Add-At $g $ic 0) }
         else { [void](Add-At $g (New-IconWell 'sign-in') 0) }
-        $sp = New-Object Windows.Controls.StackPanel
+        $sp = [Windows.Controls.StackPanel]::new()
         $nm = New-Text $it.Name 15 'Ink' 'Medium'
         $cmd = New-Mono $it.Command 12 'Muted'; $cmd.TextTrimming = 'CharacterEllipsis'; $cmd.Margin = '0,3,0,0'; $cmd.ToolTip = $it.Command; if (-not $script:Pro) { $cmd.Visibility = 'Collapsed' }
-        $meta = New-Object Windows.Controls.WrapPanel; $meta.Margin = '0,8,0,0'
+        $meta = [Windows.Controls.WrapPanel]::new(); $meta.Margin = '0,8,0,0'
         [void]$meta.Children.Add((New-Chip $it.Scope 'Paper3' 'Ink2'))
         foreach ($el in $nm, $cmd, $meta) { [void]$sp.Children.Add($el) }
         [void](Add-At $g $sp 1)
@@ -98,11 +98,11 @@ function Update-StartupList {
 }
 
 function New-StartupPage {
-    $root = New-Object Windows.Controls.StackPanel
+    $root = [Windows.Controls.StackPanel]::new()
     $bar = New-Cols @('*', 'Auto'); $bar.Margin = '0,0,0,14'
     $script:StartupStatus = New-Text '' 13 'Muted'; $script:StartupStatus.VerticalAlignment = 'Center'; $script:StartupStatus.Margin = '0,0,16,0'
     [void](Add-At $bar $script:StartupStatus 0)
-    $btns = New-Object Windows.Controls.StackPanel; $btns.Orientation = 'Horizontal'
+    $btns = [Windows.Controls.StackPanel]::new(); $btns.Orientation = 'Horizontal'
     $b1 = New-Btn 'Apps de la Store'; $b1.Margin = '0,0,8,0'; $b1.ToolTip = (T 'Teams, Spotify y otras apps de la Store se gestionan en Configuración')
     $b1.Add_Click({ Start-Process 'ms-settings:startupapps' })
     $b2 = New-Btn 'Volver a leer'
@@ -110,7 +110,7 @@ function New-StartupPage {
     [void]$btns.Children.Add($b1); [void]$btns.Children.Add($b2)
     [void](Add-At $bar $btns 1)
     [void]$root.Children.Add($bar)
-    $script:StartupList = New-Object Windows.Controls.StackPanel
+    $script:StartupList = [Windows.Controls.StackPanel]::new()
     [void]$root.Children.Add($script:StartupList)
     Update-StartupList
     $root
