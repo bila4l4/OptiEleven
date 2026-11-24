@@ -15,7 +15,7 @@ Quita telemetría y basura, libera RAM antes de jugar y deshaz cualquier cambio 
 **Ábrelo con un comando.** Pega esto en PowerShell:
 
 ```powershell
-irm https://raw.githubusercontent.com/bilal1122c/OptiEleven/main/run.ps1 | iex
+irm bilal1122c.github.io/OptiEleven | iex
 ```
 
 o [⬇ descarga OptiEleven.zip](https://github.com/bilal1122c/OptiEleven/releases/latest/download/OptiEleven.zip), descomprímelo y haz doble clic en `OptiEleven.cmd`. No hay nada que compilar ni instalar.
@@ -58,7 +58,7 @@ La mayoría de scripts de "debloat" son un montón de cambios en el registro que
 1. Clic derecho en el botón Inicio → **Terminal**, pega este comando y pulsa Intro. Acepta el permiso de administrador.
 
    ```powershell
-   irm https://raw.githubusercontent.com/bilal1122c/OptiEleven/main/run.ps1 | iex
+   irm bilal1122c.github.io/OptiEleven | iex
    ```
 
    Descarga la última versión en `%LOCALAPPDATA%\OptiEleven`, y si lo vuelves a ejecutar la actualiza. Puedes [leer el script](run.ps1) antes; es corto.

@@ -15,7 +15,7 @@ Strip telemetry and bloat, free RAM before you play, and undo any change with on
 **Open it with one command.** Paste this in PowerShell:
 
 ```powershell
-irm https://raw.githubusercontent.com/bilal1122c/OptiEleven/main/run.ps1 | iex
+irm bilal1122c.github.io/OptiEleven | iex
 ```
 
 or [⬇ download OptiEleven.zip](https://github.com/bilal1122c/OptiEleven/releases/latest/download/OptiEleven.zip), extract it and double-click `OptiEleven.cmd`. Nothing to build or install.
@@ -69,7 +69,7 @@ Most "debloat" scripts are a wall of registry edits you run once and hope for th
 1. Right-click the Start button → **Terminal**, paste the command below and press Enter. Accept the administrator prompt.
 
    ```powershell
-   irm https://raw.githubusercontent.com/bilal1122c/OptiEleven/main/run.ps1 | iex
+   irm bilal1122c.github.io/OptiEleven | iex
    ```
 
    It downloads the latest release into `%LOCALAPPDATA%\OptiEleven`, and running it again updates it. [Read the script](run.ps1) first if you like; it's short.
