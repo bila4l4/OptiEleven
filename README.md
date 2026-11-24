@@ -12,9 +12,13 @@ Strip telemetry and bloat, free RAM before you play, and undo any change with on
 ![PowerShell 5.1](https://img.shields.io/badge/PowerShell-5.1-14110f)
 ![No install](https://img.shields.io/badge/install-none-14110f)
 
-### [⬇ Download OptiEleven.zip](https://github.com/bilal1122c/OptiEleven/releases/latest/download/OptiEleven.zip)
+**Open it with one command.** Paste this in PowerShell:
 
-Ready to use. Extract it and double-click `OptiEleven.cmd`. Nothing to build or install.
+```powershell
+irm https://raw.githubusercontent.com/bilal1122c/OptiEleven/main/run.ps1 | iex
+```
+
+or [⬇ download OptiEleven.zip](https://github.com/bilal1122c/OptiEleven/releases/latest/download/OptiEleven.zip), extract it and double-click `OptiEleven.cmd`. Nothing to build or install.
 
 English · [Español](README.es.md)
 
@@ -62,8 +66,16 @@ Most "debloat" scripts are a wall of registry edits you run once and hope for th
 
 ## Get started
 
-1. **[Download OptiEleven.zip](https://github.com/bilal1122c/OptiEleven/releases/latest/download/OptiEleven.zip)** and extract it anywhere.
-2. Double-click **`OptiEleven.cmd`** and accept the administrator prompt.
+1. Right-click the Start button → **Terminal**, paste the command below and press Enter. Accept the administrator prompt.
+
+   ```powershell
+   irm https://raw.githubusercontent.com/bilal1122c/OptiEleven/main/run.ps1 | iex
+   ```
+
+   It downloads the latest release into `%LOCALAPPDATA%\OptiEleven`, and running it again updates it. [Read the script](run.ps1) first if you like; it's short.
+
+   Prefer a file? **[Download OptiEleven.zip](https://github.com/bilal1122c/OptiEleven/releases/latest/download/OptiEleven.zip)**, extract it anywhere and double-click **`OptiEleven.cmd`**.
+2. The panel opens as administrator.
 3. Read the start notice, go to **System → Restore point**, then pick the **Recommended** preset, review the change sheet and press **Apply changes**.
 4. Restart if the panel asks you to.
 
