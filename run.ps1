@@ -1,5 +1,5 @@
 # OptiEleven one-line launcher
-#   irm https://raw.githubusercontent.com/bilal1122c/OptiEleven/main/run.ps1 | iex
+#   irm https://raw.githubusercontent.com/bila4l4/OptiEleven/main/run.ps1 | iex
 #
 # Downloads the latest release from GitHub into %LOCALAPPDATA%\OptiEleven, updates it if
 # a newer one exists, and opens the panel as administrator. Nothing else is installed.
@@ -10,7 +10,7 @@
     $ProgressPreference = 'SilentlyContinue'   # the progress bar makes downloads in PowerShell 5.1 very slow
     [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
 
-    $repo    = 'bilal1122c/OptiEleven'
+    $repo    = 'bila4l4/OptiEleven'
     $home_   = Join-Path $env:LOCALAPPDATA 'OptiEleven'
     $app     = Join-Path $home_ 'app'
     $verFile = Join-Path $home_ 'version.txt'

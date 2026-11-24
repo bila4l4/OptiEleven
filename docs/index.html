@@ -35,12 +35,12 @@
 <main>
   <div class="brand"><img src="logo.png" alt=""><h1>OptiEleven</h1></div>
   <p class="lede">A reversible Windows 11 optimizer for gaming. Strip telemetry and bloat, free RAM before you play, and undo any change with one click.</p>
-  <div class="cmd"><code id="cmd">irm bilal1122c.github.io/OptiEleven | iex</code><button id="copy" type="button">Copy</button></div>
+  <div class="cmd"><code id="cmd">irm bila4l4.github.io/OptiEleven | iex</code><button id="copy" type="button">Copy</button></div>
   <p class="hint">Right-click Start, open <strong>Terminal</strong>, paste it and press Enter. It downloads the latest release and opens the panel as administrator.</p>
   <div class="links">
-    <a href="https://github.com/bilal1122c/OptiEleven/releases/latest/download/OptiEleven.zip">Download ZIP</a>
-    <a href="https://github.com/bilal1122c/OptiEleven">Source on GitHub</a>
-    <a href="https://github.com/bilal1122c/OptiEleven/blob/main/run.ps1">Read the script</a>
+    <a href="https://github.com/bila4l4/OptiEleven/releases/latest/download/OptiEleven.zip">Download ZIP</a>
+    <a href="https://github.com/bila4l4/OptiEleven">Source on GitHub</a>
+    <a href="https://github.com/bila4l4/OptiEleven/blob/main/run.ps1">Read the script</a>
   </div>
   <img class="shot" src="screenshots/settings-dark.png" alt="OptiEleven settings page with the change preview and the change sheet">
   <ul>
@@ -60,7 +60,7 @@
 <!-- Lo de abajo es el mismo run.ps1: esta página es a la vez HTML y PowerShell.
      Para PowerShell, todo el HTML de arriba está dentro de un comentario de bloque. #>
 # OptiEleven one-line launcher
-#   irm https://raw.githubusercontent.com/bilal1122c/OptiEleven/main/run.ps1 | iex
+#   irm https://raw.githubusercontent.com/bila4l4/OptiEleven/main/run.ps1 | iex
 #
 # Downloads the latest release from GitHub into %LOCALAPPDATA%\OptiEleven, updates it if
 # a newer one exists, and opens the panel as administrator. Nothing else is installed.
@@ -71,7 +71,7 @@
     $ProgressPreference = 'SilentlyContinue'   # the progress bar makes downloads in PowerShell 5.1 very slow
     [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
 
-    $repo    = 'bilal1122c/OptiEleven'
+    $repo    = 'bila4l4/OptiEleven'
     $home_   = Join-Path $env:LOCALAPPDATA 'OptiEleven'
     $app     = Join-Path $home_ 'app'
     $verFile = Join-Path $home_ 'version.txt'
