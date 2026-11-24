@@ -155,10 +155,10 @@ function Update-AppCard([string]$Id) {
         $c.Glyph.Visibility = 'Hidden'
     }
     if ($null -eq $script:AppInstalled) { $c.State.Text = (T ''); return }
-    if ($inst -and $sel) { $c.State.Text = (T 'Instalada, se actualizará'); $c.State.SetResourceReference($FgProp, 'Accent') }
-    elseif ($inst) { $c.State.Text = (T 'Instalada'); $c.State.SetResourceReference($FgProp, 'Good') }
-    elseif ($sel) { $c.State.Text = (T 'Se instalará'); $c.State.SetResourceReference($FgProp, 'Accent') }
-    else { $c.State.Text = (T 'No instalada'); $c.State.SetResourceReference($FgProp, 'Muted') }
+    if ($inst -and $sel) { $c.State.Text = (T 'Instalada, se actualizará'); $c.State.SetResourceReference($FgProp, 'Cat-Actualizaciones'); $c.State.FontWeight = 'SemiBold' }
+    elseif ($inst) { $c.State.Text = (T 'Instalada'); $c.State.SetResourceReference($FgProp, 'Accent'); $c.State.FontWeight = 'SemiBold' }
+    elseif ($sel) { $c.State.Text = (T 'Se instalará'); $c.State.SetResourceReference($FgProp, 'Cat-Actualizaciones'); $c.State.FontWeight = 'SemiBold' }
+    else { $c.State.Text = (T 'No instalada'); $c.State.SetResourceReference($FgProp, 'Muted'); $c.State.FontWeight = 'Normal' }
 }
 
 function Update-AppBar {
@@ -235,21 +235,37 @@ Write-Host ''
 Read-Host ($($m.Close)) | Out-Null
 "@
 }
-function Save-AppInstaller([object[]]$Apps, [string]$Path) {
-    # .cmd que se eleva solo una vez (como Ninite) y ejecuta el PowerShell que lleva dentro
-    $ps = Get-AppInstallScript $Apps
-    $cmd = @"
-@echo off
-rem OptiEleven - instalador de apps. Generado por OptiEleven (https://github.com/bila4l4/OptiEleven).
-rem Instala con winget, en silencio, las apps elegidas; las que ya estan instaladas se saltan.
-net session >nul 2>&1 || (powershell -NoProfile -Command "Start-Process -FilePath '%~f0' -Verb RunAs" & exit /b)
-set "OE_SELF=%~f0"
-powershell -NoProfile -ExecutionPolicy Bypass -Command "`$t = [IO.File]::ReadAllText(`$env:OE_SELF); Invoke-Expression (`$t.Substring(`$t.IndexOf('#OE-PS' + '-START#')))"
-exit /b
-#OE-PS-START#
-$ps
-"@
-    [IO.File]::WriteAllText($Path, (Remove-Accents ($cmd -replace "(?<!`r)`n", "`r`n")), [Text.Encoding]::ASCII)
+# ---------- instalador .exe, como el de Ninite: una ventana con la lista y el progreso, se eleva una sola vez
+# Se compila aquí mismo (assets\installer.cs) con el compilador de C# que trae Windows, sin descargar nada.
+function ConvertTo-CsString([string]$x) { $x.Replace('\', '\\').Replace('"', '\"') }
+function Save-AppInstallerExe([object[]]$Apps, [string]$Path) {
+    $assets = Join-Path (Split-Path $PSScriptRoot -Parent) 'assets'
+    $rows = ($Apps | ForEach-Object { '        new string[] {{ "{0}", "{1}", "{2}" }},' -f (ConvertTo-CsString $_.Id), (ConvertTo-CsString (T $_.Name)), (ConvertTo-CsString ([string]$_.Args)) }) -join "`r`n"
+    $m = [ordered]@{
+        '__TITLE__' = T 'OptiEleven - instalador de apps'; '__INTRO__' = T 'Instalando {0} apps con winget. Puedes dejarlo trabajando.'
+        '__CHECK__' = T 'Comprobando...'; '__INSTALLING__' = T 'Instalando...'; '__DONE__' = T 'Instalada'; '__ALREADY__' = T 'Ya estaba instalada'
+        '__FAIL__' = T 'Error (código {0})'; '__WAIT__' = T 'En espera'; '__SUMMARY__' = T '{0} instaladas, {1} ya estaban y {2} con error.'; '__READY__' = T 'Listo'
+        '__CLOSE__' = T 'Cerrar'; '__NOWINGET__' = T 'winget no está disponible. Instala "Instalador de aplicación" desde Microsoft Store.'
+    }
+    $src = [IO.File]::ReadAllText((Join-Path $assets 'installer.cs')).Replace('__APPS__', $rows)
+    foreach ($k in $m.Keys) { $src = $src.Replace($k, (ConvertTo-CsString $m[$k])) }
+    $tmp = Join-Path $env:TEMP ('optieleven-exe-' + [guid]::NewGuid().ToString('N')); [void](New-Item -ItemType Directory -Path $tmp)
+    try {
+        [IO.File]::WriteAllText((Join-Path $tmp 'installer.cs'), $src, (New-Object Text.UTF8Encoding $true))
+        # pide administrador al abrirse (una sola vez para todas las apps) y se ve nítido con escalado de pantalla
+        $manifest = '<?xml version="1.0" encoding="utf-8"?><assembly manifestVersion="1.0" xmlns="urn:schemas-microsoft-com:asm.v1"><assemblyIdentity version="1.0.0.0" name="OptiEleven.AppInstaller"/>' +
+            '<trustInfo xmlns="urn:schemas-microsoft-com:asm.v2"><security><requestedPrivileges xmlns="urn:schemas-microsoft-com:asm.v3"><requestedExecutionLevel level="requireAdministrator" uiAccess="false"/></requestedPrivileges></security></trustInfo>' +
+            '<application xmlns="urn:schemas-microsoft-com:asm.v3"><windowsSettings><dpiAware xmlns="http://schemas.microsoft.com/SMI/2005/WindowsSettings">true/pm</dpiAware></windowsSettings></application></assembly>'
+        [IO.File]::WriteAllText((Join-Path $tmp 'app.manifest'), $manifest, (New-Object Text.UTF8Encoding $false))
+        $csc = Join-Path ([Runtime.InteropServices.RuntimeEnvironment]::GetRuntimeDirectory()) 'csc.exe'
+        $out = Join-Path $tmp 'OptiEleven-Apps.exe'
+        $cargs = @('/nologo', '/target:winexe', '/optimize+', "/out:$out", "/win32manifest:$(Join-Path $tmp 'app.manifest')", '/r:System.Windows.Forms.dll', '/r:System.Drawing.dll')
+        $ico = Join-Path $assets 'optieleven.ico'; if (Test-Path $ico) { $cargs += "/win32icon:$ico" }
+        $log = & $csc @cargs (Join-Path $tmp 'installer.cs') 2>&1
+        if ($LASTEXITCODE -ne 0 -or -not (Test-Path $out)) { throw "csc: $(($log | Out-String).Trim())" }
+        Copy-Item -LiteralPath $out -Destination $Path -Force
+    }
+    finally { Remove-Item -LiteralPath $tmp -Recurse -Force -ErrorAction SilentlyContinue }
 }
 function Get-SelectedApps { @(foreach ($grp in $AppCatalog.Values) { foreach ($a in $grp) { if ($script:AppSel.Contains($a.Id)) { $a } } }) }
 
@@ -376,11 +392,12 @@ function New-AppsPage {
         $apps = Get-SelectedApps
         if (-not $apps) { return }
         $dlg = [Microsoft.Win32.SaveFileDialog]::new()
-        $dlg.FileName = 'OptiEleven-Apps.cmd'; $dlg.Filter = T 'Instalador (*.cmd)|*.cmd'
+        $dlg.FileName = 'OptiEleven-Apps.exe'; $dlg.Filter = T 'Instalador (*.exe)|*.exe'
         $dlg.InitialDirectory = [Environment]::GetFolderPath('Desktop')
         if (-not $dlg.ShowDialog($window)) { return }
         try {
-            Save-AppInstaller $apps $dlg.FileName
+            $window.Cursor = [Windows.Input.Cursors]::Wait; Update-Ui
+            try { Save-AppInstallerExe $apps $dlg.FileName } finally { $window.Cursor = $null }
             Write-Log "Instalador creado con $($apps.Count) apps: $($dlg.FileName)" 'OK'
             $script:AppStatus.Text = (T "Instalador creado: $([IO.Path]::GetFileName($dlg.FileName)). Ábrelo en cualquier PC con Windows 10 u 11 y lo instala todo de una vez.")
         }
