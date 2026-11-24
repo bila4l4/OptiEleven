@@ -156,7 +156,7 @@ function Update-AppCard([string]$Id) {
     }
     if ($null -eq $script:AppInstalled) { $c.State.Text = (T ''); return }
     if ($inst -and $sel) { $c.State.Text = (T 'Instalada, se actualizará'); $c.State.SetResourceReference($FgProp, 'Cat-Actualizaciones'); $c.State.FontWeight = 'SemiBold' }
-    elseif ($inst) { $c.State.Text = (T 'Instalada'); $c.State.SetResourceReference($FgProp, 'Accent'); $c.State.FontWeight = 'SemiBold' }
+    elseif ($inst) { $c.State.Text = (T 'Instalada'); $c.State.SetResourceReference($FgProp, 'Cat-Rendimiento'); $c.State.FontWeight = 'SemiBold' }
     elseif ($sel) { $c.State.Text = (T 'Se instalará'); $c.State.SetResourceReference($FgProp, 'Cat-Actualizaciones'); $c.State.FontWeight = 'SemiBold' }
     else { $c.State.Text = (T 'No instalada'); $c.State.SetResourceReference($FgProp, 'Muted'); $c.State.FontWeight = 'Normal' }
 }
