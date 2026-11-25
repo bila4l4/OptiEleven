@@ -80,6 +80,52 @@ namespace GP {
         // identidad propia en la barra de tareas: sin ella, Windows agrupa la ventana con PowerShell y muestra su icono
         [DllImport("shell32.dll", CharSet = CharSet.Unicode)] public static extern int SetCurrentProcessExplicitAppUserModelID(string appId);
     }
+    // Espacio en disco (como WinDirStat): suma lo que ocupa cada carpeta de primer nivel y guarda los archivos más grandes.
+    // En C# porque recorrer un disco entero desde PowerShell tardaría minutos. Los contadores se leen en vivo desde la ventana.
+    public static class DiskScan {
+        public static long Files, Bytes; public static string Current = ""; public static volatile bool Cancel;
+        public class Item { public string Path; public string Name; public long Size; public long Count; public bool Dir; }
+        static System.Collections.Generic.List<Item> top; static int topN;
+        static void AddTop(System.IO.FileInfo f, long len) {
+            if (top.Count >= topN && len <= top[top.Count - 1].Size) return;
+            top.Add(new Item { Path = f.FullName, Name = f.Name, Size = len, Count = 1 });
+            top.Sort((a, b) => b.Size.CompareTo(a.Size));
+            if (top.Count > topN) top.RemoveAt(top.Count - 1);
+        }
+        static bool Skip(System.IO.FileSystemInfo e) { return (e.Attributes & System.IO.FileAttributes.ReparsePoint) != 0; }   // uniones y enlaces: no contar dos veces
+        static void Walk(System.IO.DirectoryInfo start, ref long size, ref long count) {
+            var stack = new System.Collections.Generic.Stack<System.IO.DirectoryInfo>(); stack.Push(start);
+            while (stack.Count > 0 && !Cancel) {
+                var cur = stack.Pop(); Current = cur.FullName;
+                System.IO.FileSystemInfo[] es; try { es = cur.GetFileSystemInfos(); } catch { continue; }   // sin permiso: se salta
+                foreach (var e in es) {
+                    if ((e.Attributes & System.IO.FileAttributes.Directory) != 0) { if (!Skip(e)) stack.Push((System.IO.DirectoryInfo)e); continue; }
+                    var f = (System.IO.FileInfo)e; long len; try { len = f.Length; } catch { continue; }
+                    size += len; count++; Files++; Bytes += len; AddTop(f, len);
+                }
+            }
+        }
+        // devuelve { Item[] carpetas de primer nivel (y los archivos sueltos como una entrada más), Item[] archivos más grandes }
+        public static object[] Scan(string root, int topCount) {
+            Files = 0; Bytes = 0; Cancel = false; top = new System.Collections.Generic.List<Item>(); topN = topCount;
+            var kids = new System.Collections.Generic.List<Item>(); long looseSize = 0, looseCount = 0;
+            System.IO.FileSystemInfo[] entries; try { entries = new System.IO.DirectoryInfo(root).GetFileSystemInfos(); } catch { entries = new System.IO.FileSystemInfo[0]; }
+            foreach (var e in entries) {
+                if (Cancel) break;
+                if ((e.Attributes & System.IO.FileAttributes.Directory) != 0) {
+                    if (Skip(e)) continue;
+                    long s = 0, c = 0; Walk((System.IO.DirectoryInfo)e, ref s, ref c);
+                    kids.Add(new Item { Path = e.FullName, Name = e.Name, Size = s, Count = c, Dir = true });
+                } else {
+                    var f = (System.IO.FileInfo)e; long len; try { len = f.Length; } catch { continue; }
+                    looseSize += len; looseCount++; Files++; Bytes += len; AddTop(f, len);
+                }
+            }
+            if (looseCount > 0) kids.Add(new Item { Path = root, Name = "", Size = looseSize, Count = looseCount, Dir = false });
+            kids.Sort((a, b) => b.Size.CompareTo(a.Size));
+            return new object[] { kids.ToArray(), top.ToArray() };
+        }
+    }
     public static class Ws {
         [DllImport("psapi.dll")] public static extern bool EmptyWorkingSet(IntPtr h);
     }
@@ -1543,6 +1589,7 @@ $Pages = [ordered]@{
     'm-apps'          = @{ Label = 'Instalar apps'; Icon = 'download-simple'; Module = 'New-AppsPage';     Title = 'Instalar apps';       Desc = 'Launchers, Discord, monitorización y librerías para juegos, con winget.' }
     'm-startup'       = @{ Label = 'Arranque';        Icon = 'sign-in';         Module = 'New-StartupPage';  Title = 'Programas de inicio'; Desc = 'Lo que arranca con Windows y se queda en segundo plano mientras juegas.' }
     'm-clean'         = @{ Label = 'Limpieza';      Icon = 'broom';           Module = 'New-CleanerPage';  Title = 'Limpieza';            Desc = 'Temporales, cachés y restos de actualizaciones. Primero ves cuánto ocupa cada cosa.' }
+    'm-disk'          = @{ Label = 'Espacio en disco'; Icon = 'hard-drives'; Module = 'New-DiskPage'; Title = 'Espacio en disco'; Desc = 'Qué carpetas y archivos ocupan más en cada disco, como WinDirStat.' }
     'm-net'           = @{ Label = 'Red';           Icon = 'wifi-high';       Module = 'New-NetworkPage';  Title = 'Red y DNS';           Desc = 'Tu conexión, la latencia al router y a los DNS públicos, y con cuál quedarte.' }
     'm-repair'        = @{ Label = 'Reparar';       Icon = 'wrench';          Module = 'New-RepairPage';   Title = 'Reparar Windows';     Desc = 'Las reparaciones de siempre, cada una en su ventana para que veas lo que hace.' }
     'm-hw'            = @{ Label = 'Equipo';        Icon = 'laptop';          Module = 'New-HardwarePage'; Title = 'Tu equipo';           Desc = 'Procesador, gráfica, memoria, discos y el estado de Windows que afecta a los juegos.' }
@@ -1810,7 +1857,7 @@ try {
     }
     # Ventana de trabajo dentro del panel (no otra ventana): oscurece lo de detrás, círculo girando en medio, qué está
     # haciendo y una barra. Devuelve sus piezas para ir cambiando el texto; Close-Working la quita.
-    function Show-Working([string]$Title, [string]$Detail) {
+    function Show-Working([string]$Title, [string]$Detail, [scriptblock]$OnCancel) {
         $ov = [Windows.Controls.Grid]::new()
         [Windows.Controls.Grid]::SetRowSpan($ov, 10); [Windows.Controls.Grid]::SetColumnSpan($ov, 10); [Windows.Controls.Panel]::SetZIndex($ov, 90)
         $ov.Background = [Windows.Media.SolidColorBrush]::new([Windows.Media.Color]::FromArgb(0xB4, 0x04, 0x04, 0x08))
@@ -1826,6 +1873,11 @@ try {
         $bar = [Windows.Controls.Border]::new(); $bar.CornerRadius = 3; $bar.HorizontalAlignment = 'Left'; $bar.Width = 0; $bar.SetResourceReference($BgProp, 'AccentGrad')
         $track.Child = $bar
         foreach ($x in $sv, $t, $d, $track) { [void]$sp.Children.Add($x) }
+        if ($OnCancel) {
+            $cb = New-Btn 'Cancelar'; $cb.Margin = '0,20,0,0'; $cb.HorizontalAlignment = 'Center'; $cb.MinWidth = 140; $cb.Tag = $OnCancel
+            $cb.Add_Click({ param($src) $src.IsEnabled = $false; & $src.Tag })
+            [void]$sp.Children.Add($cb)
+        }
         $card.Child = $sp
         [void]$ov.Children.Add($card)
         [void]$window.Content.Children.Add($ov)
@@ -1989,7 +2041,7 @@ try {
 
     # ---------- navegación: cada apartado con su color
     $NavColors = @{ 'home' = 'Accent'; 'all' = 'Accent'; 'm-boost' = 'Cat-Rendimiento'; 'm-games' = 'Cat-Juegos'; 'm-apps' = 'Cat-Actualizaciones'; 'm-startup' = 'Cat-Servicios'
-                    'm-clean' = 'Cat-Interfaz'; 'm-net' = 'Cat-Privacidad'; 'm-repair' = 'Cat-Latencia'; 'm-hw' = 'Cat-Apps'; 'tools' = 'Cat-Servicios'; 'log' = 'Ink2' }
+                    'm-clean' = 'Cat-Interfaz'; 'm-disk' = 'Cat-Apps'; 'm-net' = 'Cat-Privacidad'; 'm-repair' = 'Cat-Latencia'; 'm-hw' = 'Cat-Apps'; 'tools' = 'Cat-Servicios'; 'log' = 'Ink2' }
     $script:NavParts = @{}
     foreach ($key in $Pages.Keys) {
         $pg = $Pages[$key]
