@@ -20,11 +20,18 @@
 
     function Write-Step([string]$Text) { Write-Host "  OptiEleven  " -ForegroundColor Black -BackgroundColor DarkYellow -NoNewline; Write-Host " $Text" }
 
+    # The latest version comes from the redirect of github.com/<repo>/releases/latest (-> .../tag/vX.Y.Z).
+    # That page has no rate limit, unlike api.github.com (60 requests an hour per IP without an account).
     function Get-Latest([int]$Timeout = 15) {
         try {
-            $rel = Invoke-RestMethod "https://api.github.com/repos/$repo/releases/latest" -Headers @{ 'User-Agent' = 'OptiEleven-launcher' } -TimeoutSec $Timeout
-            $url = ($rel.assets | Where-Object name -eq 'OptiEleven.zip' | Select-Object -First 1).browser_download_url
-            if ($url) { return [pscustomobject]@{ Tag = $rel.tag_name; Url = $url } }
+            $rq = [Net.HttpWebRequest]::Create("https://github.com/$repo/releases/latest")
+            $rq.AllowAutoRedirect = $false; $rq.Method = 'HEAD'; $rq.Timeout = $Timeout * 1000; $rq.UserAgent = 'OptiEleven-launcher'
+            $rs = $rq.GetResponse(); $loc = $rs.Headers['Location']; $rs.Close()
+            if ($loc -match '/releases/tag/([^/?#]+)$') {
+                $tag = [Uri]::UnescapeDataString($Matches[1])
+                return [pscustomobject]@{ Tag = $tag; Url = "https://github.com/$repo/releases/download/$tag/OptiEleven.zip" }
+            }
+            Write-Step "Couldn't read the latest version from GitHub."
         }
         catch { Write-Step "Couldn't reach GitHub: $($_.Exception.Message)" }
         $null
