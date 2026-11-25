@@ -1217,6 +1217,40 @@ $BrandColors = @{
     <FontFamily x:Key="Mono">Cascadia Mono, Consolas</FontFamily>
     <FontFamily x:Key="Icons">Segoe Fluent Icons, Segoe MDL2 Assets</FontFamily>
 
+    <!-- menús de clic derecho con el tema del panel (los de Windows salen blancos) -->
+    <Style TargetType="ContextMenu">
+      <Setter Property="OverridesDefaultStyle" Value="True"/>
+      <Setter Property="FontFamily" Value="{DynamicResource Display}"/>
+      <Setter Property="Foreground" Value="{DynamicResource Ink}"/>
+      <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ContextMenu">
+        <Border Background="{DynamicResource Paper2}" BorderBrush="{DynamicResource RuleStrong}" BorderThickness="1" CornerRadius="10" Padding="4" MinWidth="230">
+          <StackPanel IsItemsHost="True"/>
+        </Border>
+      </ControlTemplate></Setter.Value></Setter>
+    </Style>
+    <Style TargetType="MenuItem">
+      <Setter Property="Foreground" Value="{DynamicResource Ink}"/>
+      <Setter Property="FontSize" Value="13"/>
+      <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="MenuItem">
+        <Border x:Name="bd" Background="Transparent" CornerRadius="6" Padding="10,7,16,7">
+          <Grid>
+            <Grid.ColumnDefinitions><ColumnDefinition Width="26"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+            <ContentPresenter ContentSource="Icon" VerticalAlignment="Center"/>
+            <ContentPresenter Grid.Column="1" ContentSource="Header" VerticalAlignment="Center"/>
+          </Grid>
+        </Border>
+        <ControlTemplate.Triggers>
+          <Trigger Property="IsHighlighted" Value="True"><Setter TargetName="bd" Property="Background" Value="{DynamicResource AccentSoft}"/></Trigger>
+          <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.4"/></Trigger>
+        </ControlTemplate.Triggers>
+      </ControlTemplate></Setter.Value></Setter>
+    </Style>
+    <Style x:Key="{x:Static MenuItem.SeparatorStyleKey}" TargetType="Separator">
+      <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Separator">
+        <Border Height="1" Margin="8,4" Background="{DynamicResource Rule}"/>
+      </ControlTemplate></Setter.Value></Setter>
+    </Style>
+
     <!-- botón secundario: cristal (relleno translúcido y borde fino); al pasar se ilumina con un fundido suave -->
     <Style x:Key="Btn" TargetType="Button">
       <Setter Property="Background" Value="{DynamicResource Glass}"/>
