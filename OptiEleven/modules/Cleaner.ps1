@@ -187,15 +187,8 @@ function New-CleanerPage {
     if (-not $script:IsAdmin) { $script:CleanBtn.ToolTip = (T 'Sin administrador solo se limpia lo de tu usuario') }
     foreach ($x in $bAll, $bScan, $script:CleanBtn) { [void]$btns.Children.Add($x) }
     [void](Add-At $hg $btns 2)
-    $heroStack = [Windows.Controls.StackPanel]::new(); [void]$heroStack.Children.Add($hg)
-    $script:CleanProg = [Windows.Controls.StackPanel]::new(); $script:CleanProg.Margin = '0,18,0,0'; $script:CleanProg.Visibility = 'Collapsed'
-    $pt = [Windows.Controls.Border]::new(); $pt.Height = 6; $pt.CornerRadius = 3; $pt.SetResourceReference($BgP, 'Paper3')
-    $script:CleanProgBar = [Windows.Controls.Border]::new(); $script:CleanProgBar.CornerRadius = 3; $script:CleanProgBar.HorizontalAlignment = 'Left'; $script:CleanProgBar.Width = 0
-    $script:CleanProgBar.SetResourceReference($BgP, 'AccentGrad'); $pt.Child = $script:CleanProgBar; $script:CleanProgTrack = $pt
-    $script:CleanProgText = New-Text '' 13 'Ink2' 'Medium'; $script:CleanProgText.Margin = '0,8,0,0'
-    [void]$script:CleanProg.Children.Add($pt); [void]$script:CleanProg.Children.Add($script:CleanProgText)
-    [void]$heroStack.Children.Add($script:CleanProg)
-    $hero.Child = $heroStack
+    $hero.Child = $hg
+
     [void]$root.Children.Add($hero)
     $script:CleanResult = New-Text '' 13.5 'Cat-Juegos' 'SemiBold'; $script:CleanResult.Margin = '4,0,0,10'; $script:CleanResult.Visibility = 'Collapsed'
     [void]$root.Children.Add($script:CleanResult)
@@ -246,23 +239,20 @@ function New-CleanerPage {
         if ($sel | Where-Object { $_.Item.Id -eq 'browsers' }) { $msg += "`n`nCierra los navegadores antes para limpiar más." }
         if ([Windows.MessageBox]::Show($window, (T $msg), 'OptiEleven', 'OKCancel', 'Question') -ne 'OK') { return }
         Set-Busy $true
-        $script:CleanResult.Visibility = 'Collapsed'; $script:CleanProg.Visibility = 'Visible'; $script:CleanProgBar.Width = 0
-        $script:CleanProgText.Text = (T 'Preparando la limpieza...')
+        $script:CleanResult.Visibility = 'Collapsed'
         $script:CleanBtn.Content.Children[1].Text = (T 'Limpiando...')
         Write-Log "Limpiando: $(($sel | ForEach-Object { T $_.Item.Name }) -join ', ')"
+        $script:CleanWork = Show-Working (T 'Liberando espacio') (T 'Preparando la limpieza...')
         Start-CleanJob @($sel | ForEach-Object { $_.Item }) -OnTick {
             param($P)
             if (-not $P.Current) { return }
-            $script:CleanProgText.Text = (T "Borrando $($P.Current): $('{0:N0}' -f $P.Files) archivos, $(Format-Size $P.Bytes) liberados")
-            $done = [math]::Max(0, $P.Index - 1) / [math]::Max(1, $P.Count)
-            $script:CleanProgBar.Width = [math]::Max(8, ($done + 0.5 / [math]::Max(1, $P.Count)) * $script:CleanProgTrack.ActualWidth)
+            $script:CleanWork.Detail.Text = (T "Borrando $($P.Current): $('{0:N0}' -f $P.Files) archivos, $(Format-Size $P.Bytes) liberados")
+            Set-WorkingProgress $script:CleanWork (([math]::Max(0, $P.Index - 1) + 0.5) / [math]::Max(1, $P.Count))
             $r = $script:CleanRows[$P.CurrentId]; if ($r) { $r.SizeTb.Text = (T 'borrando...') }
-            $script:CleanBtn.Content.Children[1].Text = (T 'Limpiando...')
         } -Done {
             param($P)
+            Close-Working $script:CleanWork
             Set-Busy $false
-            $script:CleanProgBar.Width = $script:CleanProgTrack.ActualWidth
-            $script:CleanProg.Visibility = 'Collapsed'
             Write-Log "Limpieza terminada: $(Format-Size $P.Bytes) liberados (lo que estaba en uso se queda)." 'OK'
             $script:CleanResult.Text = (T "Liberados $(Format-Size $P.Bytes) en $('{0:N0}' -f $P.Files) archivos. Lo que estaba en uso se queda y se borrará otro día.")
             $script:CleanResult.Visibility = 'Visible'

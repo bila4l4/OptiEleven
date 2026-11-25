@@ -64,13 +64,15 @@ function Invoke-BoostFps {
     foreach ($k in $script:FpsSteps.Keys) { $script:FpsSteps[$k].Text = '...'; $script:FpsSteps[$k].SetResourceReference($FgProp, 'Muted') }
     $ramBefore = Get-FreeRam
     $script:BoostPower.IsChecked = $true; $script:BoostPurge.IsChecked = $false   # la memoria se vacía al final, después de recortar
+    $script:FpsWork = Show-Working 'Boost FPS' (T 'Cerrando apps y pausando servicios...'); Set-WorkingProgress $script:FpsWork 0.08
     if (-not (Get-BoostState)) { Start-Boost }
     $st = Get-BoostState
     Set-Busy $true
     try {
         $script:FpsSteps.Apps.Text = "$(@($st.Apps | Where-Object { $_ }).Count)"
         $script:FpsSteps.Svc.Text = "$(@($st.Servicios | Where-Object { $_ }).Count)"
-        Write-Log 'Boost FPS: liberando memoria...'; Update-Ui
+        Write-Log 'Boost FPS: liberando memoria...'
+        $script:FpsWork.Detail.Text = (T 'Liberando memoria RAM...'); Set-WorkingProgress $script:FpsWork 0.3; Update-Ui
         $trimmed = Invoke-TrimWorkingSets
         Start-Sleep -Milliseconds 400
         Invoke-StandbyPurge
@@ -79,12 +81,18 @@ function Invoke-BoostFps {
         Write-Log "Boost FPS: memoria recortada en $trimmed procesos, $(Format-Size $freedRam) más de RAM libre." 'OK'
         $script:FpsRam = $freedRam
         $script:FpsSteps.Clean.Text = (T 'borrando...')
+        $script:FpsWork.Detail.Text = (T 'Limpiando el disco...'); Set-WorkingProgress $script:FpsWork 0.5; Update-Ui
         # la limpieza va en segundo plano (la misma que la de Limpieza): la ventana sigue respondiendo
         Start-CleanJob $CleanItems -OnTick {
             param($P)
-            if ($P.Current) { $script:FpsSteps.Clean.Text = Format-Size $P.Bytes }
+            if ($P.Current) {
+                $script:FpsSteps.Clean.Text = Format-Size $P.Bytes
+                $script:FpsWork.Detail.Text = (T "Limpiando $($P.Current): $(Format-Size $P.Bytes) liberados")
+                Set-WorkingProgress $script:FpsWork (0.5 + 0.5 * ([math]::Max(0, $P.Index - 1) + 0.5) / [math]::Max(1, $P.Count))
+            }
         } -Done {
             param($P)
+            Close-Working $script:FpsWork
             Write-Log "Boost FPS listo: $(Format-Size $script:FpsRam) de RAM liberada y $(Format-Size $P.Bytes) de disco limpiados." 'OK'
             $script:FpsSteps.Clean.Text = Format-Size $P.Bytes
             foreach ($k in $script:FpsSteps.Keys) { $script:FpsSteps[$k].SetResourceReference($FgProp, 'Accent') }
@@ -93,7 +101,7 @@ function Invoke-BoostFps {
         }
         $async = $true
     }
-    finally { if (-not $async) { Set-Busy $false; $script:BoostPurge.IsChecked = $true; Update-BoostView } }
+    finally { if (-not $async) { Close-Working $script:FpsWork; Set-Busy $false; $script:BoostPurge.IsChecked = $true; Update-BoostView } }
 }
 function New-FpsHero {
     $card = [Windows.Controls.Border]::new(); $card.CornerRadius = 12; $card.Padding = '24,22,24,20'; $card.Margin = '0,0,0,8'

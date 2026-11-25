@@ -207,7 +207,7 @@ function Start-SpeedTest {
     $P = [hashtable]::Synchronized(@{ Phase = 'start'; Progress = 0.0 })
     Start-Bg -Work $SpeedWork -Progress $P -OnTick {
         param($P)
-        $script:SpeedBar.Width = [math]::Max(0, [math]::Min(1, [double]$P.Progress)) * $script:SpeedTrack.ActualWidth
+        $script:SpeedBar.Width = [math]::Max([double]0, [math]::Min([double]1, [double]$P.Progress)) * $script:SpeedTrack.ActualWidth
         if ($null -ne $P.Ping) { $script:SpeedVals.Ping.Text = "$($P.Ping)"; $script:SpeedVals.Jitter.Text = "$($P.Jitter)" }
         switch ($P.Phase) {
             'ping' { $script:SpeedPhase.Text = (T 'Midiendo la latencia...') }

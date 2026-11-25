@@ -376,6 +376,10 @@
     "Limpiando...": "Cleaning...",
     "borrando...": "deleting...",
     "Analizando el disco...": "Scanning the disk...",
+    "Liberando espacio": "Freeing up space",
+    "Cerrando apps y pausando servicios...": "Closing apps and pausing services...",
+    "Liberando memoria RAM...": "Freeing RAM...",
+    "Limpiando el disco...": "Cleaning the disk...",
     "Elige un ajuste": "Pick a tweak",
     "Toca cualquier fila para ver qué claves, servicios y tareas cambia, con el valor de ahora y el de después.": "Click any row to see which keys, services and tasks it changes, with the value now and after.",
     "Toca cualquier fila para ver qué hace y si es seguro. O pulsa Recomendado para marcar de una vez lo que conviene a casi todos.": "Click any row to see what it does and whether it's safe. Or press Recommended to tick what suits almost everyone in one go.",
@@ -601,6 +605,7 @@
     "Edge se reinstala desde microsoft.com/edge o con \"winget install Microsoft.Edge\".": "Edge is reinstalled from microsoft.com/edge or with \"winget install Microsoft.Edge\"."
   },
   "patterns": [
+    ["^Limpiando (.*?): (.*) liberados$", "Cleaning $1: $2 freed"],
     ["^Cargando (.*)\\.\\.\\.$", "Loading $1..."],
     ["^Borrando (.*?): ([\\d.,]+) archivos, (.*) liberados$", "Deleting $1: $2 files, $3 freed"],
     ["^Liberados (.*) en ([\\d.,]+) archivos\\. Lo que estaba en uso se queda y se borrará otro día\\.$", "$1 freed in $2 files. Files in use stay and will be removed another day."],

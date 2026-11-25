@@ -1793,17 +1793,48 @@ try {
         }
     }
     # indicador de carga: un arco que gira y un texto, para que nunca parezca que la ventana se ha quedado colgada
-    function New-Loader([string]$Text) {
-        $sp = [Windows.Controls.StackPanel]::new(); $sp.Orientation = 'Horizontal'; $sp.Margin = '4,24,0,24'
+    function New-Spinner([double]$Size = 22) {
         $arc = [Windows.Shapes.Path]::new(); $arc.Data = [Windows.Media.Geometry]::Parse('M 11,2 A 9,9 0 1 1 2,11'); $arc.Width = 22; $arc.Height = 22
         $arc.StrokeThickness = 3; $arc.StrokeStartLineCap = 'Round'; $arc.StrokeEndLineCap = 'Round'; $arc.SetResourceReference([Windows.Shapes.Shape]::StrokeProperty, 'Accent')
-        $rot = [Windows.Media.RotateTransform]::new(0, 11, 11); $arc.RenderTransform = $rot; $arc.VerticalAlignment = 'Center'
+        $rot = [Windows.Media.RotateTransform]::new(0, 11, 11); $arc.RenderTransform = $rot
         $spin = [Windows.Media.Animation.DoubleAnimation]::new(0, 360, [Windows.Duration][TimeSpan]::FromSeconds(0.9)); $spin.RepeatBehavior = [Windows.Media.Animation.RepeatBehavior]::Forever
         $rot.BeginAnimation([Windows.Media.RotateTransform]::AngleProperty, $spin)
+        $vb = [Windows.Controls.Viewbox]::new(); $vb.Width = $Size; $vb.Height = $Size; $vb.Child = $arc; $vb.VerticalAlignment = 'Center'
+        $vb
+    }
+    function New-Loader([string]$Text) {
+        $sp = [Windows.Controls.StackPanel]::new(); $sp.Orientation = 'Horizontal'; $sp.Margin = '4,24,0,24'
         $tb = New-Text $Text 14.5 'Ink2' 'Medium'; $tb.VerticalAlignment = 'Center'; $tb.Margin = '14,0,0,0'
-        [void]$sp.Children.Add($arc); [void]$sp.Children.Add($tb)
+        [void]$sp.Children.Add((New-Spinner 22)); [void]$sp.Children.Add($tb)
         $sp
     }
+    # Ventana de trabajo dentro del panel (no otra ventana): oscurece lo de detrás, círculo girando en medio, qué está
+    # haciendo y una barra. Devuelve sus piezas para ir cambiando el texto; Close-Working la quita.
+    function Show-Working([string]$Title, [string]$Detail) {
+        $ov = [Windows.Controls.Grid]::new()
+        [Windows.Controls.Grid]::SetRowSpan($ov, 10); [Windows.Controls.Grid]::SetColumnSpan($ov, 10); [Windows.Controls.Panel]::SetZIndex($ov, 90)
+        $ov.Background = [Windows.Media.SolidColorBrush]::new([Windows.Media.Color]::FromArgb(0xB4, 0x04, 0x04, 0x08))
+        $card = [Windows.Controls.Border]::new(); $card.CornerRadius = 20; $card.Padding = '44,36,44,32'; $card.Width = 440; $card.BorderThickness = 1
+        $card.HorizontalAlignment = 'Center'; $card.VerticalAlignment = 'Center'
+        $card.SetResourceReference($BgProp, 'Paper2'); $card.SetResourceReference([Windows.Controls.Border]::BorderBrushProperty, 'RuleStrong')
+        $card.Effect = [Windows.Media.Effects.DropShadowEffect]::new(); $card.Effect.BlurRadius = 50; $card.Effect.ShadowDepth = 14; $card.Effect.Direction = 270; $card.Effect.Opacity = 0.55
+        $sp = [Windows.Controls.StackPanel]::new()
+        $sv = New-Spinner 64; $sv.HorizontalAlignment = 'Center'
+        $t = New-Text $Title 21 'Ink' 'Bold'; $t.FontFamily = $window.FindResource('Display'); $t.TextAlignment = 'Center'; $t.Margin = '0,22,0,0'
+        $d = New-Text $Detail 14 'Ink2'; $d.TextAlignment = 'Center'; $d.Margin = '0,8,0,0'; $d.MinHeight = 40
+        $track = [Windows.Controls.Border]::new(); $track.Height = 6; $track.CornerRadius = 3; $track.Margin = '0,18,0,0'; $track.SetResourceReference($BgProp, 'Paper3')
+        $bar = [Windows.Controls.Border]::new(); $bar.CornerRadius = 3; $bar.HorizontalAlignment = 'Left'; $bar.Width = 0; $bar.SetResourceReference($BgProp, 'AccentGrad')
+        $track.Child = $bar
+        foreach ($x in $sv, $t, $d, $track) { [void]$sp.Children.Add($x) }
+        $card.Child = $sp
+        [void]$ov.Children.Add($card)
+        [void]$window.Content.Children.Add($ov)
+        Start-FadeIn $card 0 14
+        Update-Ui
+        @{ Overlay = $ov; Title = $t; Detail = $d; Bar = $bar; Track = $track }
+    }
+    function Set-WorkingProgress($W, [double]$Fraction) { if ($W) { $W.Bar.Width = [math]::Max([double]0, [math]::Min([double]1, $Fraction)) * $W.Track.ActualWidth } }
+    function Close-Working($W) { if ($W -and $W.Overlay) { [void]$window.Content.Children.Remove($W.Overlay) } }
     function Start-Stagger($Items, [int]$Max = 14) {
         $i = 0
         foreach ($it in $Items) { if ($i -ge $Max) { break }; if ($it.Visibility -eq 'Visible') { Start-FadeIn $it ($i * 28) 8; $i++ } }
