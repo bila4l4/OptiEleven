@@ -52,11 +52,11 @@ function New-DiskTreeRow($Node, [int]$Depth, [double]$ParentSize) {
     for ($i = 0; $i -lt 4; $i++) { $c = New-Mono $cells[$i] 12.5 $(if ($i -eq 1) { 'Ink' } else { 'Ink2' }); $c.TextAlignment = 'Right'; $c.VerticalAlignment = 'Center'; [void](Add-At $g $c ($i + 2)) }
     $row.Child = $g
     $row.Tag = @{ Node = $Node; Depth = $Depth; Open = $false; Chev = $chev; CanOpen = $canOpen }
-    $row.Add_MouseEnter({ param($s) if ($s -ne $script:DiskSel) { $s.SetResourceReference([Windows.Controls.Border]::BackgroundProperty, 'GlassHi') } })
-    $row.Add_MouseLeave({ param($s) if ($s -ne $script:DiskSel) { $s.Background = [Windows.Media.Brushes]::Transparent } })
-    $row.Add_MouseLeftButtonUp({ param($s, $e) Select-DiskRow $s; Switch-DiskRow $s })
+    $row.Add_MouseEnter({ param($s) if (@($script:DiskSel) -notcontains $s) { $s.SetResourceReference([Windows.Controls.Border]::BackgroundProperty, 'GlassHi') } })
+    $row.Add_MouseLeave({ param($s) if (@($script:DiskSel) -notcontains $s) { $s.Background = [Windows.Media.Brushes]::Transparent } })
+    $row.Add_MouseLeftButtonUp({ param($s, $e) if (-not (Select-DiskRow $s)) { Switch-DiskRow $s } })   # con Ctrl/Mayús solo se elige, no se despliega
     # clic derecho: el menú de WinDirStat (se llena al abrirlo, para no crear 150 menús de golpe)
-    if (-not $Node.IsRest) { $row.ContextMenu = [Windows.Controls.ContextMenu]::new(); $row.Add_ContextMenuOpening({ param($s, $e) Select-DiskRow $s; Fill-DiskMenu $s }) }
+    if (-not $Node.IsRest) { $row.ContextMenu = [Windows.Controls.ContextMenu]::new(); $row.Add_ContextMenuOpening({ param($s, $e) Fill-DiskMenu $s }) }
     $row.Add_MouseLeftButtonDown({   # doble clic: abrir en el Explorador
         param($s, $e)
         if ($e.ClickCount -eq 2) {
@@ -88,95 +88,130 @@ $DiskActions = @(@('open', 'Abrir', 'play-circle'), @('show', 'Mostrar en el Exp
     @('term', 'Abrir terminal aquí', 'terminal-window'), @('props', 'Propiedades', 'list-dashes'), '-', @('rescan', 'Volver a analizar', 'arrows-clockwise'), '-',
     @('recycle', 'Mover a la papelera', 'trash-simple'), @('delete', 'Eliminar para siempre', 'warning-octagon'))
 
-function Test-DiskAction($Node, [string]$Act) {
-    if (-not $Node -or $Node.IsRest) { return $false }
-    if ($Act -eq 'rescan') { return -not $Node.IsFile }
-    if ($Act -in 'recycle', 'delete') { return (Test-DiskDeletable $Node) }
+function Test-DiskAction($Nodes, [string]$Act) {
+    $Nodes = @($Nodes)
+    if (-not $Nodes.Count -or @($Nodes | Where-Object { $_.IsRest }).Count) { return $false }
+    if ($Act -in 'open', 'show', 'term', 'props', 'rescan' -and $Nodes.Count -gt 1) { return $false }   # estas, de una en una
+    if ($Act -eq 'rescan') { return -not $Nodes[0].IsFile }
+    if ($Act -in 'recycle', 'delete') { return -not @($Nodes | Where-Object { -not (Test-DiskDeletable $_) }).Count }
     $true
 }
 
-# marca la fila elegida (como en WinDirStat) y enciende los botones que valen para ella
-function Select-DiskRow($Row) {
+function Get-DiskSelNodes { @($script:DiskSel | ForEach-Object { $_.Tag.Node }) }
+
+# marca las filas elegidas (como en WinDirStat) y enciende los botones que valen para ellas
+function Set-DiskSelection($Rows) {
     $BgP = [Windows.Controls.Border]::BackgroundProperty
-    if ($script:DiskSel -and $script:DiskSel -ne $Row) { $script:DiskSel.Background = [Windows.Media.Brushes]::Transparent }
-    $script:DiskSel = $Row
-    if ($Row) { $Row.SetResourceReference($BgP, 'AccentSoft') }
-    $n = if ($Row) { $Row.Tag.Node }
-    foreach ($b in $script:DiskTools) { $b.IsEnabled = Test-DiskAction $n $b.Tag }
-    if ($script:DiskSelText) { $script:DiskSelText.Text = if ($n -and -not $n.IsRest) { Get-DiskPath $n } else { T 'Elige un archivo o carpeta del árbol.' } }
+    $Rows = @($Rows | Where-Object { $_ -and $_.Tag.Node -and -not $_.Tag.Node.IsRest })
+    foreach ($r in @($script:DiskSel)) { if ($Rows -notcontains $r) { $r.Background = [Windows.Media.Brushes]::Transparent } }
+    $script:DiskSel = $Rows
+    foreach ($r in $Rows) { $r.SetResourceReference($BgP, 'AccentSoft') }
+    $nodes = Get-DiskSelNodes
+    foreach ($b in $script:DiskTools) { $b.IsEnabled = Test-DiskAction $nodes $b.Tag }
+    if ($script:DiskSelText) {
+        $script:DiskSelText.Text = if ($nodes.Count -eq 1) { Get-DiskPath $nodes[0] }
+            elseif ($nodes.Count) { (T "$($nodes.Count) elementos seleccionados") + "  ·  $(Format-Size ([double](($nodes | Measure-Object Size -Sum).Sum)))" }
+            else { T 'Elige un archivo o carpeta del árbol. Con Ctrl o Mayús, varios.' }
+    }
+}
+
+# clic: uno solo; Ctrl+clic: añadir o quitar; Mayús+clic: todo lo que hay entre medias
+function Select-DiskRow($Row) {
+    $mods = [Windows.Input.Keyboard]::Modifiers
+    if ($mods -band [Windows.Input.ModifierKeys]::Control) {
+        if (@($script:DiskSel) -contains $Row) { Set-DiskSelection @($script:DiskSel | Where-Object { $_ -ne $Row }) } else { Set-DiskSelection (@($script:DiskSel) + $Row) }
+        $script:DiskAnchor = $Row; return $true
+    }
+    if (($mods -band [Windows.Input.ModifierKeys]::Shift) -and $script:DiskAnchor) {
+        $list = $script:DiskRows.Children; $a = $list.IndexOf($script:DiskAnchor); $b = $list.IndexOf($Row)
+        if ($a -ge 0) { Set-DiskSelection @($list | Select-Object -Skip ([math]::Min($a, $b)) -First ([math]::Abs($a - $b) + 1)); return $true }
+    }
+    Set-DiskSelection @($Row); $script:DiskAnchor = $Row; $false
 }
 
 function Fill-DiskMenu($Row) {
-    $n = $Row.Tag.Node; $m = $Row.ContextMenu; $m.Items.Clear()
+    if (@($script:DiskSel) -notcontains $Row) { Set-DiskSelection @($Row); $script:DiskAnchor = $Row }
+    $nodes = Get-DiskSelNodes; $m = $Row.ContextMenu; $m.Items.Clear()
     foreach ($it in $DiskActions) {
         if ($it -eq '-') { if ($m.Items.Count -and $m.Items[$m.Items.Count - 1] -isnot [Windows.Controls.Separator]) { [void]$m.Items.Add([Windows.Controls.Separator]::new()) }; continue }
-        if ($it[0] -eq 'rescan' -and $n.IsFile) { continue }
-        $mi = [Windows.Controls.MenuItem]::new(); $mi.Header = T $it[1]; $mi.Tag = @{ Row = $Row; Act = $it[0] }
+        if ($it[0] -eq 'rescan' -and $nodes[0].IsFile) { continue }
+        $mi = [Windows.Controls.MenuItem]::new(); $mi.Header = T $it[1]; $mi.Tag = $it[0]
         $mi.Icon = New-Icon $it[2] 15 $(if ($it[0] -eq 'delete') { 'Red' } else { 'Ink2' })
         if ($it[0] -eq 'delete') { $mi.SetResourceReference([Windows.Controls.Control]::ForegroundProperty, 'Red') }
-        $mi.IsEnabled = Test-DiskAction $n $it[0]
-        $mi.Add_Click({ param($s) Invoke-DiskAction $s.Tag.Row $s.Tag.Act })
+        $mi.IsEnabled = Test-DiskAction $nodes $it[0]
+        $mi.Add_Click({ param($s) Invoke-DiskAction (Get-DiskSelNodes) ([string]$s.Tag) })
         [void]$m.Items.Add($mi)
     }
 }
 
-function Invoke-DiskAction($Row, [string]$Act) {
-    $n = $Row.Tag.Node; $p = Get-DiskPath $n
+function Invoke-DiskAction($Nodes, [string]$Act) {
+    $Nodes = @($Nodes); if (-not (Test-DiskAction $Nodes $Act)) { return }
+    $n = $Nodes[0]; $p = Get-DiskPath $n
     $dir = if ($n.IsFile) { $n.Parent.Path } else { $p }
     switch ($Act) {
         'open' { Start-Process -FilePath $p }
         'show' { if ($n.IsFile) { Start-Process explorer.exe -ArgumentList "/select,`"$p`"" } else { Start-Process explorer.exe -ArgumentList "`"$p`"" } }
-        'copy' { [Windows.Clipboard]::SetText($p) }
+        'copy' { [Windows.Clipboard]::SetText((@($Nodes | ForEach-Object { Get-DiskPath $_ }) -join "`r`n")) }
         'term' { Start-Process powershell.exe -WorkingDirectory $dir }
         'props' {
             $sh = New-Object -ComObject Shell.Application
             if ($n.IsFile) { $sh.Namespace($dir).ParseName($n.Name).InvokeVerb('properties') } else { $sh.Namespace($p).Self.InvokeVerb('properties') }
         }
-        'rescan' { if (-not $n.Parent) { $script:DiskCache.Remove($script:DiskRoot); Start-DiskScan $script:DiskRoot 0 } else { Start-DiskJob $Row 'rescan' } }
+        'rescan' { if (-not $n.Parent) { $script:DiskCache.Remove($script:DiskRoot); Start-DiskScan $script:DiskRoot 0 } else { Start-DiskJob $Nodes 'rescan' } }
         default {
-            if (-not (Test-DiskDeletable $n)) { return }
-            $what = "`n`n$p`n$(Format-Size $n.Size), " + (T "$('{0:N0}' -f $n.Files) archivos")
+            # si se eligió una carpeta y algo de dentro, basta con la carpeta
+            $Nodes = @($Nodes | Where-Object { $x = $_.Parent; $inside = $false; while ($x) { if ($Nodes -contains $x) { $inside = $true }; $x = $x.Parent }; -not $inside })
+            $size = [double](($Nodes | Measure-Object Size -Sum).Sum); $files = [double](($Nodes | Measure-Object Files -Sum).Sum)
+            $list = @($Nodes | Select-Object -First 6 | ForEach-Object { Get-DiskPath $_ })
+            if ($Nodes.Count -gt 6) { $list += T "y $($Nodes.Count - 6) más" }
+            $what = "`n`n$($list -join "`n")`n`n$(Format-Size $size), " + (T "$('{0:N0}' -f $files) archivos")
             $msg = if ($Act -eq 'recycle') { (T '¿Mover a la papelera de reciclaje?') + $what } else { (T '¿Eliminar para siempre? No va a la papelera y no se puede deshacer.') + $what }
             if ([Windows.MessageBox]::Show($window, $msg, 'OptiEleven', 'OKCancel', 'Warning') -ne 'OK') { return }
-            Start-DiskJob $Row $Act
+            Start-DiskJob $Nodes $Act
         }
     }
 }
 
 # borra (o vuelve a medir) en segundo plano; lo que quede en el disco se mide otra vez, así el árbol cuadra aunque falle a medias
-function Start-DiskJob($Row, [string]$Act) {
-    $n = $Row.Tag.Node; $p = Get-DiskPath $n
-    $script:DiskJobRow = $Row
+function Start-DiskJob($Nodes, [string]$Act) {
+    $script:DiskJobNodes = @($Nodes)
     $title = @{ recycle = 'Moviendo a la papelera'; delete = 'Eliminando'; rescan = 'Analizando la carpeta' }[$Act]
-    $script:DiskWork = Show-Working (T $title) $p
+    $detail = if ($script:DiskJobNodes.Count -eq 1) { Get-DiskPath $script:DiskJobNodes[0] } else { T "$($script:DiskJobNodes.Count) elementos seleccionados" }
+    $script:DiskWork = Show-Working (T $title) $detail
+    $items = @($script:DiskJobNodes | ForEach-Object { @{ Path = (Get-DiskPath $_); File = [bool]$_.IsFile } })
     Start-Bg -Work {
         param($A)
-        $err = ''
-        try {
-            if ($A.Act -eq 'recycle') {
-                Add-Type -AssemblyName Microsoft.VisualBasic
-                # AllDialogs: Windows avisa si algo no cabe en la papelera, en vez de borrarlo para siempre sin preguntar
-                if ($A.File) { [Microsoft.VisualBasic.FileIO.FileSystem]::DeleteFile($A.Path, 'AllDialogs', 'SendToRecycleBin') }
-                else { [Microsoft.VisualBasic.FileIO.FileSystem]::DeleteDirectory($A.Path, 'AllDialogs', 'SendToRecycleBin') }
-            } elseif ($A.Act -eq 'delete') { Remove-Item -LiteralPath $A.Path -Recurse -Force -ErrorAction Stop }
-        } catch { $err = $_.Exception.Message }
-        $left = Test-Path -LiteralPath $A.Path
-        @{ Left = $left; Scan = $(if ($left -and -not $A.File) { , [GP.DiskScan]::Scan($A.Path) } else { $null }); Err = $err }
-    } -ArgList @(@{ Act = $Act; Path = $p; File = [bool]$n.IsFile }) -Done {
+        foreach ($it in $A.Items) {
+            $err = ''
+            try {
+                if ($A.Act -eq 'recycle') {
+                    Add-Type -AssemblyName Microsoft.VisualBasic
+                    # AllDialogs: Windows avisa si algo no cabe en la papelera, en vez de borrarlo para siempre sin preguntar
+                    if ($it.File) { [Microsoft.VisualBasic.FileIO.FileSystem]::DeleteFile($it.Path, 'AllDialogs', 'SendToRecycleBin') }
+                    else { [Microsoft.VisualBasic.FileIO.FileSystem]::DeleteDirectory($it.Path, 'AllDialogs', 'SendToRecycleBin') }
+                } elseif ($A.Act -eq 'delete') { Remove-Item -LiteralPath $it.Path -Recurse -Force -ErrorAction Stop }
+            } catch { $err = $_.Exception.Message }
+            $left = Test-Path -LiteralPath $it.Path
+            @{ Left = $left; Scan = $(if ($left -and -not $it.File) { , [GP.DiskScan]::Scan($it.Path) } else { $null }); Err = $err }
+        }
+    } -ArgList @(@{ Act = $Act; Items = $items }) -Done {
         param($r)
         Close-Working $script:DiskWork
-        $res = $r[0]; $row = $script:DiskJobRow; $old = $row.Tag.Node
-        if (-not $res) { return }
-        if ($res.Err) { Write-Log "Espacio en disco: $($res.Err)" 'WARN' }
-        if ($res.Left -and $old.IsFile) { [void][Windows.MessageBox]::Show($window, (T 'No se ha podido borrar el archivo. Puede que esté en uso.'), 'OptiEleven', 'OK', 'Warning'); return }
-        $new = $null
-        if ($res.Left) { $new = $res.Scan[0]; $new.Name = $old.Name; $new.LastWrite = $old.LastWrite }
+        if (-not $r) { return }
         $open = [Collections.Generic.HashSet[object]]::new()
         foreach ($c in $script:DiskRows.Children) { if ($c.Tag.Open) { [void]$open.Add($c.Tag.Node) } }
-        if ($new -and $open.Contains($old)) { [void]$open.Add($new) }
-        $freed = Set-DiskNode $old $new
-        if ($freed -gt 0) { Write-Log "Espacio en disco: liberados $(Format-Size $freed) ($(Get-DiskPath $old))." 'OK' }
-        Update-DiskTree $open $new
+        $sel = @(); $freed = [double]0; $stuck = 0
+        for ($i = 0; $i -lt $r.Count; $i++) {
+            $res = $r[$i]; $old = $script:DiskJobNodes[$i]
+            if ($res.Err) { Write-Log "Espacio en disco: $($res.Err)" 'WARN' }
+            if ($res.Left -and $old.IsFile) { $stuck++; $sel += $old; continue }
+            $new = $null
+            if ($res.Left) { $new = $res.Scan[0]; $new.Name = $old.Name; $new.LastWrite = $old.LastWrite; $sel += $new; if ($open.Contains($old)) { [void]$open.Add($new) } }
+            $freed += Set-DiskNode $old $new
+        }
+        if ($freed -gt 0) { Write-Log "Espacio en disco: liberados $(Format-Size $freed)." 'OK' }
+        Update-DiskTree $open $sel
+        if ($stuck) { [void][Windows.MessageBox]::Show($window, (T 'Algunos archivos no se han podido borrar. Puede que estén en uso.'), 'OptiEleven', 'OK', 'Warning') }
     }
 }
 
@@ -190,13 +225,14 @@ function Set-DiskNode($Old, $New) {
     -$dS
 }
 
-# vuelve a pintar el árbol dejando abiertas las mismas carpetas
+# vuelve a pintar el árbol dejando abiertas las mismas carpetas y elegido lo que siga existiendo
 function Update-DiskTree($Open, $Sel) {
     $root = $script:DiskCache[$script:DiskRoot].Root; $list = $script:DiskRows
-    $list.Children.Clear(); $script:DiskSel = $null
+    $list.Children.Clear(); $script:DiskSel = @(); $script:DiskAnchor = $null
     [void]$list.Children.Add((New-DiskTreeRow $root 0 $root.Size))
     for ($i = 0; $i -lt $list.Children.Count; $i++) { $c = $list.Children[$i]; if ($c.Tag.Node -and $Open.Contains($c.Tag.Node)) { Switch-DiskRow $c } }
-    Select-DiskRow $(if ($Sel) { @($list.Children | Where-Object { $_.Tag.Node -eq $Sel })[0] })
+    $Sel = @($Sel)
+    Set-DiskSelection @($list | Where-Object { $_.Tag.Node -and $Sel -contains $_.Tag.Node })
 }
 
 function Switch-DiskRow($Row) {
@@ -236,7 +272,7 @@ function Show-DiskResult([string]$Root) {
         $bl = [Windows.Controls.TextBlock]::new(); $bl.Text = T $it[1]; $bl.VerticalAlignment = 'Center'
         [void]$bc.Children.Add($bi); [void]$bc.Children.Add($bl); $b.Content = $bc
         if ($it[0] -eq 'delete') { $b.SetResourceReference([Windows.Controls.Control]::ForegroundProperty, 'Red') }
-        $b.Add_Click({ param($s) if ($script:DiskSel) { Invoke-DiskAction $script:DiskSel ([string]$s.Tag) } })
+        $b.Add_Click({ param($s) Invoke-DiskAction (Get-DiskSelNodes) ([string]$s.Tag) })
         [void]$tools.Children.Add($b); $script:DiskTools += $b
     }
     [void]$cs.Children.Add($tools)
@@ -272,7 +308,7 @@ function Show-DiskResult([string]$Root) {
     $rootRow = New-DiskTreeRow $res.Root 0 $res.Root.Size
     [void]$script:DiskRows.Children.Add($rootRow)
     Switch-DiskRow $rootRow
-    $script:DiskSel = $null; Select-DiskRow $null
+    $script:DiskSel = @(); $script:DiskAnchor = $null; Set-DiskSelection @()
     Start-FadeIn $grid 0 8
 }
 
