@@ -52,11 +52,11 @@ function New-DiskTreeRow($Node, [int]$Depth, [double]$ParentSize) {
     for ($i = 0; $i -lt 4; $i++) { $c = New-Mono $cells[$i] 12.5 $(if ($i -eq 1) { 'Ink' } else { 'Ink2' }); $c.TextAlignment = 'Right'; $c.VerticalAlignment = 'Center'; [void](Add-At $g $c ($i + 2)) }
     $row.Child = $g
     $row.Tag = @{ Node = $Node; Depth = $Depth; Open = $false; Chev = $chev; CanOpen = $canOpen }
-    $row.Add_MouseEnter({ param($s) $s.SetResourceReference([Windows.Controls.Border]::BackgroundProperty, 'GlassHi') })
-    $row.Add_MouseLeave({ param($s) $s.Background = [Windows.Media.Brushes]::Transparent })
-    $row.Add_MouseLeftButtonUp({ param($s, $e) Switch-DiskRow $s })
+    $row.Add_MouseEnter({ param($s) if ($s -ne $script:DiskSel) { $s.SetResourceReference([Windows.Controls.Border]::BackgroundProperty, 'GlassHi') } })
+    $row.Add_MouseLeave({ param($s) if ($s -ne $script:DiskSel) { $s.Background = [Windows.Media.Brushes]::Transparent } })
+    $row.Add_MouseLeftButtonUp({ param($s, $e) Select-DiskRow $s; Switch-DiskRow $s })
     # clic derecho: el menú de WinDirStat (se llena al abrirlo, para no crear 150 menús de golpe)
-    if (-not $Node.IsRest) { $row.ContextMenu = [Windows.Controls.ContextMenu]::new(); $row.Add_ContextMenuOpening({ param($s, $e) Fill-DiskMenu $s }) }
+    if (-not $Node.IsRest) { $row.ContextMenu = [Windows.Controls.ContextMenu]::new(); $row.Add_ContextMenuOpening({ param($s, $e) Select-DiskRow $s; Fill-DiskMenu $s }) }
     $row.Add_MouseLeftButtonDown({   # doble clic: abrir en el Explorador
         param($s, $e)
         if ($e.ClickCount -eq 2) {
@@ -83,19 +83,38 @@ function Test-DiskDeletable($Node) {
     $true
 }
 
+# las mismas acciones en el menú de clic derecho y en la barra de arriba del árbol
+$DiskActions = @(@('open', 'Abrir', 'play-circle'), @('show', 'Mostrar en el Explorador', 'folder-open'), @('copy', 'Copiar ruta', 'copy'),
+    @('term', 'Abrir terminal aquí', 'terminal-window'), @('props', 'Propiedades', 'list-dashes'), '-', @('rescan', 'Volver a analizar', 'arrows-clockwise'), '-',
+    @('recycle', 'Mover a la papelera', 'trash-simple'), @('delete', 'Eliminar para siempre', 'warning-octagon'))
+
+function Test-DiskAction($Node, [string]$Act) {
+    if (-not $Node -or $Node.IsRest) { return $false }
+    if ($Act -eq 'rescan') { return -not $Node.IsFile }
+    if ($Act -in 'recycle', 'delete') { return (Test-DiskDeletable $Node) }
+    $true
+}
+
+# marca la fila elegida (como en WinDirStat) y enciende los botones que valen para ella
+function Select-DiskRow($Row) {
+    $BgP = [Windows.Controls.Border]::BackgroundProperty
+    if ($script:DiskSel -and $script:DiskSel -ne $Row) { $script:DiskSel.Background = [Windows.Media.Brushes]::Transparent }
+    $script:DiskSel = $Row
+    if ($Row) { $Row.SetResourceReference($BgP, 'AccentSoft') }
+    $n = if ($Row) { $Row.Tag.Node }
+    foreach ($b in $script:DiskTools) { $b.IsEnabled = Test-DiskAction $n $b.Tag }
+    if ($script:DiskSelText) { $script:DiskSelText.Text = if ($n -and -not $n.IsRest) { Get-DiskPath $n } else { T 'Elige un archivo o carpeta del árbol.' } }
+}
+
 function Fill-DiskMenu($Row) {
     $n = $Row.Tag.Node; $m = $Row.ContextMenu; $m.Items.Clear()
-    $items = @(@('open', 'Abrir', 'play-circle'), @('show', 'Mostrar en el Explorador', 'folder-open'), @('copy', 'Copiar ruta', 'copy'),
-        @('term', 'Abrir terminal aquí', 'terminal-window'), @('props', 'Propiedades', 'list-dashes'), '-')
-    if (-not $n.IsFile) { $items += @(, @('rescan', 'Volver a analizar', 'arrows-clockwise')); $items += '-' }
-    $items += @(@('recycle', 'Mover a la papelera', 'trash-simple'), @('delete', 'Eliminar para siempre', 'warning-octagon'))
-    $canDel = Test-DiskDeletable $n
-    foreach ($it in $items) {
-        if ($it -eq '-') { [void]$m.Items.Add([Windows.Controls.Separator]::new()); continue }
+    foreach ($it in $DiskActions) {
+        if ($it -eq '-') { if ($m.Items.Count -and $m.Items[$m.Items.Count - 1] -isnot [Windows.Controls.Separator]) { [void]$m.Items.Add([Windows.Controls.Separator]::new()) }; continue }
+        if ($it[0] -eq 'rescan' -and $n.IsFile) { continue }
         $mi = [Windows.Controls.MenuItem]::new(); $mi.Header = T $it[1]; $mi.Tag = @{ Row = $Row; Act = $it[0] }
         $mi.Icon = New-Icon $it[2] 15 $(if ($it[0] -eq 'delete') { 'Red' } else { 'Ink2' })
         if ($it[0] -eq 'delete') { $mi.SetResourceReference([Windows.Controls.Control]::ForegroundProperty, 'Red') }
-        if ($it[0] -in 'recycle', 'delete' -and -not $canDel) { $mi.IsEnabled = $false }
+        $mi.IsEnabled = Test-DiskAction $n $it[0]
         $mi.Add_Click({ param($s) Invoke-DiskAction $s.Tag.Row $s.Tag.Act })
         [void]$m.Items.Add($mi)
     }
@@ -157,7 +176,7 @@ function Start-DiskJob($Row, [string]$Act) {
         if ($new -and $open.Contains($old)) { [void]$open.Add($new) }
         $freed = Set-DiskNode $old $new
         if ($freed -gt 0) { Write-Log "Espacio en disco: liberados $(Format-Size $freed) ($(Get-DiskPath $old))." 'OK' }
-        Update-DiskTree $open
+        Update-DiskTree $open $new
     }
 }
 
@@ -172,11 +191,12 @@ function Set-DiskNode($Old, $New) {
 }
 
 # vuelve a pintar el árbol dejando abiertas las mismas carpetas
-function Update-DiskTree($Open) {
+function Update-DiskTree($Open, $Sel) {
     $root = $script:DiskCache[$script:DiskRoot].Root; $list = $script:DiskRows
-    $list.Children.Clear()
+    $list.Children.Clear(); $script:DiskSel = $null
     [void]$list.Children.Add((New-DiskTreeRow $root 0 $root.Size))
     for ($i = 0; $i -lt $list.Children.Count; $i++) { $c = $list.Children[$i]; if ($c.Tag.Node -and $Open.Contains($c.Tag.Node)) { Switch-DiskRow $c } }
+    Select-DiskRow $(if ($Sel) { @($list.Children | Where-Object { $_.Tag.Node -eq $Sel })[0] })
 }
 
 function Switch-DiskRow($Row) {
@@ -206,6 +226,22 @@ function Show-DiskResult([string]$Root) {
     $card = [Windows.Controls.Border]::new(); $card.CornerRadius = 14; $card.Padding = '10,10,10,10'; $card.BorderThickness = 1; $card.Margin = '0,0,14,0'
     $card.SetResourceReference($BgP, 'Glass'); $card.SetResourceReference($BrP, 'GlassEdge')
     $cs = [Windows.Controls.StackPanel]::new()
+    # barra de acciones sobre lo elegido (lo mismo que el clic derecho)
+    $tools = [Windows.Controls.WrapPanel]::new(); $tools.Margin = '2,0,0,6'; $script:DiskTools = @()
+    foreach ($it in $DiskActions) {
+        if ($it -eq '-') { $sep = [Windows.Controls.Border]::new(); $sep.Width = 1; $sep.Height = 22; $sep.Margin = '2,0,8,6'; $sep.SetResourceReference($BgP, 'Rule'); [void]$tools.Children.Add($sep); continue }
+        $b = New-Btn ''; $b.MinHeight = 32; $b.Padding = '10,0'; $b.FontSize = 12.5; $b.Margin = '0,0,6,6'; $b.Tag = $it[0]
+        $bc = [Windows.Controls.StackPanel]::new(); $bc.Orientation = 'Horizontal'
+        $bi = New-BtnIcon $it[2] 15; $bi.Margin = '0,0,7,0'
+        $bl = [Windows.Controls.TextBlock]::new(); $bl.Text = T $it[1]; $bl.VerticalAlignment = 'Center'
+        [void]$bc.Children.Add($bi); [void]$bc.Children.Add($bl); $b.Content = $bc
+        if ($it[0] -eq 'delete') { $b.SetResourceReference([Windows.Controls.Control]::ForegroundProperty, 'Red') }
+        $b.Add_Click({ param($s) if ($script:DiskSel) { Invoke-DiskAction $script:DiskSel ([string]$s.Tag) } })
+        [void]$tools.Children.Add($b); $script:DiskTools += $b
+    }
+    [void]$cs.Children.Add($tools)
+    $script:DiskSelText = New-Text '' 12 'Muted'; $script:DiskSelText.Margin = '6,0,0,10'; $script:DiskSelText.TextTrimming = 'CharacterEllipsis'
+    [void]$cs.Children.Add($script:DiskSelText)
     $hdr = New-Cols $DiskCols; $hdr.Margin = '6,0,8,6'
     $heads = 'Nombre', 'Proporción', 'Porcentaje', 'Tamaño', 'Archivos', 'Modificado'
     for ($i = 0; $i -lt 6; $i++) { $h = New-Text $heads[$i] 12 'Muted' 'SemiBold'; if ($i -ge 2) { $h.TextAlignment = 'Right' }; [void](Add-At $hdr $h $i) }
@@ -236,6 +272,7 @@ function Show-DiskResult([string]$Root) {
     $rootRow = New-DiskTreeRow $res.Root 0 $res.Root.Size
     [void]$script:DiskRows.Children.Add($rootRow)
     Switch-DiskRow $rootRow
+    $script:DiskSel = $null; Select-DiskRow $null
     Start-FadeIn $grid 0 8
 }
 
