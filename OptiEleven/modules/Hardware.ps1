@@ -75,7 +75,7 @@ function New-HardwarePage {
     $bCopy.IsEnabled = $false
     $bCopy.Add_Click({ [Windows.Clipboard]::SetText($script:HwText); Write-Log 'Informe del equipo copiado al portapapeles.' 'OK' })
     $script:HwBody = [Windows.Controls.StackPanel]::new()
-    [void]$script:HwBody.Children.Add((New-Text 'Leyendo el equipo...' 14 'Muted'))
+    [void]$script:HwBody.Children.Add((New-Loader (T 'Leyendo el equipo...')))
     [void]$root.Children.Add($script:HwBody)
     $script:HwCopy = $bCopy
     # las consultas de WMI tardan uno o dos segundos: en segundo plano, y la ficha se pinta al llegar

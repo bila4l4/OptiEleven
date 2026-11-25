@@ -77,21 +77,24 @@ function Invoke-BoostFps {
         $freedRam = [math]::Max([double]0, [double]((Get-FreeRam) - $ramBefore))
         $script:FpsSteps.Ram.Text = '+' + (Format-Size $freedRam)
         Write-Log "Boost FPS: memoria recortada en $trimmed procesos, $(Format-Size $freedRam) más de RAM libre." 'OK'
-        $cleaned = 0
-        foreach ($it in $CleanItems) {
-            $before = Get-CleanBytes $it
-            Write-Log "Limpiando: $($it.Name)"; Update-Ui
-            Invoke-CleanItem $it
-            $cleaned += [math]::Max([double]0, [double]($before - (Get-CleanBytes $it)))
-            $script:FpsSteps.Clean.Text = Format-Size $cleaned
+        $script:FpsRam = $freedRam
+        $script:FpsSteps.Clean.Text = (T 'borrando...')
+        # la limpieza va en segundo plano (la misma que la de Limpieza): la ventana sigue respondiendo
+        Start-CleanJob $CleanItems -OnTick {
+            param($P)
+            if ($P.Current) { $script:FpsSteps.Clean.Text = Format-Size $P.Bytes }
+        } -Done {
+            param($P)
+            Write-Log "Boost FPS listo: $(Format-Size $script:FpsRam) de RAM liberada y $(Format-Size $P.Bytes) de disco limpiados." 'OK'
+            $script:FpsSteps.Clean.Text = Format-Size $P.Bytes
+            foreach ($k in $script:FpsSteps.Keys) { $script:FpsSteps[$k].SetResourceReference($FgProp, 'Accent') }
+            Set-Busy $false; $script:BoostPurge.IsChecked = $true; Update-BoostView
+            if ($script:CleanRows) { Invoke-CleanScan }
         }
-        Write-Log "Boost FPS listo: $(Format-Size $freedRam) de RAM liberada y $(Format-Size $cleaned) de disco limpiados." 'OK'
-        foreach ($k in $script:FpsSteps.Keys) { $script:FpsSteps[$k].SetResourceReference($FgProp, 'Accent') }
-        if ($script:CleanRows) { foreach ($r in $script:CleanRows.Values) { $r.Bytes = Get-CleanBytes $r.Item; $r.SizeTb.Text = Format-Size $r.Bytes }; Update-CleanTotal }
+        $async = $true
     }
-    finally { Set-Busy $false; $script:BoostPurge.IsChecked = $true; Update-BoostView }
+    finally { if (-not $async) { Set-Busy $false; $script:BoostPurge.IsChecked = $true; Update-BoostView } }
 }
-
 function New-FpsHero {
     $card = [Windows.Controls.Border]::new(); $card.CornerRadius = 12; $card.Padding = '24,22,24,20'; $card.Margin = '0,0,0,8'
     $card.SetResourceReference($BgProp, 'Glass'); $card.SetResourceReference([Windows.Controls.Border]::BorderBrushProperty, 'GlassEdge'); $card.BorderThickness = 1

@@ -36,7 +36,7 @@ function Measure-Latency([string]$Target, [int]$Count = 4) {
 function Update-NetInfo {
     # Get-NetAdapter y compañía cargan módulos de CIM (un par de segundos): en segundo plano
     $script:NetInfo.Children.Clear()
-    [void]$script:NetInfo.Children.Add((New-Text 'Leyendo la conexión...' 14 'Muted'))
+    [void]$script:NetInfo.Children.Add((New-Loader (T 'Leyendo la conexión...')))
     $work = [scriptblock]::Create("function Get-ActiveAdapters {`n${function:Get-ActiveAdapters}`n}`n@(Get-ActiveAdapters)")
     Start-Bg $work @() { param($r) $script:NetAdapters = @($r | Where-Object { $_ }); Show-NetInfo }
 }

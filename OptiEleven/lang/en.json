@@ -372,6 +372,9 @@
     "DISM, SFC, red, Windows Update y Store: las reparaciones de siempre.": "DISM, SFC, network, Windows Update and Store: the classic repairs.",
     "Todo es reversible: antes de cambiar algo, OptiEleven guarda cómo estaba.": "Everything is reversible: before changing anything, OptiEleven saves how it was.",
     "Modo experto": "Expert mode",    "Algo ha fallado, pero el panel sigue abierto. Los detalles están en Actividad (Modo experto).": "Something went wrong, but the panel is still open. Details are in Activity (Expert mode).",
+    "Preparando la limpieza...": "Getting the cleanup ready...",
+    "Limpiando...": "Cleaning...",
+    "borrando...": "deleting...",
     "Elige un ajuste": "Pick a tweak",
     "Toca cualquier fila para ver qué claves, servicios y tareas cambia, con el valor de ahora y el de después.": "Click any row to see which keys, services and tasks it changes, with the value now and after.",
     "Toca cualquier fila para ver qué hace y si es seguro. O pulsa Recomendado para marcar de una vez lo que conviene a casi todos.": "Click any row to see what it does and whether it's safe. Or press Recommended to tick what suits almost everyone in one go.",
@@ -597,6 +600,10 @@
     "Edge se reinstala desde microsoft.com/edge o con \"winget install Microsoft.Edge\".": "Edge is reinstalled from microsoft.com/edge or with \"winget install Microsoft.Edge\"."
   },
   "patterns": [
+    ["^Cargando (.*)\\.\\.\\.$", "Loading $1..."],
+    ["^Borrando (.*?): ([\\d.,]+) archivos, (.*) liberados$", "Deleting $1: $2 files, $3 freed"],
+    ["^Liberados (.*) en ([\\d.,]+) archivos\\. Lo que estaba en uso se queda y se borrará otro día\\.$", "$1 freed in $2 files. Files in use stay and will be removed another day."],
+    ["^Limpiando: (.*)$", "Cleaning: $1"],
     ["^Error inesperado: (.*)$", "Unexpected error: $1"],
     ["^Analizando\\.\\.\\. (\\d+) de (\\d+) marcados$", "Scanning... $1 of $2 ticked"],
     ["^(\\d+) de (\\d+) marcados$", "$1 of $2 ticked"],

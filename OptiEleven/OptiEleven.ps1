@@ -1792,6 +1792,18 @@ try {
             $tt.BeginAnimation([Windows.Media.TranslateTransform]::YProperty, $m)
         }
     }
+    # indicador de carga: un arco que gira y un texto, para que nunca parezca que la ventana se ha quedado colgada
+    function New-Loader([string]$Text) {
+        $sp = [Windows.Controls.StackPanel]::new(); $sp.Orientation = 'Horizontal'; $sp.Margin = '4,24,0,24'
+        $arc = [Windows.Shapes.Path]::new(); $arc.Data = [Windows.Media.Geometry]::Parse('M 11,2 A 9,9 0 1 1 2,11'); $arc.Width = 22; $arc.Height = 22
+        $arc.StrokeThickness = 3; $arc.StrokeStartLineCap = 'Round'; $arc.StrokeEndLineCap = 'Round'; $arc.SetResourceReference([Windows.Shapes.Shape]::StrokeProperty, 'Accent')
+        $rot = [Windows.Media.RotateTransform]::new(0, 11, 11); $arc.RenderTransform = $rot; $arc.VerticalAlignment = 'Center'
+        $spin = [Windows.Media.Animation.DoubleAnimation]::new(0, 360, [Windows.Duration][TimeSpan]::FromSeconds(0.9)); $spin.RepeatBehavior = [Windows.Media.Animation.RepeatBehavior]::Forever
+        $rot.BeginAnimation([Windows.Media.RotateTransform]::AngleProperty, $spin)
+        $tb = New-Text $Text 14.5 'Ink2' 'Medium'; $tb.VerticalAlignment = 'Center'; $tb.Margin = '14,0,0,0'
+        [void]$sp.Children.Add($arc); [void]$sp.Children.Add($tb)
+        $sp
+    }
     function Start-Stagger($Items, [int]$Max = 14) {
         $i = 0
         foreach ($it in $Items) { if ($i -ge $Max) { break }; if ($it.Visibility -eq 'Visible') { Start-FadeIn $it ($i * 28) 8; $i++ } }
@@ -2332,7 +2344,7 @@ try {
         }
         if ($isModule) {
             if (-not $script:ModuleCache.ContainsKey($Key)) {
-                $ui.ModuleHost.Content = (New-Text 'Cargando...' 14 'Muted'); Update-Ui
+                $ui.ModuleHost.Content = (New-Loader (T "Cargando $(T $pg.Title)...")); Update-Ui
                 try { $script:ModuleCache[$Key] = & $pg.Module }
                 catch {
                     Write-Log "$($pg.Title): $($_.Exception.Message) (línea $($_.InvocationInfo.ScriptLineNumber))" 'ERROR'

@@ -63,26 +63,45 @@ function Get-CleanBytes($Item) {
     $total
 }
 
-function Invoke-CleanItem($Item) {
-    foreach ($svc in @($Item.Services)) { if ($svc) { Stop-Service $svc -Force -ErrorAction SilentlyContinue } }
-    try {
-        if ($Item.Clean) { & $Item.Clean; return }
-        if ($Item.Paths) {
-            foreach ($p in & $Item.Paths) {
-                if (-not (Test-Path -LiteralPath $p)) { continue }
-                $k = 0
-                Get-ChildItem -LiteralPath $p -Force -ErrorAction SilentlyContinue | ForEach-Object {
-                    try { Remove-Item -LiteralPath $_.FullName -Recurse -Force -ErrorAction Stop } catch {}   # lo que está en uso se queda
-                    if ((++$k % 25) -eq 0) { Update-Ui }
-                }
-                Update-Ui
-            }
-        }
-        if ($Item.Files) { foreach ($p in & $Item.Files) { try { Remove-Item -LiteralPath $p -Force -ErrorAction Stop } catch {} } }
+# Borra en segundo plano, archivo a archivo, para poder contar lo liberado y enseñar el progreso sin bloquear la ventana.
+# $OnTick recibe la tabla de progreso (Current, Index, Count, Files, Bytes); $Done se llama al terminar con la misma tabla.
+function Start-CleanJob([object[]]$Items, [scriptblock]$OnTick, [scriptblock]$Done) {
+    $quick = [double]0
+    foreach ($it in @($Items | Where-Object { $_.Clean })) {   # papelera y caché de distribución: su propio comando, al momento
+        $b = Get-CleanBytes $it; try { & $it.Clean } catch {}; $quick += [math]::Max([double]0, [double]($b - (Get-CleanBytes $it)))
     }
-    finally { foreach ($svc in @($Item.Services)) { if ($svc) { Start-Service $svc -ErrorAction SilentlyContinue } } }
+    $jobs = @(foreach ($it in @($Items | Where-Object { -not $_.Clean })) {
+        $paths = @(); if ($it.Paths) { $paths += @(& $it.Paths) }; if ($it.Files) { $paths += @(& $it.Files) }
+        @{ Id = $it.Id; Name = (T $it.Name); Paths = $paths; Services = @($it.Services | Where-Object { $_ }) }
+    })
+    $P = [hashtable]::Synchronized(@{ Bytes = $quick; Files = 0; Current = ''; CurrentId = ''; Index = 0; Count = $jobs.Count })
+    $script:CleanJob = @{ P = $P; Done = $Done }
+    Start-Bg -Work {
+        param($A, $P)
+        foreach ($j in $A.Jobs) {
+            $P.Current = $j.Name; $P.CurrentId = $j.Id; $P.Index++
+            foreach ($svc in $j.Services) { Stop-Service $svc -Force -ErrorAction SilentlyContinue }
+            try {
+                foreach ($path in $j.Paths) {
+                    $item = Get-Item -LiteralPath $path -Force -ErrorAction SilentlyContinue
+                    if (-not $item) { continue }
+                    $files = if ($item.PSIsContainer) { Get-ChildItem -LiteralPath $path -Recurse -Force -File -ErrorAction SilentlyContinue } else { $item }
+                    foreach ($file in $files) {
+                        $len = [double]$file.Length
+                        try { [IO.File]::Delete($file.FullName) }
+                        catch { try { [IO.File]::SetAttributes($file.FullName, 'Normal'); [IO.File]::Delete($file.FullName) } catch { continue } }   # en uso: se queda
+                        $P.Bytes += $len; $P.Files++
+                    }
+                    if ($item.PSIsContainer) {   # carpetas que han quedado vacías, de la más honda a la menos
+                        Get-ChildItem -LiteralPath $path -Recurse -Force -Directory -ErrorAction SilentlyContinue | Sort-Object { $_.FullName.Length } -Descending |
+                            ForEach-Object { try { [IO.Directory]::Delete($_.FullName) } catch {} }
+                    }
+                }
+            }
+            finally { foreach ($svc in $j.Services) { Start-Service $svc -ErrorAction SilentlyContinue } }
+        }
+    } -ArgList @(@{ Jobs = $jobs }) -Progress $P -OnTick $OnTick -Done { & $script:CleanJob.Done $script:CleanJob.P }
 }
-
 function Update-CleanTotal {
     $t = 0; $n = 0; $max = 1
     foreach ($r in $script:CleanRows.Values) {
@@ -166,7 +185,15 @@ function New-CleanerPage {
     if (-not $script:IsAdmin) { $script:CleanBtn.ToolTip = (T 'Sin administrador solo se limpia lo de tu usuario') }
     foreach ($x in $bAll, $bScan, $script:CleanBtn) { [void]$btns.Children.Add($x) }
     [void](Add-At $hg $btns 2)
-    $hero.Child = $hg
+    $heroStack = [Windows.Controls.StackPanel]::new(); [void]$heroStack.Children.Add($hg)
+    $script:CleanProg = [Windows.Controls.StackPanel]::new(); $script:CleanProg.Margin = '0,18,0,0'; $script:CleanProg.Visibility = 'Collapsed'
+    $pt = [Windows.Controls.Border]::new(); $pt.Height = 6; $pt.CornerRadius = 3; $pt.SetResourceReference($BgP, 'Paper3')
+    $script:CleanProgBar = [Windows.Controls.Border]::new(); $script:CleanProgBar.CornerRadius = 3; $script:CleanProgBar.HorizontalAlignment = 'Left'; $script:CleanProgBar.Width = 0
+    $script:CleanProgBar.SetResourceReference($BgP, 'AccentGrad'); $pt.Child = $script:CleanProgBar; $script:CleanProgTrack = $pt
+    $script:CleanProgText = New-Text '' 13 'Ink2' 'Medium'; $script:CleanProgText.Margin = '0,8,0,0'
+    [void]$script:CleanProg.Children.Add($pt); [void]$script:CleanProg.Children.Add($script:CleanProgText)
+    [void]$heroStack.Children.Add($script:CleanProg)
+    $hero.Child = $heroStack
     [void]$root.Children.Add($hero)
     $script:CleanResult = New-Text '' 13.5 'Cat-Juegos' 'SemiBold'; $script:CleanResult.Margin = '4,0,0,10'; $script:CleanResult.Visibility = 'Collapsed'
     [void]$root.Children.Add($script:CleanResult)
@@ -217,22 +244,28 @@ function New-CleanerPage {
         if ($sel | Where-Object { $_.Item.Id -eq 'browsers' }) { $msg += "`n`nCierra los navegadores antes para limpiar más." }
         if ([Windows.MessageBox]::Show($window, (T $msg), 'OptiEleven', 'OKCancel', 'Question') -ne 'OK') { return }
         Set-Busy $true
-        $freed = 0
-        try {
-            foreach ($r in $sel) {
-                Write-Log "Limpiando: $($r.Item.Name)"
-                $r.SizeTb.Text = (T '...'); Update-Ui
-                $before = if ($null -ne $r.Bytes) { $r.Bytes } else { Get-CleanBytes $r.Item }
-                Invoke-CleanItem $r.Item
-                $r.Bytes = Get-CleanBytes $r.Item; $r.SizeTb.Text = Format-Size $r.Bytes
-                $freed += [math]::Max([double]0, [double]($before - $r.Bytes))
-                Update-CleanTotal; Update-Ui
-            }
-            Write-Log "Limpieza terminada: $(Format-Size $freed) liberados (lo que estaba en uso se queda)." 'OK'
-            $script:CleanResult.Text = (T "Liberados $(Format-Size $freed). Lo que estaba en uso se queda y se borrará otro día.")
+        $script:CleanResult.Visibility = 'Collapsed'; $script:CleanProg.Visibility = 'Visible'; $script:CleanProgBar.Width = 0
+        $script:CleanProgText.Text = (T 'Preparando la limpieza...')
+        $script:CleanBtn.Content.Children[1].Text = (T 'Limpiando...')
+        Write-Log "Limpiando: $(($sel | ForEach-Object { T $_.Item.Name }) -join ', ')"
+        Start-CleanJob @($sel | ForEach-Object { $_.Item }) -OnTick {
+            param($P)
+            if (-not $P.Current) { return }
+            $script:CleanProgText.Text = (T "Borrando $($P.Current): $('{0:N0}' -f $P.Files) archivos, $(Format-Size $P.Bytes) liberados")
+            $done = [math]::Max(0, $P.Index - 1) / [math]::Max(1, $P.Count)
+            $script:CleanProgBar.Width = [math]::Max(8, ($done + 0.5 / [math]::Max(1, $P.Count)) * $script:CleanProgTrack.ActualWidth)
+            $r = $script:CleanRows[$P.CurrentId]; if ($r) { $r.SizeTb.Text = (T 'borrando...') }
+            $script:CleanBtn.Content.Children[1].Text = (T 'Limpiando...')
+        } -Done {
+            param($P)
+            Set-Busy $false
+            $script:CleanProgBar.Width = $script:CleanProgTrack.ActualWidth
+            $script:CleanProg.Visibility = 'Collapsed'
+            Write-Log "Limpieza terminada: $(Format-Size $P.Bytes) liberados (lo que estaba en uso se queda)." 'OK'
+            $script:CleanResult.Text = (T "Liberados $(Format-Size $P.Bytes) en $('{0:N0}' -f $P.Files) archivos. Lo que estaba en uso se queda y se borrará otro día.")
             $script:CleanResult.Visibility = 'Visible'
+            Invoke-CleanScan   # vuelve a medir lo que queda
         }
-        finally { Set-Busy $false; Update-CleanTotal }
     })
     Update-CleanTotal
     $script:CleanFirstScan = $true
