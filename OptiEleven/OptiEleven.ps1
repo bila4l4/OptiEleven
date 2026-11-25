@@ -1604,6 +1604,15 @@ try {
         }
     }
     $window = [Windows.Markup.XamlReader]::Load((New-Object System.Xml.XmlNodeReader $xaml))
+    # Un fallo dentro de un botón no debe cerrar el panel entero: se apunta en el registro, se avisa y la ventana sigue.
+    $window.Dispatcher.Add_UnhandledException({
+        param($src, $e)
+        $e.Handled = $true
+        $ex = $e.Exception; while ($ex.InnerException) { $ex = $ex.InnerException }
+        try { Write-Log "Error inesperado: $($ex.Message)" 'ERROR' } catch {}
+        try { if ($script:Busy) { Set-Busy $false } } catch {}
+        try { [void][Windows.MessageBox]::Show($window, (T 'Algo ha fallado, pero el panel sigue abierto. Los detalles están en Actividad (Modo experto).') + "`n`n$($ex.Message)", 'OptiEleven', 'OK', 'Warning') } catch {}
+    })
     $wa = [System.Windows.SystemParameters]::WorkArea
     $window.Height = [math]::Min($window.Height, $wa.Height - 24)
     $window.Width  = [math]::Min($window.Width, $wa.Width - 24)

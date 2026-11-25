@@ -74,7 +74,7 @@ function Invoke-BoostFps {
         $trimmed = Invoke-TrimWorkingSets
         Start-Sleep -Milliseconds 400
         Invoke-StandbyPurge
-        $freedRam = [math]::Max(0, (Get-FreeRam) - $ramBefore)
+        $freedRam = [math]::Max([double]0, [double]((Get-FreeRam) - $ramBefore))
         $script:FpsSteps.Ram.Text = '+' + (Format-Size $freedRam)
         Write-Log "Boost FPS: memoria recortada en $trimmed procesos, $(Format-Size $freedRam) más de RAM libre." 'OK'
         $cleaned = 0
@@ -82,7 +82,7 @@ function Invoke-BoostFps {
             $before = Get-CleanBytes $it
             Write-Log "Limpiando: $($it.Name)"; Update-Ui
             Invoke-CleanItem $it
-            $cleaned += [math]::Max(0, $before - (Get-CleanBytes $it))
+            $cleaned += [math]::Max([double]0, [double]($before - (Get-CleanBytes $it)))
             $script:FpsSteps.Clean.Text = Format-Size $cleaned
         }
         Write-Log "Boost FPS listo: $(Format-Size $freedRam) de RAM liberada y $(Format-Size $cleaned) de disco limpiados." 'OK'
@@ -228,7 +228,7 @@ function Invoke-StandbyPurge {
     $r = [GP.Mem]::PurgeStandby()
     Start-Sleep -Milliseconds 300
     $after = (Get-CimInstance Win32_OperatingSystem).FreePhysicalMemory * 1KB
-    if ($r -eq 0) { Write-Log "Memoria en espera vaciada: $(Format-Size ([math]::Max(0, $after - $before))) más de RAM libre." 'OK' }
+    if ($r -eq 0) { Write-Log "Memoria en espera vaciada: $(Format-Size ([math]::Max([double]0, [double]($after - $before)))) más de RAM libre." 'OK' }
     else { Write-Log "No se pudo vaciar la memoria en espera (código $r). Necesita administrador." 'WARN' }
 }
 

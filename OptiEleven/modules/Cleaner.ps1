@@ -225,7 +225,7 @@ function New-CleanerPage {
                 $before = if ($null -ne $r.Bytes) { $r.Bytes } else { Get-CleanBytes $r.Item }
                 Invoke-CleanItem $r.Item
                 $r.Bytes = Get-CleanBytes $r.Item; $r.SizeTb.Text = Format-Size $r.Bytes
-                $freed += [math]::Max(0, $before - $r.Bytes)
+                $freed += [math]::Max([double]0, [double]($before - $r.Bytes))
                 Update-CleanTotal; Update-Ui
             }
             Write-Log "Limpieza terminada: $(Format-Size $freed) liberados (lo que estaba en uso se queda)." 'OK'
