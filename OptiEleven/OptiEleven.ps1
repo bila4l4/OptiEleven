@@ -80,53 +80,110 @@ namespace GP {
         // identidad propia en la barra de tareas: sin ella, Windows agrupa la ventana con PowerShell y muestra su icono
         [DllImport("shell32.dll", CharSet = CharSet.Unicode)] public static extern int SetCurrentProcessExplicitAppUserModelID(string appId);
     }
-    // Espacio en disco (como WinDirStat): suma lo que ocupa cada carpeta de primer nivel y guarda los archivos más grandes.
-    // En C# porque recorrer un disco entero desde PowerShell tardaría minutos. Los contadores se leen en vivo desde la ventana.
+    // Espacio en disco (como WinDirStat): árbol completo de carpetas con su tamaño, los archivos grandes de cada una y un
+    // resumen por extensión. FindFirstFileEx con "large fetch" (lo mismo que usa WinDirStat) y una carpeta de primer
+    // nivel por núcleo en paralelo. Los contadores se leen en vivo desde la ventana.
+    public class DNode {
+        public string Name; public string Path; public long Size; public long Files; public long LastWrite;
+        public bool IsFile; public bool IsRest; public DNode Parent;
+        public System.Collections.Generic.List<DNode> Kids;
+    }
+    public class DExt { public string Ext; public long Size; public long Count; }
     public static class DiskScan {
         public static long Files, Bytes; public static string Current = ""; public static volatile bool Cancel;
-        public class Item { public string Path; public string Name; public long Size; public long Count; public bool Dir; }
-        static System.Collections.Generic.List<Item> top; static int topN;
-        static void AddTop(System.IO.FileInfo f, long len) {
-            if (top.Count >= topN && len <= top[top.Count - 1].Size) return;
-            top.Add(new Item { Path = f.FullName, Name = f.Name, Size = len, Count = 1 });
-            top.Sort((a, b) => b.Size.CompareTo(a.Size));
-            if (top.Count > topN) top.RemoveAt(top.Count - 1);
+        const int KeepFiles = 40;   // archivos que se guardan por carpeta; el resto se suma en una sola fila
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode, Pack = 4)]
+        struct FindData {
+            public uint Attr; public long Created, Accessed, Written; public uint SizeHigh, SizeLow, R0, R1;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)] public string Name;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 14)] public string Alt;
         }
-        static bool Skip(System.IO.FileSystemInfo e) { return (e.Attributes & System.IO.FileAttributes.ReparsePoint) != 0; }   // uniones y enlaces: no contar dos veces
-        static void Walk(System.IO.DirectoryInfo start, ref long size, ref long count) {
-            var stack = new System.Collections.Generic.Stack<System.IO.DirectoryInfo>(); stack.Push(start);
-            while (stack.Count > 0 && !Cancel) {
-                var cur = stack.Pop(); Current = cur.FullName;
-                System.IO.FileSystemInfo[] es; try { es = cur.GetFileSystemInfos(); } catch { continue; }   // sin permiso: se salta
-                foreach (var e in es) {
-                    if ((e.Attributes & System.IO.FileAttributes.Directory) != 0) { if (!Skip(e)) stack.Push((System.IO.DirectoryInfo)e); continue; }
-                    var f = (System.IO.FileInfo)e; long len; try { len = f.Length; } catch { continue; }
-                    size += len; count++; Files++; Bytes += len; AddTop(f, len);
-                }
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        static extern IntPtr FindFirstFileExW(string name, int level, out FindData data, int op, IntPtr filter, int flags);
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode)] static extern bool FindNextFileW(IntPtr h, out FindData data);
+        [DllImport("kernel32.dll")] static extern bool FindClose(IntPtr h);
+
+        class Ctx { public System.Collections.Generic.Dictionary<string, long[]> Ext = new System.Collections.Generic.Dictionary<string, long[]>(System.StringComparer.OrdinalIgnoreCase); }
+
+        static void Walk(DNode dir, Ctx ctx) {
+            if (Cancel) return;
+            Current = dir.Path;
+            var files = new System.Collections.Generic.List<DNode>();
+            FindData fd; long dirBytes = 0, dirFiles = 0;
+            string pattern = (dir.Path.StartsWith(@"\\") ? dir.Path : @"\\?\" + dir.Path).TrimEnd('\\') + @"\*";
+            IntPtr h = FindFirstFileExW(pattern, 1, out fd, 0, IntPtr.Zero, 2);
+            if (h != new IntPtr(-1)) {
+                try {
+                    do {
+                        if (fd.Name == "." || fd.Name == "..") continue;
+                        if ((fd.Attr & 0x10) != 0) {
+                            if ((fd.Attr & 0x400) != 0) continue;   // uniones y enlaces: no contar dos veces
+                            var sub = new DNode { Name = fd.Name, Path = dir.Path.TrimEnd('\\') + "\\" + fd.Name, LastWrite = fd.Written, Parent = dir, Kids = new System.Collections.Generic.List<DNode>() };
+                            dir.Kids.Add(sub);
+                        } else {
+                            long len = ((long)fd.SizeHigh << 32) | fd.SizeLow;
+                            files.Add(new DNode { Name = fd.Name, Size = len, Files = 1, LastWrite = fd.Written, IsFile = true, Parent = dir });
+                            dirBytes += len; dirFiles++;
+                            int dot = fd.Name.LastIndexOf('.'); string ext = dot > 0 ? fd.Name.Substring(dot).ToLowerInvariant() : "";
+                            long[] e; if (!ctx.Ext.TryGetValue(ext, out e)) { e = new long[2]; ctx.Ext[ext] = e; } e[0] += len; e[1]++;
+                        }
+                    } while (FindNextFileW(h, out fd));
+                } finally { FindClose(h); }
             }
-        }
-        // devuelve { Item[] carpetas de primer nivel (y los archivos sueltos como una entrada más), Item[] archivos más grandes }
-        public static object[] Scan(string root, int topCount) {
-            Files = 0; Bytes = 0; Cancel = false; top = new System.Collections.Generic.List<Item>(); topN = topCount;
-            var kids = new System.Collections.Generic.List<Item>(); long looseSize = 0, looseCount = 0;
-            System.IO.FileSystemInfo[] entries; try { entries = new System.IO.DirectoryInfo(root).GetFileSystemInfos(); } catch { entries = new System.IO.FileSystemInfo[0]; }
-            foreach (var e in entries) {
-                if (Cancel) break;
-                if ((e.Attributes & System.IO.FileAttributes.Directory) != 0) {
-                    if (Skip(e)) continue;
-                    long s = 0, c = 0; Walk((System.IO.DirectoryInfo)e, ref s, ref c);
-                    kids.Add(new Item { Path = e.FullName, Name = e.Name, Size = s, Count = c, Dir = true });
-                } else {
-                    var f = (System.IO.FileInfo)e; long len; try { len = f.Length; } catch { continue; }
-                    looseSize += len; looseCount++; Files++; Bytes += len; AddTop(f, len);
-                }
+            System.Threading.Interlocked.Add(ref Files, dirFiles); System.Threading.Interlocked.Add(ref Bytes, dirBytes);
+            foreach (var sub in dir.Kids) { if (Cancel) return; Walk(sub, ctx); dirBytes += sub.Size; dirFiles += sub.Files; }
+            // solo los archivos grandes de cada carpeta como filas; los demás, sumados en una ("y 1.234 archivos más")
+            files.Sort((a, b) => b.Size.CompareTo(a.Size));
+            if (files.Count > KeepFiles) {
+                long rs = 0; for (int i = KeepFiles; i < files.Count; i++) rs += files[i].Size;
+                var rest = new DNode { Name = "", Size = rs, Files = files.Count - KeepFiles, IsFile = true, IsRest = true, Parent = dir };
+                files.RemoveRange(KeepFiles, files.Count - KeepFiles); files.Add(rest);
             }
-            if (looseCount > 0) kids.Add(new Item { Path = root, Name = "", Size = looseSize, Count = looseCount, Dir = false });
-            kids.Sort((a, b) => b.Size.CompareTo(a.Size));
-            return new object[] { kids.ToArray(), top.ToArray() };
+            dir.Kids.AddRange(files);
+            dir.Kids.Sort((a, b) => b.Size.CompareTo(a.Size));
+            dir.Size = dirBytes; dir.Files = dirFiles;
         }
-    }
-    public static class Ws {
+
+        // devuelve { DNode raíz, DExt[] extensiones de mayor a menor }
+        public static object[] Scan(string root) {
+            Files = 0; Bytes = 0; Cancel = false;
+            var top = new DNode { Name = root, Path = root.TrimEnd('\\') + (root.EndsWith(":\\") || root.EndsWith(":") ? "\\" : ""), Kids = new System.Collections.Generic.List<DNode>() };
+            if (top.Path.EndsWith(":\\") == false) top.Path = root.TrimEnd('\\');
+            // primer nivel en serie; cada carpeta de primer nivel en su hilo
+            var main = new Ctx();
+            FindData fd; var dirs = new System.Collections.Generic.List<DNode>(); var looseFiles = new System.Collections.Generic.List<DNode>(); long lb = 0, lf = 0;
+            IntPtr h = FindFirstFileExW((top.Path.StartsWith(@"\\") ? top.Path : @"\\?\" + top.Path).TrimEnd('\\') + @"\*", 1, out fd, 0, IntPtr.Zero, 2);
+            if (h != new IntPtr(-1)) {
+                try {
+                    do {
+                        if (fd.Name == "." || fd.Name == "..") continue;
+                        if ((fd.Attr & 0x10) != 0) { if ((fd.Attr & 0x400) == 0) dirs.Add(new DNode { Name = fd.Name, Path = top.Path.TrimEnd('\\') + "\\" + fd.Name, LastWrite = fd.Written, Parent = top, Kids = new System.Collections.Generic.List<DNode>() }); }
+                        else {
+                            long len = ((long)fd.SizeHigh << 32) | fd.SizeLow; lb += len; lf++;
+                            looseFiles.Add(new DNode { Name = fd.Name, Size = len, Files = 1, LastWrite = fd.Written, IsFile = true, Parent = top });
+                            int dot = fd.Name.LastIndexOf('.'); string ext = dot > 0 ? fd.Name.Substring(dot).ToLowerInvariant() : "";
+                            long[] e; if (!main.Ext.TryGetValue(ext, out e)) { e = new long[2]; main.Ext[ext] = e; } e[0] += len; e[1]++;
+                        }
+                    } while (FindNextFileW(h, out fd));
+                } finally { FindClose(h); }
+            }
+            System.Threading.Interlocked.Add(ref Files, lf); System.Threading.Interlocked.Add(ref Bytes, lb);
+            var ctxs = new System.Collections.Concurrent.ConcurrentBag<Ctx>();
+            System.Threading.Tasks.Parallel.ForEach(dirs, new System.Threading.Tasks.ParallelOptions { MaxDegreeOfParallelism = System.Math.Max(2, System.Environment.ProcessorCount) },
+                () => new Ctx(), (d, state, ctx) => { Walk(d, ctx); return ctx; }, ctx => ctxs.Add(ctx));
+            top.Kids.AddRange(dirs); top.Kids.AddRange(looseFiles);
+            long total = lb, count = lf; foreach (var d in dirs) { total += d.Size; count += d.Files; }
+            top.Kids.Sort((a, b) => b.Size.CompareTo(a.Size));
+            top.Size = total; top.Files = count;
+            // extensiones de todos los hilos juntas
+            foreach (var c in ctxs) foreach (var kv in c.Ext) { long[] e; if (!main.Ext.TryGetValue(kv.Key, out e)) { e = new long[2]; main.Ext[kv.Key] = e; } e[0] += kv.Value[0]; e[1] += kv.Value[1]; }
+            var exts = new System.Collections.Generic.List<DExt>();
+            foreach (var kv in main.Ext) exts.Add(new DExt { Ext = kv.Key, Size = kv.Value[0], Count = kv.Value[1] });
+            exts.Sort((a, b) => b.Size.CompareTo(a.Size));
+            return new object[] { top, exts.ToArray() };
+        }
+    }    public static class Ws {
         [DllImport("psapi.dll")] public static extern bool EmptyWorkingSet(IntPtr h);
     }
     public static class Mem {
@@ -1758,6 +1815,7 @@ try {
         foreach ($w in $Widths) {
             $cd = [Windows.Controls.ColumnDefinition]::new()
             if ($w -eq '*') { $cd.Width = [Windows.GridLength]::new(1, [Windows.GridUnitType]::Star) }
+            elseif ($w -match '^(\d+)\*$') { $cd.Width = [Windows.GridLength]::new([double]$Matches[1], [Windows.GridUnitType]::Star) }
             elseif ($w -eq 'Auto') { $cd.Width = [Windows.GridLength]::Auto }
             else { $cd.Width = [Windows.GridLength]::new([double]$w) }
             $g.ColumnDefinitions.Add($cd)

@@ -1,14 +1,17 @@
-﻿# Módulo "Espacio en disco": como WinDirStat. Qué carpetas ocupan más (con un clic se baja de nivel) y los archivos más grandes.
-# El recorrido lo hace [GP.DiskScan] (C#, en OptiEleven.ps1) en segundo plano; aquí solo se pinta.
+﻿# Módulo "Espacio en disco": como WinDirStat. Árbol de carpetas desplegable con la proporción de cada una, porcentaje,
+# tamaño, archivos y fecha, y a la derecha el reparto por extensión. El recorrido lo hace [GP.DiskScan] (C#, en
+# OptiEleven.ps1) en segundo plano; aquí solo se pinta, y cada carpeta crea sus filas al desplegarla.
 
-$script:DiskCache = @{}   # ruta -> resultado ya analizado, para volver atrás sin esperar otra vez
+$script:DiskCache = @{}   # unidad -> resultado ya analizado
+$DiskDepthColors = 'Accent', 'Cat-Interfaz', 'Cat-Juegos', 'Cat-Latencia', 'Cat-Privacidad', 'Cat-Rendimiento', 'Cat-Servicios', 'Cat-Apps'
+$DiskCols = @('2*', '1*', '62', '78', '70', '78')
+$DiskMaxKids = 150   # filas por carpeta al desplegar; el resto en una fila "y N más"
 
-function Start-DiskScan([string]$Path, [double]$Expected) {
-    if ($script:DiskCache.ContainsKey($Path)) { Show-DiskResult $Path; return }
-    $script:DiskExpected = $Expected
+function Start-DiskScan([string]$Root, [double]$Expected) {
+    if ($script:DiskCache.ContainsKey($Root)) { Show-DiskResult $Root; return }
+    $script:DiskExpected = $Expected; $script:DiskRoot = $Root
     $script:DiskWork = Show-Working (T 'Analizando el disco') (T 'Empezando...') { [GP.DiskScan]::Cancel = $true }
-    $script:DiskScanPath = $Path
-    Start-Bg -Work { param($A) , ([GP.DiskScan]::Scan($A.Root, 30)) } -ArgList @(@{ Root = $Path }) -Progress ([hashtable]::Synchronized(@{})) -OnTick {
+    Start-Bg -Work { param($A) , ([GP.DiskScan]::Scan($A.Root)) } -ArgList @(@{ Root = $Root }) -Progress ([hashtable]::Synchronized(@{})) -OnTick {
         param($P)
         $cur = [GP.DiskScan]::Current; if ($cur.Length -gt 60) { $cur = '...' + $cur.Substring($cur.Length - 57) }
         $script:DiskWork.Detail.Text = (T "$('{0:N0}' -f [GP.DiskScan]::Files) archivos, $(Format-Size ([GP.DiskScan]::Bytes))") + "`n" + $cur
@@ -17,81 +20,121 @@ function Start-DiskScan([string]$Path, [double]$Expected) {
         param($r)
         Close-Working $script:DiskWork
         if ([GP.DiskScan]::Cancel -or -not $r -or -not $r[0]) { Write-Log 'Análisis del disco cancelado.'; return }
-        $script:DiskCache[$script:DiskScanPath] = @{ Folders = @($r[0][0]); Files = @($r[0][1]); Total = [double][GP.DiskScan]::Bytes; Count = [GP.DiskScan]::Files }
-        Write-Log "Disco analizado: $($script:DiskScanPath), $(Format-Size ([GP.DiskScan]::Bytes)) en $('{0:N0}' -f [GP.DiskScan]::Files) archivos." 'OK'
-        Show-DiskResult $script:DiskScanPath
+        $script:DiskCache[$script:DiskRoot] = @{ Root = $r[0][0]; Ext = @($r[0][1]) }
+        Write-Log "Disco analizado: $($script:DiskRoot), $(Format-Size $r[0][0].Size) en $('{0:N0}' -f $r[0][0].Files) archivos." 'OK'
+        Show-DiskResult $script:DiskRoot
     }
 }
 
-function New-DiskRow([string]$Icon, [string]$Title, [string]$Sub, [double]$Size, [double]$Max, $Action, [string]$Color = 'Cat-Apps') {
+function New-DiskTreeRow($Node, [int]$Depth, [double]$ParentSize) {
     $BgP = [Windows.Controls.Border]::BackgroundProperty
-    $row = [Windows.Controls.Border]::new(); $row.Style = $window.FindResource('RuleRow')
-    $g = New-Cols @('54', '*', 'Auto', 'Auto')
-    [void](Add-At $g (New-IconWell $Icon 40 $Color) 0)
-    $sp = [Windows.Controls.StackPanel]::new(); $sp.VerticalAlignment = 'Center'
-    $t = New-Text $Title 14.5 'Ink' 'SemiBold'; $t.TextTrimming = 'CharacterEllipsis'; $t.TextWrapping = 'NoWrap'; [void]$sp.Children.Add($t)
-    if ($Sub) { $s = New-Text $Sub 12.5 'Muted'; $s.TextTrimming = 'CharacterEllipsis'; $s.TextWrapping = 'NoWrap'; $s.Margin = '0,2,0,0'; [void]$sp.Children.Add($s) }
-    $track = [Windows.Controls.Border]::new(); $track.Height = 4; $track.CornerRadius = 2; $track.Margin = '0,8,0,0'; $track.SetResourceReference($BgP, 'Paper3')
-    $tg = New-Cols @('*', '*'); $f = if ($Max -gt 0) { [math]::Max([double]0.005, $Size / $Max) } else { [double]0 }
-    $tg.ColumnDefinitions[0].Width = [Windows.GridLength]::new($f, 'Star'); $tg.ColumnDefinitions[1].Width = [Windows.GridLength]::new(1 - $f, 'Star')
-    $bar = [Windows.Controls.Border]::new(); $bar.CornerRadius = 2; $bar.SetResourceReference($BgP, $Color); [void](Add-At $tg $bar 0)
-    $track.Child = $tg; [void]$sp.Children.Add($track)
-    [void](Add-At $g $sp 1)
-    $pill = [Windows.Controls.Border]::new(); $pill.CornerRadius = 9; $pill.Padding = '10,3,10,4'; $pill.Margin = '16,0,0,0'; $pill.VerticalAlignment = 'Center'; $pill.MinWidth = 86
-    $pill.SetResourceReference($BgP, 'Paper3')
-    $sz = New-Mono (Format-Size $Size) 13 'Ink'; $sz.FontWeight = 'SemiBold'; $sz.HorizontalAlignment = 'Center'; $pill.Child = $sz
-    [void](Add-At $g $pill 2)
-    if ($Action) { $Action.Margin = '12,0,0,0'; $Action.VerticalAlignment = 'Center'; [void](Add-At $g $Action 3) }
+    $row = [Windows.Controls.Border]::new(); $row.Padding = '6,4,8,4'; $row.CornerRadius = 6; $row.Background = [Windows.Media.Brushes]::Transparent; $row.Cursor = 'Hand'
+    $g = New-Cols $DiskCols
+    $name = [Windows.Controls.StackPanel]::new(); $name.Orientation = 'Horizontal'
+    $sp = [Windows.Controls.Border]::new(); $sp.Width = $Depth * 12; [void]$name.Children.Add($sp)
+    $canOpen = -not $Node.IsFile -and $Node.Kids -and $Node.Kids.Count -gt 0
+    $chev = New-Text $(if ($canOpen) { '▸' } else { '' }) 13 'Muted'; $chev.Width = 16; $chev.VerticalAlignment = 'Center'; [void]$name.Children.Add($chev)
+    $icon = if ($Node.IsRest) { 'files' } elseif ($Node.IsFile) { 'file-text' } else { 'folder-open' }
+    $ic = New-Icon $icon 16 $(if ($Node.IsFile) { 'Muted' } else { 'Cat-Latencia' }); $ic.Margin = '0,0,8,0'; [void]$name.Children.Add($ic)
+    $label = if ($Node.IsRest) { T "y $('{0:N0}' -f $Node.Files) archivos más" } else { $Node.Name }
+    $nt = New-Text $label 13.5 $(if ($Node.IsFile) { 'Ink2' } else { 'Ink' }) $(if ($Node.IsFile) { 'Normal' } else { 'Medium' }); $nt.TextWrapping = 'NoWrap'; $nt.TextTrimming = 'CharacterEllipsis'; $nt.VerticalAlignment = 'Center'
+    [void]$name.Children.Add($nt)
+    [void](Add-At $g $name 0)
+    # proporción frente a la carpeta de arriba, con el color de su nivel (como WinDirStat)
+    $f = if ($ParentSize -gt 0) { [math]::Min([double]1, $Node.Size / $ParentSize) } else { [double]1 }
+    $track = [Windows.Controls.Border]::new(); $track.Height = 12; $track.CornerRadius = 3; $track.Margin = '0,0,12,0'; $track.VerticalAlignment = 'Center'; $track.SetResourceReference($BgP, 'Paper3')
+    $tg = New-Cols @('*', '*'); $tg.ColumnDefinitions[0].Width = [Windows.GridLength]::new($f, 'Star'); $tg.ColumnDefinitions[1].Width = [Windows.GridLength]::new(1 - $f, 'Star')
+    $bar = [Windows.Controls.Border]::new(); $bar.CornerRadius = 3; $bar.SetResourceReference($BgP, $DiskDepthColors[$Depth % $DiskDepthColors.Count]); [void](Add-At $tg $bar 0)
+    $track.Child = $tg
+    [void](Add-At $g $track 1)
+    $cells = @(('{0:N1} %' -f (100 * $f)), (Format-Size $Node.Size), ('{0:N0}' -f $Node.Files), $(if ($Node.LastWrite -gt 0) { [DateTime]::FromFileTime($Node.LastWrite).ToString('dd/MM/yy') } else { '' }))
+    for ($i = 0; $i -lt 4; $i++) { $c = New-Mono $cells[$i] 12.5 $(if ($i -eq 1) { 'Ink' } else { 'Ink2' }); $c.TextAlignment = 'Right'; $c.VerticalAlignment = 'Center'; [void](Add-At $g $c ($i + 2)) }
     $row.Child = $g
+    $row.Tag = @{ Node = $Node; Depth = $Depth; Open = $false; Chev = $chev; CanOpen = $canOpen }
+    $row.Add_MouseEnter({ param($s) $s.SetResourceReference([Windows.Controls.Border]::BackgroundProperty, 'GlassHi') })
+    $row.Add_MouseLeave({ param($s) $s.Background = [Windows.Media.Brushes]::Transparent })
+    $row.Add_MouseLeftButtonUp({ param($s, $e) Switch-DiskRow $s })
+    $row.Add_MouseLeftButtonDown({   # doble clic: abrir en el Explorador
+        param($s, $e)
+        if ($e.ClickCount -eq 2) {
+            $n = $s.Tag.Node
+            if ($n.IsFile -and -not $n.IsRest) { Start-Process explorer.exe -ArgumentList "/select,`"$($n.Parent.Path.TrimEnd('\'))\$($n.Name)`"" }
+            elseif (-not $n.IsFile) { Start-Process explorer.exe -ArgumentList "`"$($n.Path)`"" }
+            $e.Handled = $true
+        }
+    })
     $row
 }
 
-function Show-DiskResult([string]$Path) {
-    $res = $script:DiskCache[$Path]; $body = $script:DiskBody
+function Switch-DiskRow($Row) {
+    $t = $Row.Tag; if (-not $t.CanOpen) { return }
+    $list = $script:DiskRows; $idx = $list.Children.IndexOf($Row)
+    if ($t.Open) {
+        # plegar: quitar todo lo que cuelga de esta fila
+        while ($idx + 1 -lt $list.Children.Count -and $list.Children[$idx + 1].Tag.Depth -gt $t.Depth) { $list.Children.RemoveAt($idx + 1) }
+        $t.Open = $false; $t.Chev.Text = '▸'; return
+    }
+    $kids = $t.Node.Kids; $n = [math]::Min($kids.Count, $DiskMaxKids); $pos = $idx + 1
+    for ($i = 0; $i -lt $n; $i++) { $list.Children.Insert($pos, (New-DiskTreeRow $kids[$i] ($t.Depth + 1) $t.Node.Size)); $pos++ }
+    if ($kids.Count -gt $DiskMaxKids) {
+        $more = New-Text (T "y $($kids.Count - $DiskMaxKids) elementos más pequeños") 12.5 'Muted'; $more.Margin = "$(($t.Depth + 1) * 18 + 40),4,0,4"
+        $mb = [Windows.Controls.Border]::new(); $mb.Child = $more; $mb.Tag = @{ Depth = $t.Depth + 1; CanOpen = $false }
+        $list.Children.Insert($pos, $mb)
+    }
+    $t.Open = $true; $t.Chev.Text = '▾'
+}
+
+function Show-DiskResult([string]$Root) {
+    $res = $script:DiskCache[$Root]; $body = $script:DiskBody
     $body.Children.Clear()
-    $script:DiskPath = $Path
-    # dónde estamos y volver arriba
-    $nav = New-Cols @('Auto', '*'); $nav.Margin = '0,6,0,12'
-    $parent = Split-Path $Path -Parent
-    $up = New-Btn 'Subir'; $up.IsEnabled = [bool]$parent; $up.Margin = '0,0,12,0'; $up.Tag = $parent
-    $up.Add_Click({ param($src) Start-DiskScan ([string]$src.Tag) 0 })
-    [void](Add-At $nav $up 0)
-    $pt = New-Text "$Path  ($(Format-Size $res.Total), $('{0:N0}' -f $res.Count) archivos)" 15 'Ink' 'SemiBold'; $pt.VerticalAlignment = 'Center'; $pt.TextTrimming = 'CharacterEllipsis'; $pt.TextWrapping = 'NoWrap'
-    [void](Add-At $nav $pt 1)
-    [void]$body.Children.Add($nav)
-
-    [void]$body.Children.Add((New-Section 'Lo que más ocupa'))
-    $max = if ($res.Folders) { [double]$res.Folders[0].Size } else { 0 }
-    foreach ($it in @($res.Folders | Select-Object -First 25)) {
-        if ($it.Size -le 0) { continue }
-        $pct = if ($res.Total -gt 0) { '{0:N1} %' -f (100 * $it.Size / $res.Total) } else { '' }
-        if ($it.Dir) {
-            $open = New-Btn 'Abrir'; $open.Tag = @($it.Path, [double]$it.Size)
-            $open.Add_Click({ param($src) Start-DiskScan ([string]$src.Tag[0]) ([double]$src.Tag[1]) })
-            [void]$body.Children.Add((New-DiskRow 'folder-open' $it.Name (T "$pct, $('{0:N0}' -f $it.Count) archivos") $it.Size $max $open))
-        }
-        else { [void]$body.Children.Add((New-DiskRow 'files' (T 'Archivos sueltos en esta carpeta') (T "$pct, $('{0:N0}' -f $it.Count) archivos") $it.Size $max $null 'Cat-Tools')) }
+    $BgP = [Windows.Controls.Border]::BackgroundProperty; $BrP = [Windows.Controls.Border]::BorderBrushProperty
+    $grid = New-Cols @('*', '250')
+    # árbol
+    $card = [Windows.Controls.Border]::new(); $card.CornerRadius = 14; $card.Padding = '10,10,10,10'; $card.BorderThickness = 1; $card.Margin = '0,0,14,0'
+    $card.SetResourceReference($BgP, 'Glass'); $card.SetResourceReference($BrP, 'GlassEdge')
+    $cs = [Windows.Controls.StackPanel]::new()
+    $hdr = New-Cols $DiskCols; $hdr.Margin = '6,0,8,6'
+    $heads = 'Nombre', 'Proporción', 'Porcentaje', 'Tamaño', 'Archivos', 'Modificado'
+    for ($i = 0; $i -lt 6; $i++) { $h = New-Text $heads[$i] 12 'Muted' 'SemiBold'; if ($i -ge 2) { $h.TextAlignment = 'Right' }; [void](Add-At $hdr $h $i) }
+    [void]$cs.Children.Add($hdr); [void]$cs.Children.Add((New-Ruled))
+    $script:DiskRows = [Windows.Controls.StackPanel]::new()
+    [void]$cs.Children.Add($script:DiskRows)
+    $card.Child = $cs
+    [void](Add-At $grid $card 0)
+    # extensiones
+    $ec = [Windows.Controls.Border]::new(); $ec.CornerRadius = 14; $ec.Padding = '16,14'; $ec.BorderThickness = 1; $ec.VerticalAlignment = 'Top'
+    $ec.SetResourceReference($BgP, 'Glass'); $ec.SetResourceReference($BrP, 'GlassEdge')
+    $es = [Windows.Controls.StackPanel]::new()
+    $et = New-Text 'Extensiones' 15 'Ink' 'SemiBold'; $et.Margin = '0,0,0,10'; [void]$es.Children.Add($et)
+    $total = [double]$res.Root.Size; $i = 0
+    foreach ($x in @($res.Ext | Select-Object -First 30)) {
+        $r = New-Cols @('16', '*', 'Auto'); $r.Margin = '0,3,0,3'
+        $sw = [Windows.Controls.Border]::new(); $sw.Width = 10; $sw.Height = 10; $sw.CornerRadius = 3; $sw.VerticalAlignment = 'Center'
+        $sw.SetResourceReference($BgP, $DiskDepthColors[$i % $DiskDepthColors.Count]); [void](Add-At $r $sw 0)
+        $nm = New-Text $(if ($x.Ext) { $x.Ext } else { T '(sin extensión)' }) 13 'Ink' 'Medium'; $nm.TextTrimming = 'CharacterEllipsis'; $nm.TextWrapping = 'NoWrap'
+        $nm.ToolTip = (T "$('{0:N0}' -f $x.Count) archivos"); [void](Add-At $r $nm 1)
+        $sz = New-Mono "$(Format-Size $x.Size)  $('{0,5:N1}' -f (100 * $x.Size / [math]::Max([double]1, $total)))%" 12 'Ink2'; $sz.VerticalAlignment = 'Center'; [void](Add-At $r $sz 2)
+        [void]$es.Children.Add($r); $i++
     }
-
-    [void]$body.Children.Add((New-Section 'Archivos más grandes'))
-    $fmax = if ($res.Files) { [double]$res.Files[0].Size } else { 0 }
-    foreach ($fi in $res.Files) {
-        $show = New-Btn 'Mostrar'; $show.Tag = $fi.Path; $show.ToolTip = (T 'Abre la carpeta en el Explorador con el archivo seleccionado')
-        $show.Add_Click({ param($src) Start-Process explorer.exe -ArgumentList "/select,`"$($src.Tag)`"" })
-        [void]$body.Children.Add((New-DiskRow 'file-text' $fi.Name (Split-Path $fi.Path -Parent) $fi.Size $fmax $show 'Cat-Rendimiento'))
-    }
-    Start-Stagger @($body.Children) 12
+    $ec.Child = $es
+    [void](Add-At $grid $ec 1)
+    [void]$body.Children.Add($grid)
+    # la raíz (la unidad) ya desplegada
+    $rootRow = New-DiskTreeRow $res.Root 0 $res.Root.Size
+    [void]$script:DiskRows.Children.Add($rootRow)
+    Switch-DiskRow $rootRow
+    Start-FadeIn $grid 0 8
 }
 
 function New-DiskPage {
-    $BgP = [Windows.Controls.Border]::BackgroundProperty; $BrP = [Windows.Controls.Border]::BorderBrushProperty
+    $BgP = [Windows.Controls.Border]::BackgroundProperty
     $root = [Windows.Controls.StackPanel]::new()
-    $hint = New-Text 'Elige un disco para ver qué carpetas y archivos ocupan más. Con un clic en una carpeta bajas a ver qué hay dentro.' 14 'Muted'
+    $hint = New-Text 'Elige un disco. Pulsa una carpeta para desplegarla y doble clic para abrirla en el Explorador.' 14 'Muted'
     if (-not $script:IsAdmin) { $hint.Text += ' ' + (T 'Sin administrador, algunas carpetas del sistema no se pueden medir.') }
     $hint.Margin = '0,0,0,14'
     [void]$root.Children.Add($hint)
     # un botón grande por disco, con lo que tiene ocupado
-    $grid = [Windows.Controls.Primitives.UniformGrid]::new(); $grid.Columns = 3; $grid.Margin = '0,0,-12,0'
+    $grid = [Windows.Controls.Primitives.UniformGrid]::new(); $grid.Columns = 3; $grid.Margin = '0,0,-12,4'
     foreach ($dr in [IO.DriveInfo]::GetDrives() | Where-Object { $_.DriveType -eq 'Fixed' -and $_.IsReady }) {
         $used = [double]($dr.TotalSize - $dr.TotalFreeSpace)
         $card = [Windows.Controls.Border]::new(); $card.Style = $window.FindResource('Row'); $card.Margin = '0,0,12,12'; $card.Padding = '18,16'; $card.Cursor = 'Hand'
@@ -118,6 +161,6 @@ function New-DiskPage {
     [void]$root.Children.Add($grid)
     $script:DiskBody = [Windows.Controls.StackPanel]::new()
     [void]$root.Children.Add($script:DiskBody)
-    if ($script:DiskPath -and $script:DiskCache.ContainsKey($script:DiskPath)) { Show-DiskResult $script:DiskPath }
+    if ($script:DiskRoot -and $script:DiskCache.ContainsKey($script:DiskRoot)) { Show-DiskResult $script:DiskRoot }
     $root
 }
