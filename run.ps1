@@ -72,15 +72,23 @@
     }
 
     Write-Host ''
+    # Swaps the downloaded version ($next) in. The old folder is renamed first: Windows refuses that while the panel
+    # has files open, so an open panel leaves everything as it was (deleting file by file would leave it half gone).
+    function Use-Next {
+        $old = Join-Path $home_ 'app.old'
+        if (Test-Path $old) { Remove-Item -LiteralPath $old -Recurse -Force -ErrorAction SilentlyContinue }
+        if (Test-Path $old) { return $false }
+        if (Test-Path $app) { try { Rename-Item -LiteralPath $app -NewName 'app.old' -ErrorAction Stop } catch { return $false } }
+        Move-Item -LiteralPath $next -Destination $app
+        Copy-Item (Join-Path $app 'version.txt') $verFile -Force -ErrorAction SilentlyContinue
+        Remove-Item -LiteralPath $old -Recurse -Force -ErrorAction SilentlyContinue
+        $true
+    }
+
     # an update downloaded last time goes in now, before opening
     if (Test-Path (Join-Path $next 'OptiEleven.ps1')) {
-        try {
-            if (Test-Path $app) { Remove-Item -LiteralPath $app -Recurse -Force }
-            Move-Item -LiteralPath $next -Destination $app
-            Copy-Item (Join-Path $app 'version.txt') $verFile -Force -ErrorAction SilentlyContinue
-            Write-Step "Updated to $((Get-Content $verFile -Raw).Trim())."
-        }
-        catch { Write-Step "Couldn't apply the update now (is the panel open?). It will be tried again next time." }
+        if (Use-Next) { Write-Step "Updated to $((Get-Content $verFile -Raw).Trim())." }
+        else { Write-Step 'The panel is open: close it and run the command again to update.' }
     }
 
     $current = if (Test-Path $verFile) { (Get-Content $verFile -Raw).Trim() } else { $null }
@@ -92,13 +100,8 @@
         if ($latest -and $latest.Tag -ne $current) {
             Write-Step "Updating to OptiEleven $($latest.Tag)..."
             if (Save-Release $latest $next) {
-                try {
-                    Remove-Item -LiteralPath $app -Recurse -Force
-                    Move-Item -LiteralPath $next -Destination $app
-                    Copy-Item (Join-Path $app 'version.txt') $verFile -Force
-                    Write-Step "Updated to $($latest.Tag)."
-                }
-                catch { Write-Step "Couldn't replace the old version now (is the panel open?). It will update next time." }
+                if (Use-Next) { Write-Step "Updated to $($latest.Tag)." }
+                else { Write-Step 'The panel is open: close it and run the command again to update.' }
             }
         }
         elseif ($latest) { Write-Step "OptiEleven $current is up to date." }

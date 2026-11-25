@@ -109,6 +109,7 @@ function Update-CleanTotal {
         if ($r.Switch.IsChecked) { $n++; if ($null -ne $r.Bytes) { $t += $r.Bytes } }
     }
     $script:CleanTotal.Text = Format-Size $t
+    $script:CleanSpin.Visibility = if ($script:CleanScanning) { 'Visible' } else { 'Collapsed' }
     $script:CleanCount.Text = T $(if ($script:CleanScanning) { "Analizando... $n de $($script:CleanRows.Count) marcados" } else { "$n de $($script:CleanRows.Count) marcados" })
     $script:CleanBtn.Content.Children[1].Text = T $(if ($t -gt 0) { "Limpiar $(Format-Size $t)" } else { 'Limpiar ahora' })
     $script:CleanBtn.IsEnabled = ($n -gt 0) -and -not $script:Busy
@@ -172,7 +173,8 @@ function New-CleanerPage {
     $tl = New-Text 'Se puede liberar' 13.5 'Ink2' 'SemiBold'
     $script:CleanTotal = New-Mono '...' 38 'Ink'; $script:CleanTotal.FontWeight = 'Bold'; $script:CleanTotal.Margin = '0,0,0,0'
     $script:CleanCount = New-Text '' 13 'Muted'
-    foreach ($x in $tl, $script:CleanTotal, $script:CleanCount) { [void]$ht.Children.Add($x) }
+    $script:CleanSpin = New-Loader (T 'Analizando el disco...'); $script:CleanSpin.Margin = '0,8,0,0'; $script:CleanSpin.Visibility = 'Collapsed'
+    foreach ($x in $tl, $script:CleanTotal, $script:CleanCount, $script:CleanSpin) { [void]$ht.Children.Add($x) }
     [void](Add-At $hg $ht 1)
     $btns = [Windows.Controls.StackPanel]::new(); $btns.Orientation = 'Horizontal'; $btns.VerticalAlignment = 'Center'
     $bAll = New-Btn 'Marcar todo'; $bAll.MinHeight = 46; $bAll.Margin = '0,0,8,0'
