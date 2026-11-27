@@ -110,7 +110,7 @@
   }
   document.querySelectorAll('.lang button').forEach(function (b) { b.addEventListener('click', function () { setLang(b.dataset.lang); }); });
   var saved = null; try { saved = localStorage.getItem('lang'); } catch (e) {}
-  setLang(saved || ((navigator.language || '').toLowerCase().indexOf('es') === 0 ? 'es' : 'en'));
+  setLang(saved === 'es' ? 'es' : 'en');   // inglés siempre, salvo que el visitante haya elegido ES
   document.getElementById('copy').addEventListener('click', function () {
     var b = this, text = document.getElementById('cmd').textContent;
     function done() { b.textContent = T[lang].copied; setTimeout(function () { b.textContent = T[lang].copy; }, 1500); }
