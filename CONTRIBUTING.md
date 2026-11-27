@@ -45,6 +45,32 @@ The code is written in Spanish, and `OptiEleven/lang/<code>.json` translates it:
 
 To add a language, copy `lang/en.json` to a new file named with the language code (for example `fr.json`), set `"name"` (for example `"Français"`) and translate the values. Leave the keys alone. The language shows up in the language menu automatically.
 
+## Building and releasing
+
+`build/Build.ps1` makes a release, the same way on your PC and in CI. Run it with Windows PowerShell 5.1:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File build\Build.ps1
+```
+
+It runs `tests/Run-Tests.ps1` (if present) and stops if it fails, takes the **committed** files (`git archive HEAD`), and compiles with the C# compiler that ships with Windows (.NET Framework 4.8), so there is nothing to install:
+
+- `OptiEleven.exe`, the launcher (`launcher/Launcher.cs`). It asks for administrator and runs `OptiEleven.ps1` from its folder inside its own process. No hidden `powershell.exe`, no encoded command, nothing embedded.
+- `native/OptiEleven.Native.dll`, the `$GpSource` block of `OptiEleven.ps1`, and `native/OptiEleven-Apps.exe`, the app installer stub (`assets/installer.cs`). Users' PCs load these instead of compiling. Each carries the hash of its source; if the source changed, the panel compiles it as before, which is also what happens in a git checkout.
+
+Then it adds `LICENSE` and `THIRD-PARTY.md`, signs with `build/Sign.ps1`, and writes `dist/OptiEleven.zip` and `dist/SHA256SUMS.txt`.
+
+`.github/workflows/release.yml` runs the same script on `windows-latest` for pushes to `v2`, manual runs and tags `v*`. Every run uploads the zip and the sums as a workflow artifact. A tag also creates a **draft** release with both files and the hashes in the notes; review it and publish it by hand.
+
+### Signing
+
+Signing is optional. With no secrets the build prints `signing skipped (no certificate)` and succeeds, so forks work. `Sign.ps1` signs the `.exe`, `.dll` and `.ps1` files with `signtool` (SHA256 and a timestamp) and fails unless Windows reports every signature as Valid. The app installer stub is left unsigned, because the panel appends each user's app list to it. Set these repository secrets for one mode:
+
+- **Azure Artifact Signing** (formerly Trusted Signing), the realistic option: `AZURE_SIGNING_ENDPOINT`, `AZURE_SIGNING_ACCOUNT`, `AZURE_SIGNING_PROFILE`, plus `AZURE_TENANT_ID`, `AZURE_CLIENT_ID` and `AZURE_CLIENT_SECRET` for an app registration with the *Trusted Signing Certificate Profile Signer* role. The workflow installs Microsoft's signing client from NuGet.
+- **PFX**: `SIGN_PFX_BASE64` (the .pfx as base64) and `SIGN_PFX_PASSWORD`. Since June 2023 public CAs only issue code-signing keys on hardware (a token or HSM), so you can't get a new public .pfx; this mode is for older certificates or a private CA.
+
+Optional: `SIGN_TIMESTAMP_URL`. Once releases are signed, the one-line launcher refuses scripts whose signature isn't valid.
+
 ## Style
 
 - PowerShell 5.1 compatible (no `??`, `?:` or `&&`).
