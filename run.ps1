@@ -1,5 +1,5 @@
 # OptiEleven one-line launcher
-#   irm bila4l4.github.io/OptiEleven | iex
+#   irm optieleven.app | iex
 #
 # First run: downloads the latest release from GitHub into %LOCALAPPDATA%\OptiEleven and opens it.
 # Later runs: a quick check on GitHub; if there's a newer release it's installed first, then the panel
