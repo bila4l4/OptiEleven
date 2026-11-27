@@ -1,0 +1,34 @@
+{
+    "id":  "wu-delivery",
+    "kind":  "tweak",
+    "category":  "Actualizaciones",
+    "order":  290,
+    "name":  {
+                 "es":  "Sin compartir actualizaciones con otros equipos",
+                 "en":  "Don\u0027t share updates with other PCs"
+             },
+    "summary":  {
+                    "es":  "Desactiva la Optimización de distribución (P2P): tu conexión no sube actualizaciones a otros PCs mientras juegas online.",
+                    "en":  "Turns off Delivery Optimization (P2P): your connection doesn\u0027t upload updates to other PCs while you play online."
+                },
+    "risk":  "safe",
+    "presets":  [
+                    "recommended",
+                    "advanced"
+                ],
+    "requiresAdmin":  true,
+    "reboot":  false,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "snapshot"
+             },
+    "actions":  [
+                    {
+                        "registry":  "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\DeliveryOptimization",
+                        "name":  "DODownloadMode",
+                        "type":  "DWord",
+                        "value":  0,
+                        "default":  null
+                    }
+                ]
+}

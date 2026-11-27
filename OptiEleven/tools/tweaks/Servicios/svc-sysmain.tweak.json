@@ -1,0 +1,32 @@
+{
+    "id":  "svc-sysmain",
+    "kind":  "tweak",
+    "category":  "Servicios",
+    "order":  90,
+    "name":  {
+                 "es":  "SysMain (Superfetch)",
+                 "en":  "SysMain (Superfetch)"
+             },
+    "summary":  {
+                    "es":  "Con SSD y 32 GB apenas aporta, y quita lecturas de disco en segundo plano. Las apps pueden tardar un poco más en abrir la primera vez.",
+                    "en":  "With an SSD and 32 GB it barely helps, and it removes background disk reads. Apps may take a little longer to open the first time."
+                },
+    "risk":  "moderate",
+    "presets":  [
+                    "recommended",
+                    "advanced"
+                ],
+    "requiresAdmin":  true,
+    "reboot":  false,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "snapshot"
+             },
+    "actions":  [
+                    {
+                        "service":  "SysMain",
+                        "startup":  "Disabled",
+                        "default":  "Auto"
+                    }
+                ]
+}

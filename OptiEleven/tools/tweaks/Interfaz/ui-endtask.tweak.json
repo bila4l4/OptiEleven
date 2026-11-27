@@ -1,0 +1,34 @@
+{
+    "id":  "ui-endtask",
+    "kind":  "tweak",
+    "category":  "Interfaz",
+    "order":  340,
+    "name":  {
+                 "es":  "\"Finalizar tarea\" en la barra de tareas",
+                 "en":  "\"End task\" in the taskbar"
+             },
+    "summary":  {
+                    "es":  "Clic derecho en un icono de la barra de tareas para cerrar a la fuerza un juego colgado, sin abrir el Administrador de tareas.",
+                    "en":  "Right-click a taskbar icon to force-close a frozen game without opening Task Manager."
+                },
+    "risk":  "safe",
+    "presets":  [
+                    "recommended",
+                    "advanced"
+                ],
+    "requiresAdmin":  true,
+    "reboot":  false,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "snapshot"
+             },
+    "actions":  [
+                    {
+                        "registry":  "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\\TaskbarDeveloperSettings",
+                        "name":  "TaskbarEndTask",
+                        "type":  "DWord",
+                        "value":  1,
+                        "default":  null
+                    }
+                ]
+}

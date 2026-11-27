@@ -1,0 +1,41 @@
+{
+    "id":  "svc-xbox",
+    "kind":  "tweak",
+    "category":  "Servicios",
+    "order":  130,
+    "name":  {
+                 "es":  "Servicios de Xbox",
+                 "en":  "Xbox services"
+             },
+    "summary":  {
+                    "es":  "NO lo actives si usas Game Pass, la app Xbox o juegos de la Microsoft Store. Steam/Epic/Riot no se ven afectados.",
+                    "en":  "DON\u0027T turn this on if you use Game Pass, the Xbox app or Microsoft Store games. Steam/Epic/Riot aren\u0027t affected."
+                },
+    "risk":  "advanced",
+    "presets":  [
+
+                ],
+    "requiresAdmin":  true,
+    "reboot":  false,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "snapshot"
+             },
+    "actions":  [
+                    {
+                        "service":  "XblAuthManager",
+                        "startup":  "Disabled",
+                        "default":  "Manual"
+                    },
+                    {
+                        "service":  "XblGameSave",
+                        "startup":  "Disabled",
+                        "default":  "Manual"
+                    },
+                    {
+                        "service":  "XboxNetApiSvc",
+                        "startup":  "Disabled",
+                        "default":  "Manual"
+                    }
+                ]
+}

@@ -1,0 +1,76 @@
+{
+    "id":  "priv-bing",
+    "kind":  "tweak",
+    "category":  "Privacidad",
+    "order":  50,
+    "name":  {
+                 "es":  "Sin Bing en el menú Inicio",
+                 "en":  "No Bing in Start"
+             },
+    "summary":  {
+                    "es":  "La búsqueda del menú Inicio solo busca en tu PC: sin resultados web, sin \"destacados\" del día y sin buscar en tu cuenta en la nube.",
+                    "en":  "Start search only searches your PC: no web results, no daily \"highlights\" and no cloud account search."
+                },
+    "risk":  "safe",
+    "presets":  [
+                    "recommended",
+                    "advanced"
+                ],
+    "requiresAdmin":  true,
+    "reboot":  false,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "snapshot"
+             },
+    "actions":  [
+                    {
+                        "registry":  "HKCU:\\Software\\Policies\\Microsoft\\Windows\\Explorer",
+                        "name":  "DisableSearchBoxSuggestions",
+                        "type":  "DWord",
+                        "value":  1,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Search",
+                        "name":  "EnableDynamicContentInWSB",
+                        "type":  "DWord",
+                        "value":  0,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Search",
+                        "name":  "AllowCloudSearch",
+                        "type":  "DWord",
+                        "value":  0,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Search",
+                        "name":  "ConnectedSearchUseWeb",
+                        "type":  "DWord",
+                        "value":  0,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\SearchSettings",
+                        "name":  "IsDynamicSearchBoxEnabled",
+                        "type":  "DWord",
+                        "value":  0,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\SearchSettings",
+                        "name":  "IsMSACloudSearchEnabled",
+                        "type":  "DWord",
+                        "value":  0,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\SearchSettings",
+                        "name":  "IsAADCloudSearchEnabled",
+                        "type":  "DWord",
+                        "value":  0,
+                        "default":  null
+                    }
+                ]
+}

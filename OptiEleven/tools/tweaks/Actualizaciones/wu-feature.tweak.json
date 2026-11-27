@@ -1,0 +1,40 @@
+{
+    "id":  "wu-feature",
+    "kind":  "tweak",
+    "category":  "Actualizaciones",
+    "order":  310,
+    "name":  {
+                 "es":  "Retrasar las versiones nuevas de Windows un año",
+                 "en":  "Delay new Windows versions by a year"
+             },
+    "summary":  {
+                    "es":  "Sigues recibiendo los parches de seguridad, pero las actualizaciones grandes (25H2, 26H2...) llegan 365 días después, ya pulidas.",
+                    "en":  "You still get security patches, but the big updates (25H2, 26H2...) arrive 365 days later, already polished."
+                },
+    "risk":  "moderate",
+    "presets":  [
+
+                ],
+    "requiresAdmin":  true,
+    "reboot":  false,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "snapshot"
+             },
+    "actions":  [
+                    {
+                        "registry":  "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate",
+                        "name":  "DeferFeatureUpdates",
+                        "type":  "DWord",
+                        "value":  1,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate",
+                        "name":  "DeferFeatureUpdatesPeriodInDays",
+                        "type":  "DWord",
+                        "value":  365,
+                        "default":  null
+                    }
+                ]
+}

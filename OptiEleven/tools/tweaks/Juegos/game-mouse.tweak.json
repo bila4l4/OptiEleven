@@ -1,0 +1,47 @@
+{
+    "id":  "game-mouse",
+    "kind":  "tweak",
+    "category":  "Juegos",
+    "order":  250,
+    "name":  {
+                 "es":  "Sin aceleración del ratón",
+                 "en":  "No mouse acceleration"
+             },
+    "summary":  {
+                    "es":  "Desactiva \"Mejorar la precisión del puntero\": el movimiento es 1:1, mejor para apuntar. Requiere cerrar sesión.",
+                    "en":  "Turns off \"Enhance pointer precision\": movement is 1:1, better for aiming. Needs a sign-out."
+                },
+    "risk":  "safe",
+    "presets":  [
+                    "advanced"
+                ],
+    "requiresAdmin":  true,
+    "reboot":  false,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "snapshot"
+             },
+    "actions":  [
+                    {
+                        "registry":  "HKCU:\\Control Panel\\Mouse",
+                        "name":  "MouseSpeed",
+                        "type":  "String",
+                        "value":  "0",
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKCU:\\Control Panel\\Mouse",
+                        "name":  "MouseThreshold1",
+                        "type":  "String",
+                        "value":  "0",
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKCU:\\Control Panel\\Mouse",
+                        "name":  "MouseThreshold2",
+                        "type":  "String",
+                        "value":  "0",
+                        "default":  null
+                    }
+                ]
+}

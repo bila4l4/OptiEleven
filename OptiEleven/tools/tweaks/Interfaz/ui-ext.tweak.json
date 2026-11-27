@@ -1,0 +1,34 @@
+{
+    "id":  "ui-ext",
+    "kind":  "tweak",
+    "category":  "Interfaz",
+    "order":  320,
+    "name":  {
+                 "es":  "Mostrar extensiones de archivo",
+                 "en":  "Show file extensions"
+             },
+    "summary":  {
+                    "es":  "Ver \".exe\", \".pdf\"... también es más seguro (evita archivos \"foto.jpg.exe\").",
+                    "en":  "Seeing \".exe\", \".pdf\"... is also safer (avoids \"photo.jpg.exe\" files)."
+                },
+    "risk":  "safe",
+    "presets":  [
+                    "recommended",
+                    "advanced"
+                ],
+    "requiresAdmin":  true,
+    "reboot":  false,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "snapshot"
+             },
+    "actions":  [
+                    {
+                        "registry":  "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+                        "name":  "HideFileExt",
+                        "type":  "DWord",
+                        "value":  0,
+                        "default":  null
+                    }
+                ]
+}

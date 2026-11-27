@@ -1,0 +1,28 @@
+{
+    "id":  "ui-context",
+    "kind":  "tweak",
+    "category":  "Interfaz",
+    "order":  330,
+    "name":  {
+                 "es":  "Menú contextual clásico",
+                 "en":  "Classic context menu"
+             },
+    "summary":  {
+                    "es":  "Recupera el menú de clic derecho completo de Windows 10 (sin \"Mostrar más opciones\"). Reinicia el Explorador para verlo.",
+                    "en":  "Brings back the full Windows 10 right-click menu (no \"Show more options\"). Restart File Explorer to see it."
+                },
+    "risk":  "safe",
+    "presets":  [
+
+                ],
+    "requiresAdmin":  true,
+    "reboot":  false,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "script"
+             },
+    "actions":  [
+
+                ],
+    "script":  "ui-context.tweak.ps1"
+}

@@ -1,0 +1,188 @@
+{
+    "id":  "priv-ads",
+    "kind":  "tweak",
+    "category":  "Privacidad",
+    "order":  20,
+    "name":  {
+                 "es":  "Publicidad, sugerencias e instalaciones silenciosas",
+                 "en":  "Ads, suggestions and silent installs"
+             },
+    "summary":  {
+                    "es":  "Quita el ID de publicidad, las apps que Windows instala solo, los consejos, los anuncios de Configuración y del menú Inicio y el \"terminemos de configurar tu PC\".",
+                    "en":  "Removes the advertising ID, the apps Windows installs on its own, tips, the ads in Settings and Start, and the \"let\u0027s finish setting up your PC\" prompt."
+                },
+    "risk":  "safe",
+    "presets":  [
+                    "recommended",
+                    "advanced"
+                ],
+    "requiresAdmin":  true,
+    "reboot":  false,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "snapshot"
+             },
+    "actions":  [
+                    {
+                        "registry":  "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\AdvertisingInfo",
+                        "name":  "DisabledByGroupPolicy",
+                        "type":  "DWord",
+                        "value":  1,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\CloudContent",
+                        "name":  "DisableWindowsConsumerFeatures",
+                        "type":  "DWord",
+                        "value":  1,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\CloudContent",
+                        "name":  "DisableSoftLanding",
+                        "type":  "DWord",
+                        "value":  1,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\CloudContent",
+                        "name":  "DisableCloudOptimizedContent",
+                        "type":  "DWord",
+                        "value":  1,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKCU:\\Software\\Policies\\Microsoft\\Windows\\CloudContent",
+                        "name":  "DisableTailoredExperiencesWithDiagnosticData",
+                        "type":  "DWord",
+                        "value":  1,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+                        "name":  "SubscribedContent-338393Enabled",
+                        "type":  "DWord",
+                        "value":  0,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+                        "name":  "SubscribedContent-310093Enabled",
+                        "type":  "DWord",
+                        "value":  0,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+                        "name":  "ContentDeliveryAllowed",
+                        "type":  "DWord",
+                        "value":  0,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+                        "name":  "OemPreInstalledAppsEnabled",
+                        "type":  "DWord",
+                        "value":  0,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+                        "name":  "PreInstalledAppsEnabled",
+                        "type":  "DWord",
+                        "value":  0,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\UserProfileEngagement",
+                        "name":  "ScoobeSystemSettingEnabled",
+                        "type":  "DWord",
+                        "value":  0,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+                        "name":  "Start_IrisRecommendations",
+                        "type":  "DWord",
+                        "value":  0,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+                        "name":  "Start_AccountNotifications",
+                        "type":  "DWord",
+                        "value":  0,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKLM:\\SOFTWARE\\Policies\\Microsoft\\PushToInstall",
+                        "name":  "DisablePushToInstall",
+                        "type":  "DWord",
+                        "value":  1,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+                        "name":  "SilentInstalledAppsEnabled",
+                        "type":  "DWord",
+                        "value":  0,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+                        "name":  "SystemPaneSuggestionsEnabled",
+                        "type":  "DWord",
+                        "value":  0,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+                        "name":  "SubscribedContent-338388Enabled",
+                        "type":  "DWord",
+                        "value":  0,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+                        "name":  "SubscribedContent-338389Enabled",
+                        "type":  "DWord",
+                        "value":  0,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+                        "name":  "SubscribedContent-353694Enabled",
+                        "type":  "DWord",
+                        "value":  0,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+                        "name":  "SubscribedContent-353696Enabled",
+                        "type":  "DWord",
+                        "value":  0,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+                        "name":  "RotatingLockScreenOverlayEnabled",
+                        "type":  "DWord",
+                        "value":  0,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+                        "name":  "SubscribedContent-338387Enabled",
+                        "type":  "DWord",
+                        "value":  0,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Privacy",
+                        "name":  "TailoredExperiencesWithDiagnosticDataEnabled",
+                        "type":  "DWord",
+                        "value":  0,
+                        "default":  null
+                    }
+                ]
+}

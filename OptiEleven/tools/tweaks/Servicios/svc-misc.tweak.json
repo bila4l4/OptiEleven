@@ -1,0 +1,42 @@
+{
+    "id":  "svc-misc",
+    "kind":  "tweak",
+    "category":  "Servicios",
+    "order":  80,
+    "name":  {
+                 "es":  "Servicios que nadie usa",
+                 "en":  "Services nobody uses"
+             },
+    "summary":  {
+                    "es":  "Mapas sin conexión, modo demo de tienda y fax.",
+                    "en":  "Offline maps, retail demo mode and fax."
+                },
+    "risk":  "safe",
+    "presets":  [
+                    "recommended",
+                    "advanced"
+                ],
+    "requiresAdmin":  true,
+    "reboot":  false,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "snapshot"
+             },
+    "actions":  [
+                    {
+                        "service":  "MapsBroker",
+                        "startup":  "Disabled",
+                        "default":  "Delayed"
+                    },
+                    {
+                        "service":  "RetailDemo",
+                        "startup":  "Disabled",
+                        "default":  "Manual"
+                    },
+                    {
+                        "service":  "Fax",
+                        "startup":  "Disabled",
+                        "default":  "Manual"
+                    }
+                ]
+}

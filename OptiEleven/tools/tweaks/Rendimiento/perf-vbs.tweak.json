@@ -1,0 +1,40 @@
+{
+    "id":  "perf-vbs",
+    "kind":  "tweak",
+    "category":  "Rendimiento",
+    "order":  210,
+    "name":  {
+                 "es":  "Desactivar VBS / Integridad de memoria",
+                 "en":  "Turn off VBS / Memory integrity"
+             },
+    "summary":  {
+                    "es":  "Puede dar un 5-10 % más de FPS en algunos juegos, a cambio de menos protección contra malware a nivel de kernel. Algunos anticheat pueden pedir que esté activado.",
+                    "en":  "Can give 5-10% more FPS in some games, at the cost of less protection against kernel-level malware. Some anti-cheats may require it on."
+                },
+    "risk":  "advanced",
+    "presets":  [
+
+                ],
+    "requiresAdmin":  true,
+    "reboot":  true,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "snapshot"
+             },
+    "actions":  [
+                    {
+                        "registry":  "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\DeviceGuard",
+                        "name":  "EnableVirtualizationBasedSecurity",
+                        "type":  "DWord",
+                        "value":  0,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\DeviceGuard\\Scenarios\\HypervisorEnforcedCodeIntegrity",
+                        "name":  "Enabled",
+                        "type":  "DWord",
+                        "value":  0,
+                        "default":  null
+                    }
+                ]
+}

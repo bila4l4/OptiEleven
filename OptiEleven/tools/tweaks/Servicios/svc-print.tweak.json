@@ -1,0 +1,31 @@
+{
+    "id":  "svc-print",
+    "kind":  "tweak",
+    "category":  "Servicios",
+    "order":  110,
+    "name":  {
+                 "es":  "Cola de impresión (Spooler)",
+                 "en":  "Print spooler"
+             },
+    "summary":  {
+                    "es":  "Solo si NO imprimes ni usas \"Imprimir a PDF\".",
+                    "en":  "Only if you DON\u0027T print or use \"Print to PDF\"."
+                },
+    "risk":  "moderate",
+    "presets":  [
+
+                ],
+    "requiresAdmin":  true,
+    "reboot":  false,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "snapshot"
+             },
+    "actions":  [
+                    {
+                        "service":  "Spooler",
+                        "startup":  "Disabled",
+                        "default":  "Auto"
+                    }
+                ]
+}

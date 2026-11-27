@@ -12,7 +12,13 @@ Open an issue with:
 
 ## Adding or changing a tweak
 
-Tweaks live in the catalog in `OptiEleven/OptiEleven.ps1`. Every tweak must be reversible: use the `Reg`, `Svc` and `Task` definitions where you can, so the engine saves and restores the original state for you. For anything else, provide `Backup`, `Test`, `Apply`, `Revert` and `Diff` scriptblocks.
+Each tweak is one file: `OptiEleven/tools/tweaks/<category>/<id>.tweak.json`. The panel loads every file on start, sorted by `order`.
+
+- Fields: `id`, `kind` (`"tweak"`), `category` (the tab it goes in), `order`, `name` and `summary` (each `{ "es": "...", "en": "..." }`), `risk` (`safe`, `moderate` or `advanced`), `presets` (`recommended`, `advanced`), `requiresAdmin`, `reboot`, `reversible`, `undo` and `actions`.
+- `actions` is a list of `{ "registry", "name", "type", "value", "default" }`, `{ "service", "startup", "default" }` and `{ "task" }`. The engine saves the current state before applying and restores it on revert, so these need no code.
+- If a tweak needs code (power plans, app removal…), add `"script": "<id>.tweak.ps1"` and put next to it a file that returns `@{ Backup; Test; Apply; Revert; Diff }` scriptblocks.
+
+Every tweak must be reversible, or set `"reversible": false` and say why in `undo.note`. A file with a missing field or a repeated `id` is skipped with a warning in Activity.
 
 Please include in the PR:
 

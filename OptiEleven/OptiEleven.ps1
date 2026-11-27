@@ -369,6 +369,12 @@ function Get-Backup([string]$Id) { $p = $script:Store.PSObject.Properties[$Id]; 
 function Save-Backup([string]$Id, $Bk) { $script:Store | Add-Member -NotePropertyName $Id -NotePropertyValue $Bk -Force; Write-Store }
 function Remove-Backup([string]$Id) { $script:Store.PSObject.Properties.Remove($Id); Write-Store }
 
+function Get-ToolText($Value) {
+    # textos del manifiesto: { "es": "...", "en": "..." } (o un texto suelto); si falta el idioma, el español
+    if ($null -eq $Value -or $Value -is [string]) { return [string]$Value }
+    $x = $Value.$($script:LangCode); if (-not $x) { $x = $Value.es }
+    [string]$x
+}
 # ============================================================ catálogo de ajustes
 # Risk: Seguro / Moderado / Avanzado
 # Presets: R = Recomendado (quita casi toda la basura, sin romper nada que se use a diario)
@@ -411,266 +417,7 @@ function Remove-AppList([string[]]$List) {
     }
 }
 
-$Tweaks = @(
-    # ---------------- Privacidad
-    @{ Id = 'priv-telemetry'; Cat = 'Privacidad'; Risk = 'Seguro'; Presets = 'R', 'A'
-       Name = 'Telemetría al mínimo'
-       Desc = 'Diagnósticos al mínimo que permite Windows Pro, sin programa de mejora (CEIP), sin inventario de apps y sin las tareas programadas que recogen datos.'
-       Reg  = @( (RegV "$P\DataCollection" 'AllowTelemetry' 0), (RegV "$P\DataCollection" 'DoNotShowFeedbackNotifications' 1),
-                 (RegV "$P\DataCollection" 'AllowDeviceNameInTelemetry' 0), (RegV "$P\DataCollection" 'LimitDiagnosticLogCollection' 1),
-                 (RegV "$P\DataCollection" 'DisableOneSettingsDownloads' 1), (RegV "$P\DataCollection" 'LimitDumpCollection' 1),
-                 (RegV 'HKLM:\SOFTWARE\Policies\Microsoft\SQMClient\Windows' 'CEIPEnable' 0),
-                 (RegV "$P\AppCompat" 'AITEnable' 0), (RegV "$P\AppCompat" 'DisableInventory' 1), (RegV "$P\AppCompat" 'DisableUAR' 1),
-                 (RegV 'HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting' 'Disabled' 1) )
-       Task = @( '\Microsoft\Windows\Application Experience\Microsoft Compatibility Appraiser',
-                 '\Microsoft\Windows\Application Experience\MareBackup',
-                 '\Microsoft\Windows\Application Experience\PcaPatchDbTask',
-                 '\Microsoft\Windows\Windows Error Reporting\QueueReporting',
-                 '\Microsoft\Windows\Device Information\Device',
-                 '\Microsoft\Windows\Device Information\Device User',
-                 '\Microsoft\Windows\CloudExperienceHost\CreateObjectTask',
-                 '\Microsoft\Windows\Flighting\FeatureConfig\UsageDataReporting',
-                 '\Microsoft\Windows\Flighting\FeatureConfig\UsageDataFlushing',
-                 '\Microsoft\Windows\Maps\MapsToastTask',
-                 '\Microsoft\Windows\Maps\MapsUpdateTask',
-                 '\Microsoft\Windows\PI\Sqm-Tasks',
-                 '\Microsoft\Office\OfficeTelemetryAgentLogOn2016',
-                 '\Microsoft\Office\OfficeTelemetryAgentFallBack2016',
-                 '\Microsoft\Windows\Application Experience\Microsoft Compatibility Appraiser Exp',
-                 '\Microsoft\Windows\Application Experience\ProgramDataUpdater',
-                 '\Microsoft\Windows\Customer Experience Improvement Program\Consolidator',
-                 '\Microsoft\Windows\Customer Experience Improvement Program\UsbCeip',
-                 '\Microsoft\Windows\DiskDiagnostic\Microsoft-Windows-DiskDiagnosticDataCollector',
-                 '\Microsoft\Windows\Feedback\Siuf\DmClient',
-                 '\Microsoft\Windows\Feedback\Siuf\DmClientOnScenarioDownload',
-                 '\Microsoft\Windows\Autochk\Proxy' ) }
-    @{ Id = 'priv-ads'; Cat = 'Privacidad'; Risk = 'Seguro'; Presets = 'R', 'A'
-       Name = 'Publicidad, sugerencias e instalaciones silenciosas'
-       Desc = 'Quita el ID de publicidad, las apps que Windows instala solo, los consejos, los anuncios de Configuración y del menú Inicio y el "terminemos de configurar tu PC".'
-       Reg  = @( (RegV "$P\AdvertisingInfo" 'DisabledByGroupPolicy' 1), (RegV "$P\CloudContent" 'DisableWindowsConsumerFeatures' 1),
-                 (RegV "$P\CloudContent" 'DisableSoftLanding' 1), (RegV "$P\CloudContent" 'DisableCloudOptimizedContent' 1),
-                 (RegV 'HKCU:\Software\Policies\Microsoft\Windows\CloudContent' 'DisableTailoredExperiencesWithDiagnosticData' 1),
-                 (RegV $CDM 'SubscribedContent-338393Enabled' 0), (RegV $CDM 'SubscribedContent-310093Enabled' 0),
-                 (RegV $CDM 'ContentDeliveryAllowed' 0), (RegV $CDM 'OemPreInstalledAppsEnabled' 0), (RegV $CDM 'PreInstalledAppsEnabled' 0),
-                 (RegV 'HKCU:\Software\Microsoft\Windows\CurrentVersion\UserProfileEngagement' 'ScoobeSystemSettingEnabled' 0),
-                 (RegV 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced' 'Start_IrisRecommendations' 0),
-                 (RegV 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced' 'Start_AccountNotifications' 0),
-                 (RegV 'HKLM:\SOFTWARE\Policies\Microsoft\PushToInstall' 'DisablePushToInstall' 1),
-                 (RegV $CDM 'SilentInstalledAppsEnabled' 0), (RegV $CDM 'SystemPaneSuggestionsEnabled' 0),
-                 (RegV $CDM 'SubscribedContent-338388Enabled' 0), (RegV $CDM 'SubscribedContent-338389Enabled' 0),
-                 (RegV $CDM 'SubscribedContent-353694Enabled' 0), (RegV $CDM 'SubscribedContent-353696Enabled' 0),
-                 (RegV $CDM 'RotatingLockScreenOverlayEnabled' 0), (RegV $CDM 'SubscribedContent-338387Enabled' 0),
-                 (RegV 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Privacy' 'TailoredExperiencesWithDiagnosticDataEnabled' 0) ) }
-    @{ Id = 'priv-ai'; Cat = 'Privacidad'; Risk = 'Seguro'; Presets = 'R', 'A'
-       Name = 'Copilot, Recall y la IA de Windows'
-       Desc = 'Desactiva Copilot, Recall, Click to Do, la IA de Paint y del Bloc de notas, y el servicio de IA que arranca con Windows (WSAIFabricSvc).'
-       Reg  = @( (RegV 'HKCU:\Software\Policies\Microsoft\Windows\WindowsCopilot' 'TurnOffWindowsCopilot' 1),
-                 (RegV "$P\WindowsCopilot" 'TurnOffWindowsCopilot' 1),
-                 (RegV "$P\WindowsAI" 'DisableAIDataAnalysis' 1), (RegV "$P\WindowsAI" 'AllowRecallEnablement' 0),
-                 (RegV 'HKCU:\Software\Policies\Microsoft\Windows\WindowsAI' 'DisableClickToDo' 1),
-                 (RegV 'HKLM:\SOFTWARE\Policies\WindowsNotepad' 'DisableAIFeatures' 1),
-                 (RegV 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Paint' 'DisableCocreator' 1),
-                 (RegV 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Paint' 'DisableGenerativeFill' 1),
-                 (RegV 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Paint' 'DisableImageCreator' 1) )
-       Svc  = @( (SvcV 'WSAIFabricSvc' 'Manual' 'Auto') ) }
-    @{ Id = 'priv-activity'; Cat = 'Privacidad'; Risk = 'Seguro'; Presets = 'R', 'A'
-       Name = 'Historial de actividad'
-       Desc = 'Windows deja de registrar y subir lo que abres, y el portapapeles no se sincroniza con la nube.'
-       Reg  = @( (RegV "$P\System" 'PublishUserActivities' 0), (RegV "$P\System" 'UploadUserActivities' 0), (RegV "$P\System" 'EnableActivityFeed' 0),
-                 (RegV "$P\System" 'AllowCrossDeviceClipboard' 0),
-                 (RegV 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced' 'Start_TrackProgs' 0) ) }
-    @{ Id = 'priv-bing'; Cat = 'Privacidad'; Risk = 'Seguro'; Presets = 'R', 'A'
-       Name = 'Sin Bing en el menú Inicio'
-       Desc = 'La búsqueda del menú Inicio solo busca en tu PC: sin resultados web, sin "destacados" del día y sin buscar en tu cuenta en la nube.'
-       Reg  = @( (RegV 'HKCU:\Software\Policies\Microsoft\Windows\Explorer' 'DisableSearchBoxSuggestions' 1),
-                 (RegV "$P\Windows Search" 'EnableDynamicContentInWSB' 0), (RegV "$P\Windows Search" 'AllowCloudSearch' 0),
-                 (RegV "$P\Windows Search" 'ConnectedSearchUseWeb' 0),
-                 (RegV 'HKCU:\Software\Microsoft\Windows\CurrentVersion\SearchSettings' 'IsDynamicSearchBoxEnabled' 0),
-                 (RegV 'HKCU:\Software\Microsoft\Windows\CurrentVersion\SearchSettings' 'IsMSACloudSearchEnabled' 0),
-                 (RegV 'HKCU:\Software\Microsoft\Windows\CurrentVersion\SearchSettings' 'IsAADCloudSearchEnabled' 0) ) }
-    @{ Id = 'priv-widgets'; Cat = 'Privacidad'; Risk = 'Seguro'; Presets = 'R', 'A'
-       Name = 'Widgets y noticias'
-       Desc = 'Desactiva el panel de Widgets (y su proceso WebView en segundo plano).'
-       Reg  = @( (RegV 'HKLM:\SOFTWARE\Policies\Microsoft\Dsh' 'AllowNewsAndInterests' 0) ) }
 
-    # ---------------- Servicios
-    @{ Id = 'svc-telemetry'; Cat = 'Servicios'; Risk = 'Seguro'; Presets = 'R', 'A'
-       Name = 'Servicios de telemetría e informes de errores'
-       Desc = 'DiagTrack (experiencias del usuario conectado), dmwappushservice, InventorySvc (inventario de apps para Microsoft) y WerSvc.'
-       Svc  = @( (SvcV 'DiagTrack' 'Disabled' 'Auto'), (SvcV 'dmwappushservice' 'Disabled' 'Delayed'), (SvcV 'WerSvc' 'Disabled' 'Manual'),
-                 (SvcV 'InventorySvc' 'Disabled' 'Delayed'), (SvcV 'diagnosticshub.standardcollector.service' 'Disabled' 'Manual') ) }
-    @{ Id = 'svc-misc'; Cat = 'Servicios'; Risk = 'Seguro'; Presets = 'R', 'A'
-       Name = 'Servicios que nadie usa'
-       Desc = 'Mapas sin conexión, modo demo de tienda y fax.'
-       Svc  = @( (SvcV 'MapsBroker' 'Disabled' 'Delayed'), (SvcV 'RetailDemo' 'Disabled' 'Manual'), (SvcV 'Fax' 'Disabled' 'Manual') ) }
-    @{ Id = 'svc-sysmain'; Cat = 'Servicios'; Risk = 'Moderado'; Presets = 'R', 'A'
-       Name = 'SysMain (Superfetch)'
-       Desc = 'Con SSD y 32 GB apenas aporta, y quita lecturas de disco en segundo plano. Las apps pueden tardar un poco más en abrir la primera vez.'
-       Svc  = @( (SvcV 'SysMain' 'Disabled' 'Auto') ) }
-    @{ Id = 'svc-search'; Cat = 'Servicios'; Risk = 'Moderado'; Presets = @('A')
-       Name = 'Indexación de búsqueda'
-       Desc = 'Quita el indexador. Las apps siguen saliendo en Inicio, pero buscar archivos y correos será más lento.'
-       Svc  = @( (SvcV 'WSearch' 'Disabled' 'Delayed') ) }
-    @{ Id = 'svc-print'; Cat = 'Servicios'; Risk = 'Moderado'; Presets = @()
-       Name = 'Cola de impresión (Spooler)'
-       Desc = 'Solo si NO imprimes ni usas "Imprimir a PDF".'
-       Svc  = @( (SvcV 'Spooler' 'Disabled' 'Auto') ) }
-    @{ Id = 'svc-geo'; Cat = 'Servicios'; Risk = 'Moderado'; Presets = @('A')
-       Name = 'Ubicación'
-       Desc = 'Desactiva la geolocalización. Deja de funcionar la zona horaria automática y el tiempo local.'
-       Svc  = @( (SvcV 'lfsvc' 'Disabled' 'Manual') ) }
-    @{ Id = 'svc-xbox'; Cat = 'Servicios'; Risk = 'Avanzado'; Presets = @()
-       Name = 'Servicios de Xbox'
-       Desc = 'NO lo actives si usas Game Pass, la app Xbox o juegos de la Microsoft Store. Steam/Epic/Riot no se ven afectados.'
-       Svc  = @( (SvcV 'XblAuthManager' 'Disabled' 'Manual'), (SvcV 'XblGameSave' 'Disabled' 'Manual'), (SvcV 'XboxNetApiSvc' 'Disabled' 'Manual') ) }
-
-    # ---------------- Rendimiento
-    @{ Id = 'perf-powermode'; Cat = 'Rendimiento'; Risk = 'Seguro'; Presets = 'R', 'A'
-       Name = 'Modo de energía: Máximo rendimiento'
-       Desc = 'Equivale a Configuración > Energía > "Mejor rendimiento" para la fuente de energía actual. En batería gasta más; ponlo enchufado.'
-       Custom = @{
-           Backup = { @{ Prev = (Get-OverlayGuid) } }
-           Test   = { param($bk) (Get-OverlayGuid) -eq 'ded574b5-45a0-4f42-8737-46345c09c238' }
-           Apply  = { param($bk) Set-OverlayGuid 'ded574b5-45a0-4f42-8737-46345c09c238' }
-           Revert = { param($bk) $g = '00000000-0000-0000-0000-000000000000'; if ($bk -and $bk.Custom.Prev) { $g = $bk.Custom.Prev }; Set-OverlayGuid $g }
-       } }
-    @{ Id = 'perf-ultimate'; Cat = 'Rendimiento'; Risk = 'Avanzado'; Presets = @()
-       Name = 'Plan "Rendimiento máximo" (Ultimate)'
-       Desc = 'Crea y activa el plan oculto Ultimate Performance: la CPU nunca baja de frecuencia. Solo para jugar enchufado; más calor y ruido.'
-       Custom = @{
-           Backup = { @{ Prev = (Get-ActiveSchemeGuid); Created = $null } }
-           Test   = { param($bk) [bool]($bk -and $bk.Custom.Created -and ((Get-ActiveSchemeGuid) -eq $bk.Custom.Created)) }
-           Apply  = { param($bk)
-               $out = powercfg /duplicatescheme e9a42b02-d5df-448d-aa00-03f14749eb61
-               if (-not ("$out" -match '([0-9a-f]{8}-[0-9a-f-]{27})')) { throw "No se pudo crear el plan: $out" }
-               $g = $Matches[1]; powercfg /setactive $g | Out-Null; $bk.Custom.Created = $g
-               Sync-PowerTweaks }   # el plan nuevo nace con los valores de fábrica: se le copian los ajustes de energía aplicados
-           Revert = { param($bk)
-               $prev = '381b4222-f694-41f0-9685-ff5bb260df2e'
-               if ($bk -and $bk.Custom.Prev) { $prev = $bk.Custom.Prev }
-               powercfg /setactive $prev | Out-Null
-               if ($bk -and $bk.Custom.Created) { powercfg /delete $bk.Custom.Created | Out-Null } }
-       } }
-    @{ Id = 'perf-mmcss'; Cat = 'Rendimiento'; Risk = 'Seguro'; Presets = 'R', 'A'
-       Name = 'Prioridad multimedia para juegos (MMCSS)'
-       Desc = 'Reserva menos CPU para tareas de fondo y da prioridad alta a los hilos de juego registrados.'
-       Reg  = @( (RegV $MM 'SystemResponsiveness' 10), (RegV "$MM\Tasks\Games" 'GPU Priority' 8), (RegV "$MM\Tasks\Games" 'Priority' 6),
-                 (RegV "$MM\Tasks\Games" 'Scheduling Category' 'High' 'String'), (RegV "$MM\Tasks\Games" 'SFIO Priority' 'High' 'String') ) }
-    @{ Id = 'perf-netthrottle'; Cat = 'Rendimiento'; Risk = 'Moderado'; Presets = @('A')
-       Name = 'Sin limitación de red multimedia'
-       Desc = 'Quita el límite que Windows pone a la red mientras suena audio o vídeo. Útil si juegas online con Discord o música abiertos.'
-       Reg  = @( (RegV $MM 'NetworkThrottlingIndex' -1) ) }   # -1 = 0xFFFFFFFF
-    @{ Id = 'perf-bgapps'; Cat = 'Rendimiento'; Risk = 'Moderado'; Presets = 'R', 'A'
-       Name = 'Apps de la Store en segundo plano'
-       Desc = 'Las apps de la Store no se ejecutan en segundo plano. Sus notificaciones (WhatsApp de la Store, Correo...) pueden no llegar.'
-       Reg  = @( (RegV "$P\AppPrivacy" 'LetAppsRunInBackground' 2) ) }
-    @{ Id = 'perf-faststartup'; Cat = 'Rendimiento'; Risk = 'Seguro'; Presets = 'R', 'A'; Reboot = $true
-       Name = 'Desactivar Inicio rápido'
-       Desc = 'Cada arranque carga el kernel y los drivers desde cero: evita fallos raros de drivers y de memoria acumulada.'
-       Reg  = @( (RegV 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Power' 'HiberbootEnabled' 0) ) }
-    @{ Id = 'perf-visual'; Cat = 'Rendimiento'; Risk = 'Seguro'; Presets = @('A')
-       Name = 'Menos efectos visuales'
-       Desc = 'Quita las transparencias y las animaciones de ventanas y barra de tareas. Requiere cerrar sesión.'
-       Reg  = @( (RegV 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize' 'EnableTransparency' 0),
-                 (RegV 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced' 'TaskbarAnimations' 0),
-                 (RegV 'HKCU:\Control Panel\Desktop\WindowMetrics' 'MinAnimate' '0' 'String') ) }
-    @{ Id = 'perf-vbs'; Cat = 'Rendimiento'; Risk = 'Avanzado'; Presets = @(); Reboot = $true
-       Name = 'Desactivar VBS / Integridad de memoria'
-       Desc = 'Puede dar un 5-10 % más de FPS en algunos juegos, a cambio de menos protección contra malware a nivel de kernel. Algunos anticheat pueden pedir que esté activado.'
-       Reg  = @( (RegV 'HKLM:\SYSTEM\CurrentControlSet\Control\DeviceGuard' 'EnableVirtualizationBasedSecurity' 0),
-                 (RegV 'HKLM:\SYSTEM\CurrentControlSet\Control\DeviceGuard\Scenarios\HypervisorEnforcedCodeIntegrity' 'Enabled' 0) ) }
-
-    # ---------------- Juegos
-    @{ Id = 'game-mode'; Cat = 'Juegos'; Risk = 'Seguro'; Presets = 'R', 'A'
-       Name = 'Modo juego activado'
-       Desc = 'Windows prioriza el juego en primer plano y pausa Windows Update mientras juegas.'
-       Reg  = @( (RegV 'HKCU:\Software\Microsoft\GameBar' 'AutoGameModeEnabled' 1), (RegV 'HKCU:\Software\Microsoft\GameBar' 'AllowAutoGameMode' 1) ) }
-    @{ Id = 'game-hags'; Cat = 'Juegos'; Risk = 'Seguro'; Presets = 'R', 'A'; Reboot = $true
-       Name = 'Programación de GPU acelerada por hardware'
-       Desc = 'La GPU gestiona su propia cola de trabajo: menos latencia y menos carga de CPU. Necesario para Frame Generation.'
-       Reg  = @( (RegV 'HKLM:\SYSTEM\CurrentControlSet\Control\GraphicsDrivers' 'HwSchMode' 2) ) }
-    @{ Id = 'game-dvr'; Cat = 'Juegos'; Risk = 'Seguro'; Presets = 'R', 'A'
-       Name = 'Sin grabación en segundo plano (Game DVR)'
-       Desc = 'Desactiva la captura continua de la Xbox Game Bar. Si grabas clips con Win+G, déjalo como está.'
-       Reg  = @( (RegV 'HKCU:\System\GameConfigStore' 'GameDVR_Enabled' 0), (RegV "$P\GameDVR" 'AllowGameDVR' 0) ) }
-    @{ Id = 'game-mouse'; Cat = 'Juegos'; Risk = 'Seguro'; Presets = @('A')
-       Name = 'Sin aceleración del ratón'
-       Desc = 'Desactiva "Mejorar la precisión del puntero": el movimiento es 1:1, mejor para apuntar. Requiere cerrar sesión.'
-       Reg  = @( (RegV 'HKCU:\Control Panel\Mouse' 'MouseSpeed' '0' 'String'), (RegV 'HKCU:\Control Panel\Mouse' 'MouseThreshold1' '0' 'String'),
-                 (RegV 'HKCU:\Control Panel\Mouse' 'MouseThreshold2' '0' 'String') ) }
-    @{ Id = 'game-sticky'; Cat = 'Juegos'; Risk = 'Seguro'; Presets = 'R', 'A'
-       Name = 'Sin atajo de Teclas especiales'
-       Desc = 'Pulsar Mayús cinco veces ya no saca el aviso de Teclas especiales en mitad de la partida.'
-       Reg  = @( (RegV 'HKCU:\Control Panel\Accessibility\StickyKeys' 'Flags' '506' 'String' '510'),
-                 (RegV 'HKCU:\Control Panel\Accessibility\Keyboard Response' 'Flags' '122' 'String' '126'),
-                 (RegV 'HKCU:\Control Panel\Accessibility\ToggleKeys' 'Flags' '58' 'String' '62') ) }
-    @{ Id = 'perf-startupdelay'; Cat = 'Rendimiento'; Risk = 'Seguro'; Presets = 'R', 'A'
-       Name = 'Sin retraso de las apps de inicio'
-       Desc = 'Windows espera unos segundos antes de abrir las apps de inicio. Con SSD no hace falta.'
-       Reg  = @( (RegV 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Serialize' 'StartupDelayInMSec' 0) ) }
-
-    # ---------------- Actualizaciones
-    @{ Id = 'wu-noreboot'; Cat = 'Actualizaciones'; Risk = 'Seguro'; Presets = 'R', 'A'
-       Name = 'Sin reinicios automáticos con la sesión abierta'
-       Desc = 'Windows Update no reinicia el equipo mientras estás conectado; te avisa y reinicias tú.'
-       Reg  = @( (RegV "$P\WindowsUpdate\AU" 'NoAutoRebootWithLoggedOnUsers' 1) ) }
-    @{ Id = 'wu-delivery'; Cat = 'Actualizaciones'; Risk = 'Seguro'; Presets = 'R', 'A'
-       Name = 'Sin compartir actualizaciones con otros equipos'
-       Desc = 'Desactiva la Optimización de distribución (P2P): tu conexión no sube actualizaciones a otros PCs mientras juegas online.'
-       Reg  = @( (RegV "$P\DeliveryOptimization" 'DODownloadMode' 0) ) }
-    @{ Id = 'wu-drivers'; Cat = 'Actualizaciones'; Risk = 'Moderado'; Presets = @('A')
-       Name = 'No instalar drivers desde Windows Update'
-       Desc = 'Evita que Windows sustituya el driver de AMD/NVIDIA que instalaste. Los drivers de chipset, Wi-Fi y audio tendrás que ponerlos tú.'
-       Reg  = @( (RegV "$P\WindowsUpdate" 'ExcludeWUDriversInQualityUpdate' 1) ) }
-    @{ Id = 'wu-feature'; Cat = 'Actualizaciones'; Risk = 'Moderado'; Presets = @()
-       Name = 'Retrasar las versiones nuevas de Windows un año'
-       Desc = 'Sigues recibiendo los parches de seguridad, pero las actualizaciones grandes (25H2, 26H2...) llegan 365 días después, ya pulidas.'
-       Reg  = @( (RegV "$P\WindowsUpdate" 'DeferFeatureUpdates' 1), (RegV "$P\WindowsUpdate" 'DeferFeatureUpdatesPeriodInDays' 365) ) }
-
-    # ---------------- Interfaz
-    @{ Id = 'ui-ext'; Cat = 'Interfaz'; Risk = 'Seguro'; Presets = 'R', 'A'
-       Name = 'Mostrar extensiones de archivo'
-       Desc = 'Ver ".exe", ".pdf"... también es más seguro (evita archivos "foto.jpg.exe").'
-       Reg  = @( (RegV 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced' 'HideFileExt' 0) ) }
-    @{ Id = 'ui-context'; Cat = 'Interfaz'; Risk = 'Seguro'; Presets = @()
-       Name = 'Menú contextual clásico'
-       Desc = 'Recupera el menú de clic derecho completo de Windows 10 (sin "Mostrar más opciones"). Reinicia el Explorador para verlo.'
-       Custom = @{
-           Test   = { param($bk) Test-Path 'HKCU:\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32' }
-           Apply  = { param($bk) $k = 'HKCU:\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32'
-                      New-Item -Path $k -Force | Out-Null; Set-Item -LiteralPath $k -Value '' }
-           Revert = { param($bk) Remove-Item 'HKCU:\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}' -Recurse -Force -ErrorAction SilentlyContinue }
-       } }
-    @{ Id = 'ui-endtask'; Cat = 'Interfaz'; Risk = 'Seguro'; Presets = 'R', 'A'
-       Name = '"Finalizar tarea" en la barra de tareas'
-       Desc = 'Clic derecho en un icono de la barra de tareas para cerrar a la fuerza un juego colgado, sin abrir el Administrador de tareas.'
-       Reg  = @( (RegV 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\TaskbarDeveloperSettings' 'TaskbarEndTask' 1) ) }
-
-    # ---------------- Apps
-    @{ Id = 'app-debloat'; Cat = 'Apps'; Risk = 'Moderado'; Presets = 'R', 'A'; Irreversible = $true
-       Name = 'Quitar apps preinstaladas'
-       Desc = 'Unas 60 apps para todos los usuarios: Noticias, Tiempo, Clipchamp, Solitaire, Teams personal, Copilot, Outlook (nuevo), Office Hub, To Do, Mapas, Dev Home, Widgets, Skype, Correo y Calendar antiguos, y las patrocinadas (Candy Crush, TikTok, Facebook, Disney+...). Se quedan Fotos, Paint, Bloc de notas, Recortes, Calculadora, Cámara y la Store.'
-       Custom = @{
-           Test   = { param($bk) -not (Get-DebloatPresent $DebloatApps) }
-           Apply  = { param($bk) Remove-AppList $DebloatApps }
-           Revert = { param($bk) Write-Log 'Las apps quitadas no se reinstalan solas: búscalas en Microsoft Store si quieres alguna.' 'WARN' }
-       } }
-    @{ Id = 'app-onedrive'; Cat = 'Apps'; Risk = 'Moderado'; Presets = @('A'); Irreversible = $true
-       Name = 'Desinstalar OneDrive'
-       Desc = 'Quita OneDrive y su sincronización en segundo plano. Tus archivos de la carpeta OneDrive se quedan en el disco. Se puede reinstalar desde onedrive.com.'
-       Custom = @{
-           Test   = { param($bk) -not ((Test-Path "$env:LOCALAPPDATA\Microsoft\OneDrive\OneDrive.exe") -or (Test-Path "$env:ProgramFiles\Microsoft OneDrive\OneDrive.exe")) }
-           Apply  = { param($bk)
-               Stop-Process -Name OneDrive -Force -ErrorAction SilentlyContinue
-               $out = & winget uninstall --id Microsoft.OneDrive -e --silent --accept-source-agreements --disable-interactivity 2>&1
-               if ($LASTEXITCODE -ne 0) {
-                   $setup = @("$env:SystemRoot\System32\OneDriveSetup.exe", "$env:SystemRoot\SysWOW64\OneDriveSetup.exe") | Where-Object { Test-Path $_ } | Select-Object -First 1
-                   if (-not $setup) { throw "winget no pudo desinstalarlo: $($out | Select-Object -Last 1)" }
-                   Start-Process $setup -ArgumentList '/uninstall' -Wait
-               } }
-           Revert = { param($bk) Write-Log 'OneDrive no se reinstala solo: descárgalo de onedrive.com o con "winget install Microsoft.OneDrive".' 'WARN' }
-       } }
-)
 
 # ---------- Latencia avanzada (ideas de Hone, Atlas y los foros de latencia)
 # Ajustes de un valor del plan de energía actual (solo enchufado / AC). Lee el valor con powercfg /query:
@@ -745,40 +492,7 @@ function New-DynRegCustom([string]$KeysFn, [string[]]$Names, [int]$Value) {
     }
 }
 
-$Tweaks += @(
-    @{ Id = 'lat-priosep'; Cat = 'Latencia'; Risk = 'Moderado'; Presets = @('A')
-       Name = 'Prioridad fuerte para la ventana activa'
-       Desc = 'Win32PrioritySeparation a 0x26: turnos de CPU cortos y con ventaja para el programa en primer plano, que es el juego.'
-       Reg  = @( (RegV 'HKLM:\SYSTEM\CurrentControlSet\Control\PriorityControl' 'Win32PrioritySeparation' 38 'DWord' 2) ) }
-    @{ Id = 'lat-usb'; Cat = 'Latencia'; Risk = 'Moderado'; Presets = @('A')
-       Name = 'Sin suspensión selectiva de USB'
-       Desc = 'Windows deja de dormir los puertos USB para ahorrar energía: ratón, teclado y mando sin microcortes. Solo enchufado.'
-       Custom = (New-PowerCustom '2a737441-1930-4402-8d77-b2bebba308a3' '48e6b7a6-50f5-4782-a5d4-53bb8f07e226' 0 1) }
-    @{ Id = 'lat-pcie'; Cat = 'Latencia'; Risk = 'Moderado'; Presets = @('A')
-       Name = 'PCI Express sin ahorro de energía'
-       Desc = 'Desactiva la administración de energía del enlace PCIe: la GPU y el SSD no bajan de estado entre fotogramas. Solo enchufado.'
-       Custom = (New-PowerCustom '501a4d13-42af-4429-9fd1-a8218c268e20' 'ee12f906-d277-404b-b6da-e5fa1a576df5' 0 1) }
-    @{ Id = 'lat-cores'; Cat = 'Latencia'; Risk = 'Avanzado'; Presets = @()
-       Name = 'Sin aparcamiento de núcleos'
-       Desc = 'Todos los núcleos de la CPU quedan despiertos enchufado. Menos latencia al empezar una carga, más consumo y temperatura.'
-       Custom = (New-PowerCustom '54533251-82be-4824-96c1-47b60b740d00' '0cc5b647-c1df-4637-891a-dec35c318583' 100 10) }
-    @{ Id = 'lat-nagle'; Cat = 'Latencia'; Risk = 'Avanzado'; Presets = @(); Reboot = $true
-       Name = 'Desactivar el algoritmo de Nagle'
-       Desc = 'TCP envía cada paquete al momento en vez de agruparlos. Solo ayuda en juegos que usan TCP (MMO, MOBA antiguos); los shooters usan UDP.'
-       Custom = (New-DynRegCustom 'Get-NicKeys' @('TcpAckFrequency', 'TCPNoDelay') 1) }
-    @{ Id = 'lat-msi'; Cat = 'Latencia'; Risk = 'Avanzado'; Presets = @(); Reboot = $true
-       Name = 'Modo MSI para la tarjeta gráfica'
-       Desc = 'La GPU avisa a la CPU con interrupciones por mensaje en vez de por línea. Los drivers recientes de AMD y NVIDIA ya suelen venir así.'
-       Custom = (New-DynRegCustom 'Get-GpuMsiKeys' @('MSISupported') 1) }
-    @{ Id = 'lat-memcomp'; Cat = 'Latencia'; Risk = 'Moderado'; Presets = @('A'); Reboot = $true
-       Name = 'Sin compresión de memoria'
-       Desc = 'Con 16 GB o más, comprimir la RAM gasta CPU sin necesidad. Con poca memoria es mejor dejarla activada.'
-       Custom = @{
-           Test   = { param($bk) try { -not (Get-MMAgent -ErrorAction Stop).MemoryCompression } catch { $null } }
-           Apply  = { param($bk) Disable-MMAgent -MemoryCompression -ErrorAction Stop }
-           Revert = { param($bk) Enable-MMAgent -MemoryCompression -ErrorAction Stop }
-       } }
-)
+
 
 # ---------- más basura de Windows 11 (lo que quitan los optimizadores conocidos)
 function Get-EdgeSetup {
@@ -796,137 +510,37 @@ $OldCapabilities = @(
     @{ Cap = 'MathRecognizer*';                File = "$env:CommonProgramFiles\Microsoft Shared\Ink\mip.exe" }
 )
 
-$Tweaks += @(
-    # ---------------- Privacidad (más)
-    @{ Id = 'priv-input'; Cat = 'Privacidad'; Risk = 'Seguro'; Presets = 'R', 'A'
-       Name = 'Escritura y voz sin enviar datos'
-       Desc = 'Windows deja de aprender de lo que escribes y dibujas, de leer tus contactos para el teclado y de mandar la voz a Microsoft.'
-       Reg  = @( (RegV 'HKCU:\Software\Microsoft\InputPersonalization' 'RestrictImplicitInkCollection' 1),
-                 (RegV 'HKCU:\Software\Microsoft\InputPersonalization' 'RestrictImplicitTextCollection' 1),
-                 (RegV 'HKCU:\Software\Microsoft\InputPersonalization\TrainedDataStore' 'HarvestContacts' 0),
-                 (RegV 'HKCU:\Software\Microsoft\Personalization\Settings' 'AcceptedPrivacyPolicy' 0),
-                 (RegV 'HKCU:\Software\Microsoft\Speech_OneCore\Settings\OnlineSpeechPrivacy' 'HasAccepted' 0) ) }
-                 # TailoredExperiencesWithDiagnosticDataEnabled ya lo pone priv-ads: dos ajustes sobre el mismo valor se pisan las copias
-    @{ Id = 'priv-feedback'; Cat = 'Privacidad'; Risk = 'Seguro'; Presets = 'R', 'A'
-       Name = 'Sin encuestas de opinión'
-       Desc = 'Windows no te vuelve a preguntar "¿qué te parece...?" ni manda la respuesta.'
-       Reg  = @( (RegV 'HKCU:\Software\Microsoft\Siuf\Rules' 'NumberOfSIUFInPeriod' 0), (RegV 'HKCU:\Software\Microsoft\Siuf\Rules' 'PeriodInNanoSeconds' 0) ) }
-    @{ Id = 'priv-edge'; Cat = 'Privacidad'; Risk = 'Seguro'; Presets = 'R', 'A'
-       Name = 'Microsoft Edge sin segundo plano ni telemetría'
-       Desc = 'Edge deja de quedarse abierto al cerrarlo y de precargarse al encender (son 6 a 10 procesos y unos 300 MB de RAM), sin barra de Copilot, sin compras ni recomendaciones. Edge dirá "administrado por tu organización".'
-       Reg  = @( (RegV $EdgePol 'StartupBoostEnabled' 0), (RegV $EdgePol 'BackgroundModeEnabled' 0), (RegV $EdgePol 'HubsSidebarEnabled' 0),
-                 (RegV $EdgePol 'PersonalizationReportingEnabled' 0), (RegV $EdgePol 'ShowRecommendationsEnabled' 0), (RegV $EdgePol 'DiagnosticData' 0),
-                 (RegV $EdgePol 'EdgeShoppingAssistantEnabled' 0), (RegV $EdgePol 'UserFeedbackAllowed' 0), (RegV $EdgePol 'ConfigureDoNotTrack' 1),
-                 (RegV $EdgePol 'SpotlightExperiencesAndRecommendationsEnabled' 0), (RegV $EdgePol 'EdgeCollectionsEnabled' 0) ) }
-    @{ Id = 'priv-office'; Cat = 'Privacidad'; Risk = 'Seguro'; Presets = 'R', 'A'
-       Name = 'Office sin telemetría'
-       Desc = 'Word, Excel y compañía dejan de enviar datos de uso y de pedir opinión. Si no tienes Office, no hace nada.'
-       Reg  = @( (RegV 'HKCU:\Software\Policies\Microsoft\Office\16.0\Common\ClientTelemetry' 'DisableTelemetry' 1),
-                 (RegV 'HKCU:\Software\Policies\Microsoft\Office\16.0\Common\ClientTelemetry' 'SendTelemetry' 3),
-                 (RegV 'HKCU:\Software\Policies\Microsoft\Office\16.0\Common\Feedback' 'Enabled' 0),
-                 (RegV 'HKCU:\Software\Policies\Microsoft\Office\Common\ClientTelemetry' 'SendTelemetry' 3) ) }
-    @{ Id = 'priv-devtools'; Cat = 'Privacidad'; Risk = 'Seguro'; Presets = 'R', 'A'
-       Name = 'PowerShell y .NET sin telemetría'
-       Desc = 'Variables de entorno oficiales para que PowerShell 7 y las herramientas de .NET no envíen datos de uso.'
-       Reg  = @( (RegV 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment' 'POWERSHELL_TELEMETRY_OPTOUT' '1' 'String'),
-                 (RegV 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment' 'DOTNET_CLI_TELEMETRY_OPTOUT' '1' 'String') ) }
-    @{ Id = 'priv-findmy'; Cat = 'Privacidad'; Risk = 'Moderado'; Presets = @()
-       Name = 'Sin "Encontrar mi dispositivo"'
-       Desc = 'Windows deja de guardar la ubicación del equipo en tu cuenta. En un portátil es lo que te ayuda si te lo roban.'
-       Reg  = @( (RegV 'HKLM:\SOFTWARE\Policies\Microsoft\FindMyDevice' 'AllowFindMyDevice' 0) ) }
-
-    # ---------------- Servicios (más)
-    @{ Id = 'svc-manual'; Cat = 'Servicios'; Risk = 'Seguro'; Presets = 'R', 'A'
-       Name = 'Servicios bajo demanda'
-       Desc = 'Pasan a manual: arrancan solo cuando algo los necesita, como hace WinUtil. Seguimiento de accesos directos, Asistente de compatibilidad, uso de datos, dispositivos conectados, salud de Windows, escáneres y los actualizadores de Edge y Google.'
-       Svc  = @( (SvcV 'TrkWks' 'Manual' 'Auto'), (SvcV 'PcaSvc' 'Manual' 'Delayed'), (SvcV 'DusmSvc' 'Manual' 'Auto'), (SvcV 'CDPSvc' 'Manual' 'Delayed'),
-                 (SvcV 'whesvc' 'Manual' 'Delayed'), (SvcV 'StiSvc' 'Manual' 'Auto'), (SvcV 'edgeupdate' 'Manual' 'Delayed'), (SvcV 'edgeupdatem' 'Manual' 'Delayed'),
-                 (SvcV 'gupdate' 'Manual' 'Delayed'), (SvcV 'gupdatem' 'Manual' 'Manual') ) }
-    @{ Id = 'svc-diag'; Cat = 'Servicios'; Risk = 'Avanzado'; Presets = @('A')
-       Name = 'Diagnóstico y solucionadores de Windows'
-       Desc = 'Desactiva el servicio de directivas de diagnóstico y sus anfitriones. Dejan de funcionar los solucionadores de problemas y el uso de red por app del Administrador de tareas.'
-       Svc  = @( (SvcV 'DPS' 'Disabled' 'Auto'), (SvcV 'WdiServiceHost' 'Disabled' 'Manual'), (SvcV 'WdiSystemHost' 'Disabled' 'Manual'),
-                 (SvcV 'TroubleshootingSvc' 'Disabled' 'Manual') ) }
-    @{ Id = 'svc-netdisc'; Cat = 'Servicios'; Risk = 'Moderado'; Presets = @('A')
-       Name = 'Descubrimiento de dispositivos en la red'
-       Desc = 'SSDP y el host UPnP buscan televisores, impresoras y NAS en tu red sin parar. Si no compartes nada en la red de casa, sobran. El UPnP de los juegos (abrir puertos del router) no depende de ellos.'
-       Svc  = @( (SvcV 'SSDPSRV' 'Disabled' 'Manual'), (SvcV 'upnphost' 'Disabled' 'Manual'), (SvcV 'FDResPub' 'Disabled' 'Manual') ) }
-    @{ Id = 'svc-iphelper'; Cat = 'Servicios'; Risk = 'Avanzado'; Presets = @()
-       Name = 'Asistente de IP (túneles IPv6)'
-       Desc = 'Quita Teredo y los túneles IPv6. Algunas VPN y el chat de grupo de Xbox lo usan; si no, es un proceso menos.'
-       Svc  = @( (SvcV 'iphlpsvc' 'Disabled' 'Auto') ) }
-
-    # ---------------- Rendimiento (más)
-    @{ Id = 'perf-hibernate'; Cat = 'Rendimiento'; Risk = 'Moderado'; Presets = @()
-       Name = 'Desactivar la hibernación'
-       Desc = 'Borra hiberfil.sys (entre el 40 % y el 100 % de tu RAM, varios GB de disco). Mientras esté apagada tampoco hay inicio rápido; al volver a activarla, el inicio rápido queda como diga "Desactivar Inicio rápido". En un portátil, con la batería agotada se apagará en vez de hibernar.'
-       Custom = @{
-           Test   = { param($bk) try { (Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\Power' -Name HibernateEnabled -ErrorAction Stop).HibernateEnabled -eq 0 } catch { $false } }
-           Apply  = { param($bk) powercfg /hibernate off | Out-Null }
-           Revert = { param($bk) powercfg /hibernate on | Out-Null }
-       } }
-
-    # ---------------- Interfaz (más)
-    @{ Id = 'ui-spotlight'; Cat = 'Interfaz'; Risk = 'Seguro'; Presets = 'R', 'A'
-       Name = 'Sin Windows Spotlight'
-       Desc = 'Quita las fotos e "información" que Windows descarga para la pantalla de bloqueo y el escritorio. Pones tu fondo y ya.'
-       Reg  = @( (RegV 'HKCU:\Software\Policies\Microsoft\Windows\CloudContent' 'DisableWindowsSpotlightFeatures' 1),
-                 (RegV 'HKCU:\Software\Policies\Microsoft\Windows\CloudContent' 'DisableSpotlightCollectionOnDesktop' 1) ) }
-    @{ Id = 'ui-taskbar'; Cat = 'Interfaz'; Risk = 'Seguro'; Presets = @('A')
-       Name = 'Barra de tareas limpia'
-       Desc = 'Quita el botón de Vista de tareas y deja la búsqueda solo como icono. Win+Tab y Win+S siguen funcionando.'
-       Reg  = @( (RegV 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced' 'ShowTaskViewButton' 0),
-                 (RegV 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Search' 'SearchboxTaskbarMode' 1) ) }
-
-    # ---------------- Apps (más)
-    @{ Id = 'app-phonelink'; Cat = 'Apps'; Risk = 'Moderado'; Presets = @('A'); Irreversible = $true
-       Name = 'Quitar Enlace móvil'
-       Desc = 'La app que conecta el móvil con el PC y se queda en segundo plano (PhoneExperienceHost, unos 150 MB aquí). Se puede reinstalar desde la Store.'
-       Custom = @{
-           Test   = { param($bk) -not (Get-DebloatPresent $PhoneApps) }
-           Apply  = { param($bk) Stop-Process -Name PhoneExperienceHost -Force -ErrorAction SilentlyContinue; Remove-AppList $PhoneApps }
-           Revert = { param($bk) Write-Log 'Enlace móvil no se reinstala solo: búscalo en Microsoft Store.' 'WARN' }
-       } }
-    @{ Id = 'app-capabilities'; Cat = 'Apps'; Risk = 'Moderado'; Presets = @('A'); Irreversible = $true; Reboot = $true
-       Name = 'Quitar componentes antiguos de Windows'
-       Desc = 'Grabación de acciones de usuario, WordPad, Windows Media Player clásico y el panel de expresiones matemáticas. Se pueden volver a añadir en Configuración > Sistema > Características opcionales.'
-       Custom = @{
-           # los archivos pueden seguir ahí hasta reiniciar: la marca evita que se vuelva a lanzar DISM para nada
-           Test   = { param($bk) (Test-Path (Join-Path $script:Secure 'capabilities.done')) -or -not ($OldCapabilities | Where-Object { Test-Path $_.File }) }
-           Apply  = { param($bk)
-               $caps = @(Get-WindowsCapability -Online -ErrorAction Stop | Where-Object State -eq 'Installed')
-               foreach ($oc in $OldCapabilities) {
-                   foreach ($c in $caps | Where-Object Name -like $oc.Cap) {
-                       try { Remove-WindowsCapability -Online -Name $c.Name -ErrorAction Stop | Out-Null; Write-Log "  quitado: $($c.Name)" }
-                       catch { Write-Log "  no se pudo quitar $($c.Name): $($_.Exception.Message)" 'WARN' }
-                   }
-               }
-               Set-Content -LiteralPath (Join-Path $script:Secure 'capabilities.done') -Value (Get-Date).ToString('s') }
-           Revert = { param($bk) Write-Log 'Los componentes se vuelven a añadir en Configuración > Sistema > Características opcionales.' 'WARN' }
-       } }
-    @{ Id = 'app-xbox'; Cat = 'Apps'; Risk = 'Avanzado'; Presets = @(); Irreversible = $true
-       Name = 'Quitar las apps de Xbox'
-       Desc = 'App Xbox, Game Bar y sus complementos. NO lo hagas si usas Game Pass, juegos de la Store, Win+G o el chat de Xbox. Steam, Epic y los juegos normales no se ven afectados.'
-       Custom = @{
-           Test   = { param($bk) -not (Get-DebloatPresent $XboxApps) }
-           Apply  = { param($bk) Remove-AppList $XboxApps }
-           Revert = { param($bk) Write-Log 'Las apps de Xbox se reinstalan desde Microsoft Store (Xbox y Xbox Game Bar).' 'WARN' }
-       } }
-    @{ Id = 'app-edge'; Cat = 'Apps'; Risk = 'Avanzado'; Presets = @(); Irreversible = $true
-       Name = 'Desinstalar Microsoft Edge'
-       Desc = 'Quita el navegador Edge y evita que Windows Update lo reinstale. WebView2, que usan muchos launchers, se queda. Instala otro navegador antes. Windows solo lo permite del todo en Europa; si no, puede negarse.'
-       Custom = @{
-           Test   = { param($bk) -not ((Test-Path "${env:ProgramFiles(x86)}\Microsoft\Edge\Application\msedge.exe") -or (Test-Path "$env:ProgramFiles\Microsoft\Edge\Application\msedge.exe")) }
-           Apply  = { param($bk)
-               $setup = Get-EdgeSetup
-               if (-not $setup) { throw 'No encuentro el desinstalador de Edge (setup.exe).' }
-               Set-RegValue 'HKLM:\SOFTWARE\Microsoft\EdgeUpdate' 'DoNotUpdateToEdgeWithChromium' 1 'DWord'
-               Stop-Process -Name msedge -Force -ErrorAction SilentlyContinue
-               $p = Start-Process $setup.FullName -ArgumentList '--uninstall --system-level --verbose-logging --force-uninstall' -Wait -PassThru
-               if (Test-Path "${env:ProgramFiles(x86)}\Microsoft\Edge\Application\msedge.exe") { throw "Windows no ha dejado desinstalar Edge (código $($p.ExitCode)). Desde Configuración > Aplicaciones puedes intentarlo si estás en la UE." } }
-           Revert = { param($bk) Remove-RegValue 'HKLM:\SOFTWARE\Microsoft\EdgeUpdate' 'DoNotUpdateToEdgeWithChromium'; Write-Log 'Edge se reinstala desde microsoft.com/edge o con "winget install Microsoft.Edge".' 'WARN' }
-       } }
-)
+# Cada ajuste es tools\tweaks\<categoría>\<id>.tweak.json; si necesita código propio, <id>.tweak.ps1 al lado (lo indica "script").
+# Se convierten a la misma forma que usa el motor (Reg / Svc / Task / Custom), así que aplicar, comprobar y revertir no cambian.
+$TweakRisk = @{ safe = 'Seguro'; moderate = 'Moderado'; advanced = 'Avanzado' }
+$TweakPresets = @{ recommended = 'R'; advanced = 'A'; competitive = 'C' }
+function Import-Tweaks([string]$Dir) {
+    $seen = @{}
+    $list = foreach ($f in Get-ChildItem -LiteralPath $Dir -Filter '*.tweak.json' -Recurse -ErrorAction SilentlyContinue) {
+        try {
+            $j = [IO.File]::ReadAllText($f.FullName, [Text.Encoding]::UTF8) | ConvertFrom-Json
+            $miss = @('id', 'kind', 'category', 'order', 'name', 'summary', 'risk', 'presets', 'reversible', 'undo', 'actions' | Where-Object { $null -eq $j.$_ })
+            if ($miss.Count) { throw "faltan $($miss -join ', ')" }
+            if (-not $TweakRisk.ContainsKey([string]$j.risk)) { throw "riesgo desconocido: $($j.risk)" }
+            if ($seen.ContainsKey($j.id)) { throw "id repetido: $($j.id)" }
+            $seen[$j.id] = $true
+            $tw = @{ Id = $j.id; Cat = $j.category; Risk = $TweakRisk[[string]$j.risk]; Name = (Get-ToolText $j.name); Desc = (Get-ToolText $j.summary)
+                     Presets = @($j.presets | ForEach-Object { $TweakPresets[[string]$_] }) }
+            if ($j.reboot) { $tw.Reboot = $true }
+            if (-not $j.reversible) { $tw.Irreversible = $true }
+            $reg = @($j.actions | Where-Object { $_.registry } | ForEach-Object { RegV $_.registry $_.name $_.value $_.type $_.default })
+            $svc = @($j.actions | Where-Object { $_.service } | ForEach-Object { SvcV $_.service $_.startup $_.default })
+            $task = @($j.actions | Where-Object { $_.task } | ForEach-Object { [string]$_.task })
+            if ($reg.Count) { $tw.Reg = $reg }
+            if ($svc.Count) { $tw.Svc = $svc }
+            if ($task.Count) { $tw.Task = $task }
+            if ($j.script) { $tw.Custom = . (Join-Path $f.DirectoryName $j.script) }
+            [pscustomobject]@{ Order = [int]$j.order; Tweak = $tw }
+        } catch { Write-Log "Ajuste no cargado ($($f.Name)): $($_.Exception.Message)" 'WARN' }   # uno roto no tumba los demás
+    }
+    @($list | Sort-Object Order | ForEach-Object { $_.Tweak })
+}
+$Tweaks = Import-Tweaks (Join-Path $PSScriptRoot 'tools\tweaks')
 
 # icono de cada ajuste (nombres de assets\icons.json)
 $TweakIcons = @{
@@ -1664,12 +1278,6 @@ $BrandColors = @{
 
 # ---------- herramientas: cada carpeta de tools\ trae su tool.json y su tool.ps1; el núcleo no conoce ninguna por su nombre
 $script:AppDir = $PSScriptRoot
-function Get-ToolText($Value) {
-    # textos del manifiesto: { "es": "...", "en": "..." } (o un texto suelto); si falta el idioma, el español
-    if ($null -eq $Value -or $Value -is [string]) { return [string]$Value }
-    $x = $Value.$($script:LangCode); if (-not $x) { $x = $Value.es }
-    [string]$x
-}
 function Get-Tools([string]$Dir) {
     $seen = @{}
     foreach ($f in Get-ChildItem -LiteralPath $Dir -Filter 'tool.json' -Recurse -ErrorAction SilentlyContinue | Sort-Object FullName) {

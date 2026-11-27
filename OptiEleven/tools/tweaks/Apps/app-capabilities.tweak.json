@@ -1,0 +1,32 @@
+{
+    "id":  "app-capabilities",
+    "kind":  "tweak",
+    "category":  "Apps",
+    "order":  580,
+    "name":  {
+                 "es":  "Quitar componentes antiguos de Windows",
+                 "en":  "Remove old Windows components"
+             },
+    "summary":  {
+                    "es":  "Grabación de acciones de usuario, WordPad, Windows Media Player clásico y el panel de expresiones matemáticas. Se pueden volver a añadir en Configuración \u003e Sistema \u003e Características opcionales.",
+                    "en":  "Steps Recorder, WordPad, classic Windows Media Player and the Math Input Panel. They can be added back in Settings \u003e System \u003e Optional features."
+                },
+    "risk":  "moderate",
+    "presets":  [
+                    "advanced"
+                ],
+    "requiresAdmin":  true,
+    "reboot":  true,
+    "reversible":  false,
+    "undo":  {
+                 "type":  "none",
+                 "note":  {
+                              "es":  "No se puede deshacer desde el panel.",
+                              "en":  "Can\u0027t be undone from the panel."
+                          }
+             },
+    "actions":  [
+
+                ],
+    "script":  "app-capabilities.tweak.ps1"
+}

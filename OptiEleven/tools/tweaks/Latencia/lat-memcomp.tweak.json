@@ -1,0 +1,28 @@
+{
+    "id":  "lat-memcomp",
+    "kind":  "tweak",
+    "category":  "Latencia",
+    "order":  430,
+    "name":  {
+                 "es":  "Sin compresión de memoria",
+                 "en":  "No memory compression"
+             },
+    "summary":  {
+                    "es":  "Con 16 GB o más, comprimir la RAM gasta CPU sin necesidad. Con poca memoria es mejor dejarla activada.",
+                    "en":  "With 16 GB or more, compressing RAM wastes CPU. With little memory it\u0027s better to leave it on."
+                },
+    "risk":  "moderate",
+    "presets":  [
+                    "advanced"
+                ],
+    "requiresAdmin":  true,
+    "reboot":  true,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "script"
+             },
+    "actions":  [
+
+                ],
+    "script":  "lat-memcomp.tweak.ps1"
+}

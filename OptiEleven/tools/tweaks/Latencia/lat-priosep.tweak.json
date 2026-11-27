@@ -1,0 +1,33 @@
+{
+    "id":  "lat-priosep",
+    "kind":  "tweak",
+    "category":  "Latencia",
+    "order":  370,
+    "name":  {
+                 "es":  "Prioridad fuerte para la ventana activa",
+                 "en":  "Strong priority for the active window"
+             },
+    "summary":  {
+                    "es":  "Win32PrioritySeparation a 0x26: turnos de CPU cortos y con ventaja para el programa en primer plano, que es el juego.",
+                    "en":  "Win32PrioritySeparation at 0x26: short CPU slices with a boost for the foreground program, which is the game."
+                },
+    "risk":  "moderate",
+    "presets":  [
+                    "advanced"
+                ],
+    "requiresAdmin":  true,
+    "reboot":  false,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "snapshot"
+             },
+    "actions":  [
+                    {
+                        "registry":  "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl",
+                        "name":  "Win32PrioritySeparation",
+                        "type":  "DWord",
+                        "value":  38,
+                        "default":  2
+                    }
+                ]
+}

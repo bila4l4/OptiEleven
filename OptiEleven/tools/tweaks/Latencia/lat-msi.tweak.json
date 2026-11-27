@@ -1,0 +1,28 @@
+{
+    "id":  "lat-msi",
+    "kind":  "tweak",
+    "category":  "Latencia",
+    "order":  420,
+    "name":  {
+                 "es":  "Modo MSI para la tarjeta gráfica",
+                 "en":  "MSI mode for the graphics card"
+             },
+    "summary":  {
+                    "es":  "La GPU avisa a la CPU con interrupciones por mensaje en vez de por línea. Los drivers recientes de AMD y NVIDIA ya suelen venir así.",
+                    "en":  "The GPU signals the CPU with message-signaled interrupts instead of line-based ones. Recent AMD and NVIDIA drivers usually already do this."
+                },
+    "risk":  "advanced",
+    "presets":  [
+
+                ],
+    "requiresAdmin":  true,
+    "reboot":  true,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "script"
+             },
+    "actions":  [
+
+                ],
+    "script":  "lat-msi.tweak.ps1"
+}

@@ -1,0 +1,62 @@
+{
+    "id":  "priv-activity",
+    "kind":  "tweak",
+    "category":  "Privacidad",
+    "order":  40,
+    "name":  {
+                 "es":  "Historial de actividad",
+                 "en":  "Activity history"
+             },
+    "summary":  {
+                    "es":  "Windows deja de registrar y subir lo que abres, y el portapapeles no se sincroniza con la nube.",
+                    "en":  "Windows stops recording and uploading what you open, and the clipboard no longer syncs to the cloud."
+                },
+    "risk":  "safe",
+    "presets":  [
+                    "recommended",
+                    "advanced"
+                ],
+    "requiresAdmin":  true,
+    "reboot":  false,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "snapshot"
+             },
+    "actions":  [
+                    {
+                        "registry":  "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\System",
+                        "name":  "PublishUserActivities",
+                        "type":  "DWord",
+                        "value":  0,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\System",
+                        "name":  "UploadUserActivities",
+                        "type":  "DWord",
+                        "value":  0,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\System",
+                        "name":  "EnableActivityFeed",
+                        "type":  "DWord",
+                        "value":  0,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\System",
+                        "name":  "AllowCrossDeviceClipboard",
+                        "type":  "DWord",
+                        "value":  0,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+                        "name":  "Start_TrackProgs",
+                        "type":  "DWord",
+                        "value":  0,
+                        "default":  null
+                    }
+                ]
+}

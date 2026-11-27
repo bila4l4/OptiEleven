@@ -1,0 +1,32 @@
+{
+    "id":  "app-edge",
+    "kind":  "tweak",
+    "category":  "Apps",
+    "order":  600,
+    "name":  {
+                 "es":  "Desinstalar Microsoft Edge",
+                 "en":  "Uninstall Microsoft Edge"
+             },
+    "summary":  {
+                    "es":  "Quita el navegador Edge y evita que Windows Update lo reinstale. WebView2, que usan muchos launchers, se queda. Instala otro navegador antes. Windows solo lo permite del todo en Europa; si no, puede negarse.",
+                    "en":  "Removes the Edge browser and stops Windows Update from reinstalling it. WebView2, used by many launchers, stays. Install another browser first. Windows only fully allows this in Europe; elsewhere it may refuse."
+                },
+    "risk":  "advanced",
+    "presets":  [
+
+                ],
+    "requiresAdmin":  true,
+    "reboot":  false,
+    "reversible":  false,
+    "undo":  {
+                 "type":  "none",
+                 "note":  {
+                              "es":  "No se puede deshacer desde el panel.",
+                              "en":  "Can\u0027t be undone from the panel."
+                          }
+             },
+    "actions":  [
+
+                ],
+    "script":  "app-edge.tweak.ps1"
+}

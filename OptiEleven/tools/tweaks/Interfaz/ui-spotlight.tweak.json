@@ -1,0 +1,41 @@
+{
+    "id":  "ui-spotlight",
+    "kind":  "tweak",
+    "category":  "Interfaz",
+    "order":  550,
+    "name":  {
+                 "es":  "Sin Windows Spotlight",
+                 "en":  "No Windows Spotlight"
+             },
+    "summary":  {
+                    "es":  "Quita las fotos e \"información\" que Windows descarga para la pantalla de bloqueo y el escritorio. Pones tu fondo y ya.",
+                    "en":  "Removes the photos and \"facts\" Windows downloads for the lock screen and desktop. You set your own wallpaper and that\u0027s it."
+                },
+    "risk":  "safe",
+    "presets":  [
+                    "recommended",
+                    "advanced"
+                ],
+    "requiresAdmin":  true,
+    "reboot":  false,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "snapshot"
+             },
+    "actions":  [
+                    {
+                        "registry":  "HKCU:\\Software\\Policies\\Microsoft\\Windows\\CloudContent",
+                        "name":  "DisableWindowsSpotlightFeatures",
+                        "type":  "DWord",
+                        "value":  1,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKCU:\\Software\\Policies\\Microsoft\\Windows\\CloudContent",
+                        "name":  "DisableSpotlightCollectionOnDesktop",
+                        "type":  "DWord",
+                        "value":  1,
+                        "default":  null
+                    }
+                ]
+}

@@ -1,0 +1,41 @@
+{
+    "id":  "priv-devtools",
+    "kind":  "tweak",
+    "category":  "Privacidad",
+    "order":  480,
+    "name":  {
+                 "es":  "PowerShell y .NET sin telemetría",
+                 "en":  "PowerShell and .NET without telemetry"
+             },
+    "summary":  {
+                    "es":  "Variables de entorno oficiales para que PowerShell 7 y las herramientas de .NET no envíen datos de uso.",
+                    "en":  "Official environment variables so PowerShell 7 and the .NET tools don\u0027t send usage data."
+                },
+    "risk":  "safe",
+    "presets":  [
+                    "recommended",
+                    "advanced"
+                ],
+    "requiresAdmin":  true,
+    "reboot":  false,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "snapshot"
+             },
+    "actions":  [
+                    {
+                        "registry":  "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment",
+                        "name":  "POWERSHELL_TELEMETRY_OPTOUT",
+                        "type":  "String",
+                        "value":  "1",
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment",
+                        "name":  "DOTNET_CLI_TELEMETRY_OPTOUT",
+                        "type":  "String",
+                        "value":  "1",
+                        "default":  null
+                    }
+                ]
+}
