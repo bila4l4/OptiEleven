@@ -93,6 +93,17 @@ function New-HomePage {
     $script:RingLegend = [Windows.Controls.WrapPanel]::new(); $script:RingLegend.HorizontalAlignment = 'Center'; $script:RingLegend.Margin = '0,6,0,0'
     [void]$root.Children.Add($script:RingLegend)
 
+    # ---------- liberar memoria: el botón de un clic de Inicio. Solo cosas sin efectos duraderos: no toca ningún ajuste
+    $free = New-Btn '' -Primary; $free.HorizontalAlignment = 'Center'; $free.MinHeight = 44; $free.Padding = '22,0'; $free.FontSize = 15; $free.Margin = '0,18,0,0'
+    $fsp = [Windows.Controls.StackPanel]::new(); $fsp.Orientation = 'Horizontal'
+    $fi = New-BtnIcon 'lightning' 18; $fi.Margin = '0,0,10,0'; [void]$fsp.Children.Add($fi)
+    $ft = [Windows.Controls.TextBlock]::new(); $ft.Text = T 'Liberar memoria'; $ft.VerticalAlignment = 'Center'; [void]$fsp.Children.Add($ft)
+    $free.Content = $fsp; $free.ToolTip = T 'Libera RAM, borra archivos temporales y vacía la caché DNS. No cambia ningún ajuste.'
+    $free.Add_Click({ Invoke-HomeFreeUp })
+    [void]$root.Children.Add($free)
+    $script:FreeResult = New-Text 'RAM, temporales y caché DNS. No cambia ningún ajuste.' 12.5 'Ink2'; $script:FreeResult.HorizontalAlignment = 'Center'; $script:FreeResult.Margin = '0,6,0,0'
+    [void]$root.Children.Add($script:FreeResult)
+
     # ---------- categorías, como accesos rápidos
     $cats = [Windows.Controls.WrapPanel]::new(); $cats.HorizontalAlignment = 'Center'; $cats.Margin = '0,20,0,4'
     foreach ($k in @($Pages.Keys | Where-Object { $_ -like 'c-*' })) {
@@ -185,6 +196,38 @@ function Update-HomeStats {
         [void]$script:RingLegend.Children.Add($it)
     }
     Start-RingAnimation
+}
+
+# Liberar memoria: recorta la RAM de los procesos abiertos, vacía la memoria en espera (con admin), vacía la caché DNS
+# y borra temporales y volcados de errores. Ni papelera (sería para siempre) ni caché de sombreadores (da tirones al jugar).
+function Invoke-HomeFreeUp {
+    if ($script:Busy) { return }
+    $ramBefore = Get-FreeRam
+    $script:FreeWork = Show-Working (T 'Liberando memoria') (T 'Liberando memoria RAM...'); Set-WorkingProgress $script:FreeWork 0.1
+    Set-Busy $true
+    $async = $false
+    try {
+        [void](Invoke-TrimWorkingSets)
+        Start-Sleep -Milliseconds 400
+        if ($script:IsAdmin) { Invoke-StandbyPurge }
+        $script:FreeRam = [math]::Max([double]0, [double]((Get-FreeRam) - $ramBefore))
+        try { ipconfig /flushdns | Out-Null } catch {}
+        $script:FreeWork.Detail.Text = T 'Borrando archivos temporales...'; Set-WorkingProgress $script:FreeWork 0.4; Update-Ui
+        $items = @($CleanItems | Where-Object { $_.Id -in 'temp-user', 'temp-win', 'dumps' -and ($script:IsAdmin -or -not $_.Admin) })
+        Start-CleanJob $items -OnTick {
+            param($P)
+            if ($P.Current) { Set-WorkingProgress $script:FreeWork (0.4 + 0.6 * ([math]::Max(0, $P.Index - 1) + 0.5) / [math]::Max(1, $P.Count)) }
+        } -Done {
+            param($P)
+            Close-Working $script:FreeWork; Set-Busy $false
+            $msg = "Liberados $(Format-Size $script:FreeRam) de RAM y $(Format-Size $P.Bytes) de disco."
+            Write-Log $msg 'OK'; Add-History 'home' 'free-up' $msg
+            $script:FreeResult.Text = T $msg; $script:FreeResult.SetResourceReference([Windows.Controls.TextBlock]::ForegroundProperty, 'Accent')
+            Update-HomeStats
+        }
+        $async = $true
+    }
+    finally { if (-not $async) { Close-Working $script:FreeWork; Set-Busy $false } }
 }
 
 function New-Suggestion([string]$Icon, [string]$Title, [string]$Sub, [string]$Button, [scriptblock]$Action, [switch]$Primary) {
