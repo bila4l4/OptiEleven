@@ -16,7 +16,7 @@
                     "en":  "Processor, graphics, memory and drives."
                 },
     "icon":  "laptop",
-    "color":  "Cat-Apps",
+    "color": "Cat-Sistema",
     "view":  "New-HardwarePage",
     "risk":  "safe",
     "requiresAdmin":  false,

@@ -16,7 +16,7 @@
                     "en":  "Temp files, caches and update leftovers."
                 },
     "icon":  "broom",
-    "color":  "Cat-Interfaz",
+    "color": "Cat-Juegos",
     "view":  "New-CleanerPage",
     "onShow":  "Invoke-CleanerOnShow",
     "risk":  "moderate",

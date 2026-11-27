@@ -16,7 +16,7 @@
                     "en":  "SFC, DISM, network, Windows Update and Store."
                 },
     "icon":  "wrench",
-    "color":  "Cat-Latencia",
+    "color": "Cat-Interfaz",
     "view":  "New-RepairPage",
     "risk":  "moderate",
     "requiresAdmin":  true,

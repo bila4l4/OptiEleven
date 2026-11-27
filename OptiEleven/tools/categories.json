@@ -1,6 +1,6 @@
 [
     { "id": "start", "order": 0 },
-    { "id": "optimize", "order": 10, "icon": "gauge",
+    { "id": "optimize", "order": 10, "icon": "gauge", "color": "Cat-Rendimiento",
       "name": { "es": "Optimizar", "en": "Optimize" },
       "summary": { "es": "Rendimiento, latencia y juegos.", "en": "Performance, latency and games." },
       "tweaks": [
@@ -8,28 +8,28 @@
         { "id": "Latencia", "order": 20, "icon": "timer", "name": { "es": "Latencia", "en": "Latency" }, "summary": { "es": "USB, PCIe, núcleos e interrupciones. Pruébalos de uno en uno.", "en": "USB, PCIe, cores and interrupts. Try them one at a time." } },
         { "id": "Juegos", "order": 30, "icon": "game-controller", "name": { "es": "Ajustes de juego", "en": "Game settings" }, "summary": { "es": "GPU, ratón, teclado y grabación.", "en": "GPU, mouse, keyboard and recording." } }
       ] },
-    { "id": "privacy", "order": 20, "icon": "shield-check",
+    { "id": "privacy", "order": 20, "icon": "shield-check", "color": "Cat-Privacidad",
       "name": { "es": "Privacidad", "en": "Privacy" },
       "summary": { "es": "Lo que Windows envía y lo que te enseña.", "en": "What Windows sends and what it shows you." },
       "tweaks": [
         { "id": "Privacidad", "order": 10, "icon": "shield-check", "name": { "es": "Privacidad", "en": "Privacy" }, "summary": { "es": "Lo que Windows envía y lo que te enseña.", "en": "What Windows sends and what it shows you." } }
       ] },
-    { "id": "clean", "order": 30, "icon": "broom",
+    { "id": "clean", "order": 30, "icon": "broom", "color": "Cat-Juegos",
       "name": { "es": "Limpiar", "en": "Clean up" },
       "summary": { "es": "Espacio en disco y apps que sobran.", "en": "Disk space and apps you don't need." },
       "tweaks": [
         { "id": "Apps", "order": 30, "icon": "trash", "name": { "es": "Apps preinstaladas", "en": "Preinstalled apps" }, "summary": { "es": "Apps de serie, patrocinadas y componentes antiguos.", "en": "Built-in and sponsored apps, and old components." } }
       ] },
-    { "id": "install", "order": 40, "icon": "download-simple",
+    { "id": "install", "order": 40, "icon": "download-simple", "color": "Cat-Actualizaciones",
       "name": { "es": "Instalar", "en": "Install" },
       "summary": { "es": "Apps con winget.", "en": "Apps with winget." } },
-    { "id": "network", "order": 50, "icon": "wifi-high",
+    { "id": "network", "order": 50, "icon": "wifi-high", "color": "Cat-Latencia",
       "name": { "es": "Red", "en": "Network" },
       "summary": { "es": "DNS, latencia y velocidad.", "en": "DNS, latency and speed." } },
-    { "id": "repair", "order": 60, "icon": "wrench",
+    { "id": "repair", "order": 60, "icon": "wrench", "color": "Cat-Interfaz",
       "name": { "es": "Reparar", "en": "Repair" },
       "summary": { "es": "Las reparaciones de Windows de siempre.", "en": "The usual Windows repairs." } },
-    { "id": "system", "order": 70, "icon": "laptop",
+    { "id": "system", "order": 70, "icon": "laptop", "color": "Cat-Sistema",
       "name": { "es": "Sistema", "en": "System" },
       "summary": { "es": "Tu equipo, actualizaciones, interfaz y servicios.", "en": "Your PC, updates, interface and services." },
       "tweaks": [

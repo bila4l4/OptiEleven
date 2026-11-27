@@ -16,7 +16,7 @@
                     "en":  "What changed and when."
                 },
     "icon":  "clock-counter-clockwise",
-    "color":  "Cat-Actualizaciones",
+    "color": "Cat-Apps",
     "view":  "New-HistoryPage",
     "onShow":  "Update-HistoryView",
     "risk":  "safe",

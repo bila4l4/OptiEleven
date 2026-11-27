@@ -845,7 +845,7 @@ $Themes = @{
                Green = '#0f7b0f'; GreenSoft = '#dff6dd'; Amber = '#9d5d00'; AmberSoft = '#fff4ce'; Red = '#c42b1c'; RedSoft = '#fde7e9'
                Grid = '#ededed'; Track = '#d1d1d1'; KeyLight = '#00ffffff'; Wash = '#e1f1ef'
                'Cat-Privacidad' = '#2e6bb5'; 'Cat-Servicios' = '#0d7a72'; 'Cat-Rendimiento' = '#b3541e'; 'Cat-Latencia' = '#b07d00'
-               'Cat-Juegos' = '#2f8a3e'; 'Cat-Actualizaciones' = '#4f6bb0'; 'Cat-Interfaz' = '#a8466f'; 'Cat-Apps' = '#7a5a2e'; 'Cat-Tools' = '#5c5c5c'
+               'Cat-Juegos' = '#2f8a3e'; 'Cat-Actualizaciones' = '#4f6bb0'; 'Cat-Interfaz' = '#a8466f'; 'Cat-Apps' = '#7a5a2e'; 'Cat-Sistema' = '#7048c2'; 'Cat-Tools' = '#5c5c5c'
                Mica = @{ Paper = '#00000000'; Side = '#00000000'; Layer = '#80ffffff'; LayerEdge = '#0f000000'; Card = '#b3ffffff'; CardEdge = '#0f000000'; CardHover = '#80f9f9f9'; Glass = '#b3ffffff'; GlassEdge = '#0f000000'; GlassHi = '#80f9f9f9' } }
     Dark  = @{ Dark = $true; Paper = '#202020'; Side = '#202020'; Layer = '#272727'; LayerEdge = '#1c1c1c'; Paper2 = '#2b2b2b'; Paper3 = '#383838'
                Card = '#2d2d2d'; CardEdge = '#383838'; CardHover = '#323232'; Control = '#2d2d2d'; ControlEdge = '#404040'; ControlHover = '#353535'
@@ -856,7 +856,7 @@ $Themes = @{
                Green = '#6ccb5f'; GreenSoft = '#1e3a1c'; Amber = '#f2c94c'; AmberSoft = '#3a3115'; Red = '#ff99a4'; RedSoft = '#442726'
                Grid = '#2a2a2a'; Track = '#4a4a4a'; KeyLight = '#00ffffff'; Wash = '#173a37'
                'Cat-Privacidad' = '#6ca6e8'; 'Cat-Servicios' = '#4cc3b6'; 'Cat-Rendimiento' = '#e8925a'; 'Cat-Latencia' = '#e5c04a'
-               'Cat-Juegos' = '#6ccb7a'; 'Cat-Actualizaciones' = '#8fa7e8'; 'Cat-Interfaz' = '#e58ab8'; 'Cat-Apps' = '#c9a46a'; 'Cat-Tools' = '#a0a0a0'
+               'Cat-Juegos' = '#6ccb7a'; 'Cat-Actualizaciones' = '#8fa7e8'; 'Cat-Interfaz' = '#e58ab8'; 'Cat-Apps' = '#c9a46a'; 'Cat-Sistema' = '#b39af0'; 'Cat-Tools' = '#a0a0a0'
                Mica = @{ Paper = '#00000000'; Side = '#00000000'; Layer = '#4c3a3a3a'; LayerEdge = '#19000000'; Card = '#0dffffff'; CardEdge = '#19000000'; CardHover = '#15ffffff'; Glass = '#0dffffff'; GlassEdge = '#19000000'; GlassHi = '#15ffffff' } }
 }# each brand's real color (Simple Icons); in the dark theme, black brands switch to the light ink
 $BrandColors = @{
@@ -1047,7 +1047,7 @@ $BrandColors = @{
       </Setter>
     </Style>
 
-    <!-- tweak or action card (Windows SettingsCard): radius 4, thin border, lightens on hover -->
+    <!-- tweak or action card (Windows SettingsCard): radius 4, thin border, lightens and lifts a little on hover -->
     <Style x:Key="RuleRow" TargetType="Border">
       <Setter Property="Background" Value="{DynamicResource Card}"/>
       <Setter Property="BorderBrush" Value="{DynamicResource CardEdge}"/>
@@ -1055,8 +1055,13 @@ $BrandColors = @{
       <Setter Property="CornerRadius" Value="4"/>
       <Setter Property="Margin" Value="0,0,0,4"/>
       <Setter Property="Padding" Value="16,12,16,12"/>
+      <Setter Property="RenderTransform"><Setter.Value><TranslateTransform/></Setter.Value></Setter>
       <Style.Triggers>
-        <Trigger Property="IsMouseOver" Value="True"><Setter Property="Background" Value="{DynamicResource CardHover}"/></Trigger>
+        <Trigger Property="IsMouseOver" Value="True">
+          <Setter Property="Background" Value="{DynamicResource CardHover}"/>
+          <Trigger.EnterActions><BeginStoryboard><Storyboard><DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)" To="-1" Duration="0:0:0.12"/></Storyboard></BeginStoryboard></Trigger.EnterActions>
+          <Trigger.ExitActions><BeginStoryboard><Storyboard><DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)" To="0" Duration="0:0:0.16"/></Storyboard></BeginStoryboard></Trigger.ExitActions>
+        </Trigger>
       </Style.Triggers>
     </Style>
     <Style x:Key="Tile" TargetType="Border">
@@ -1067,8 +1072,13 @@ $BrandColors = @{
       <Setter Property="Padding" Value="16,14"/>
     </Style>
     <Style x:Key="Row" TargetType="Border" BasedOn="{StaticResource Tile}">
+      <Setter Property="RenderTransform"><Setter.Value><TranslateTransform/></Setter.Value></Setter>
       <Style.Triggers>
-        <Trigger Property="IsMouseOver" Value="True"><Setter Property="Background" Value="{DynamicResource CardHover}"/></Trigger>
+        <Trigger Property="IsMouseOver" Value="True">
+          <Setter Property="Background" Value="{DynamicResource CardHover}"/>
+          <Trigger.EnterActions><BeginStoryboard><Storyboard><DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)" To="-2" Duration="0:0:0.12"/></Storyboard></BeginStoryboard></Trigger.EnterActions>
+          <Trigger.ExitActions><BeginStoryboard><Storyboard><DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)" To="0" Duration="0:0:0.16"/></Storyboard></BeginStoryboard></Trigger.ExitActions>
+        </Trigger>
       </Style.Triggers>
     </Style>
 
@@ -1223,7 +1233,7 @@ $BrandColors = @{
         <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
         <StackPanel>
           <TextBlock x:Name="Crumb" FontSize="14" Foreground="{DynamicResource Ink2}" Margin="0,0,0,4" Cursor="Hand" Visibility="Collapsed"/>
-          <TextBlock x:Name="PageTitle" FontFamily="{StaticResource Display}" FontSize="28" FontWeight="SemiBold"/>
+          <StackPanel Orientation="Horizontal"><ContentControl x:Name="PageIcon" Focusable="False" Margin="0,0,14,0" VerticalAlignment="Center"/><TextBlock x:Name="PageTitle" FontFamily="{StaticResource Display}" FontSize="28" FontWeight="SemiBold" VerticalAlignment="Center"/></StackPanel>
           <TextBlock x:Name="PageDesc" Foreground="{DynamicResource Ink2}" FontSize="14" Margin="0,4,0,0" TextWrapping="Wrap" MaxWidth="620" HorizontalAlignment="Left"/>
         </StackPanel>
         <StackPanel x:Name="PresetBar" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Bottom" Margin="20,0,0,0">
@@ -1342,19 +1352,20 @@ foreach ($c in @($ToolCats | Sort-Object { [int]$_.order })) {
     foreach ($m in Get-CatTools $c.id) { $items += [pscustomobject]@{ Order = [int]$m.order; Key = $m.id; Def = (ConvertTo-PageDef $m) } }
     foreach ($g in @($c.tweaks)) {
         if (-not $g) { continue }
-        $items += [pscustomobject]@{ Order = [int]$g.order; Key = $g.id; Def = @{ Tab = $g.id; Label = (Get-ToolText $g.name); Title = (Get-ToolText $g.name); Desc = (Get-ToolText $g.summary); Icon = $g.icon } }
+        $items += [pscustomobject]@{ Order = [int]$g.order; Key = $g.id; Def = @{ Tab = $g.id; Color = "Cat-$($g.id)"; Label = (Get-ToolText $g.name); Title = (Get-ToolText $g.name); Desc = (Get-ToolText $g.summary); Icon = $g.icon } }
     }
     $items = @($items | Sort-Object Order)
     if ($c.id -eq 'start') { foreach ($it in $items) { $it.Def.Nav = $true; $Pages[$it.Key] = $it.Def }; continue }
     if (-not $items.Count) { continue }
-    $hub = "c-$($c.id)"
-    $Pages[$hub] = @{ Label = (Get-ToolText $c.name); Title = (Get-ToolText $c.name); Desc = (Get-ToolText $c.summary); Icon = $c.icon; Nav = $true; Hub = [Collections.ArrayList]@($items | ForEach-Object { $_.Key }) }
+    $hub = "c-$($c.id)"; $col = if ($c.color) { $c.color } else { 'Accent' }
+    foreach ($it in $items) { if (-not $it.Def.Color) { $it.Def.Color = $col } }
+    $Pages[$hub] = @{ Label = (Get-ToolText $c.name); Title = (Get-ToolText $c.name); Desc = (Get-ToolText $c.summary); Icon = $c.icon; Color = $col; Nav = $true; Hub = [Collections.ArrayList]@($items | ForEach-Object { $_.Key }) }
     foreach ($it in $items) { $it.Def.Parent = $hub; $Pages[$it.Key] = $it.Def }
 }
 # core pages: all tweaks together (with filters), backups and profiles, and the activity log (with technical details)
 $Pages['all'] = @{ Tab = 'all'; Label = 'Todos los ajustes'; Title = 'Todos los ajustes'; Desc = 'Los 60 ajustes en una lista, con filtros por grupo.' }
-$Pages['tools'] = @{ Label = 'Copias y perfiles'; Icon = 'archive'; Title = 'Copias y perfiles'; Desc = 'Punto de restauración, perfiles para otros equipos y copias de seguridad.'; Parent = 'c-system' }
-$Pages['log'] = @{ Label = 'Actividad'; Icon = 'scroll'; Title = 'Actividad'; Desc = 'Lo que ha hecho el panel en esta sesión.'; Parent = 'c-system'; ProOnly = $true }
+$Pages['tools'] = @{ Label = 'Copias y perfiles'; Icon = 'archive'; Title = 'Copias y perfiles'; Desc = 'Punto de restauración, perfiles para otros equipos y copias de seguridad.'; Parent = 'c-system'; Color = 'Cat-Sistema' }
+$Pages['log'] = @{ Label = 'Actividad'; Icon = 'scroll'; Title = 'Actividad'; Desc = 'Lo que ha hecho el panel en esta sesión.'; Parent = 'c-system'; Color = 'Cat-Sistema'; ProOnly = $true }
 if ($Pages.Contains('c-system')) { [void]$Pages['c-system'].Hub.Add('tools'); [void]$Pages['c-system'].Hub.Add('log') }
 $ToolDefs = @(
     @{ Icon = 'clock-counter-clockwise'; Name = 'Punto de restauración'; Desc = 'Una copia del sistema a la que volver si algo sale mal.'; Button = 'Crear punto'; Admin = $true
@@ -1413,7 +1424,7 @@ try {
     $window.Height = [math]::Min($window.Height, $wa.Height - 24)
     $window.Width  = [math]::Min($window.Width, $wa.Width - 24)
     $ui = @{}
-    foreach ($n in 'Root', 'TitleRow', 'TitleMark', 'Layer', 'SearchBox', 'SearchHint', 'SearchKey', 'SearchPopup', 'SearchList', 'Crumb', 'InfoHost', 'Nav', 'BrandMark', 'BtnLang', 'LangIcon', 'LangCode', 'ProRow', 'ProIcon', 'ProSwitch', 'LedgerStats','AdminChip', 'AdminIcon', 'AdminTitle', 'BtnTheme', 'ThemeIcon', 'PageTitle', 'PageDesc', 'PresetBar', 'BtnRec', 'BtnComp',
+    foreach ($n in 'Root', 'TitleRow', 'TitleMark', 'Layer', 'SearchBox', 'SearchHint', 'SearchKey', 'SearchPopup', 'SearchList', 'Crumb', 'InfoHost', 'Nav', 'BrandMark', 'BtnLang', 'LangIcon', 'LangCode', 'ProRow', 'ProIcon', 'ProSwitch', 'LedgerStats','AdminChip', 'AdminIcon', 'AdminTitle', 'BtnTheme', 'ThemeIcon', 'PageIcon', 'PageTitle', 'PageDesc', 'PresetBar', 'BtnRec', 'BtnComp',
                    'Tabs', 'TabScroll', 'TweakPage', 'TweakList', 'ToolsPage', 'ToolGrid', 'LogPage', 'Log', 'ModulePage', 'ModuleHost', 'Rail', 'Detail',
                    'Ledger', 'LedgerSub', 'LedgerCount', 'LedgerApply', 'LedgerRevert', 'LedgerReboot', 'LedgerGrid', 'LedgerList', 'BtnDiscard', 'BtnApply',
                    'StatList', 'QueuePill', 'QueueText') {
@@ -1494,10 +1505,10 @@ try {
         else { $Icon.SetResourceReference($FgProp, $Brush) }
     }
     function New-IconWell($Code, [double]$Box = 38, [string]$Brush = 'Ink2') {
-        # like Windows Settings: just the icon, in the text color (category colors no longer tint icons);
-        # brands keep their color
+        # a category color tints the icon and gives it a soft rounded well; brands keep their own color
         $w = [Windows.Controls.Border]::new(); $w.Width = $Box; $w.Height = $Box; $w.VerticalAlignment = 'Center'
-        if ($Brush -like 'Cat-*') { $Brush = 'Ink' }
+        if (-not $Brush) { $Brush = 'Ink2' }
+        if ($Brush -like 'Cat-*' -or $Brush -eq 'Accent') { $w.CornerRadius = [math]::Round($Box * 0.3); $w.SetResourceReference($BgProp, $(if ($Brush -eq 'Accent') { 'AccentSoft' } else { "Soft$Brush" })) }
         $isBrand = $Code -is [string] -and $Code -like 'brand-*'
         $ic = New-Icon $Code ([math]::Round($Box * $(if ($isBrand) { 0.6 } else { 0.5 }))) $(if ($Brush -eq 'Ink2' -and -not $isBrand) { 'Ink' } else { $Brush })
         $ic.HorizontalAlignment = 'Center'; $w.Child = $ic
@@ -1816,7 +1827,7 @@ try {
     foreach ($key in $Pages.Keys) {
         $pg = $Pages[$key]; if (-not $pg.Nav) { continue }
         $g = New-Cols @('Auto', '*'); $g.Tag = $key
-        $ic = New-Icon $pg.Icon 16 'Ink2'; $ic.Margin = '2,0,14,0'
+        $ic = New-Icon $pg.Icon 16 $(if ($pg.Color) { $pg.Color } else { 'Ink2' }); $ic.Margin = '2,0,14,0'
         [void](Add-At $g $ic 0)
         $lb = New-Text $pg.Label 14 'Ink'; $lb.VerticalAlignment = 'Center'; $lb.TextWrapping = 'NoWrap'
         [void](Add-At $g $lb 1)
@@ -1827,7 +1838,6 @@ try {
         foreach ($k in $script:NavParts.Keys) {
             $sel = $ui.Nav.SelectedItem -and $ui.Nav.SelectedItem.Tag -eq $k
             $np = $script:NavParts[$k]
-            Set-IconBrush $np.Icon $(if ($sel) { 'Ink' } else { 'Ink2' })
             $np.Label.FontWeight = $(if ($sel) { 'SemiBold' } else { 'Normal' })
         }
     }
@@ -1838,7 +1848,7 @@ try {
             $pg = $Pages[$k]; if (-not $pg -or ($pg.ProOnly -and -not $script:Pro)) { continue }
             $row = [Windows.Controls.Border]::new(); $row.Style = $window.FindResource('RuleRow'); $row.Cursor = 'Hand'; $row.Tag = $k; $row.Padding = '16,14,16,14'
             $g = New-Cols @('40', '*', 'Auto', 'Auto')
-            [void](Add-At $g (New-IconWell $pg.Icon 28) 0)
+            [void](Add-At $g (New-IconWell $pg.Icon 32 $pg.Color) 0)
             $tx = [Windows.Controls.StackPanel]::new(); $tx.VerticalAlignment = 'Center'
             [void]$tx.Children.Add((New-Text $pg.Label 14 'Ink'))
             if ($pg.Desc) { $dl = New-Text $pg.Desc 12 'Ink2'; $dl.TextTrimming = 'CharacterEllipsis'; $dl.TextWrapping = 'NoWrap'; [void]$tx.Children.Add($dl) }
@@ -1892,7 +1902,7 @@ try {
             [void](Add-At $outer $mark 0)
             $grid = New-Cols @('44', '*', 'Auto', 'Auto', 'Auto'); $grid.Margin = '10,12,10,12'; $grid.Background = [Windows.Media.Brushes]::Transparent; $grid.Cursor = 'Hand'; $grid.Tag = $t.Id
             $icon = if ($TweakIcons.ContainsKey($t.Id)) { $TweakIcons[$t.Id] } else { 'gear-six' }
-            [void](Add-At $grid (New-IconWell $icon 28) 0)
+            [void](Add-At $grid (New-IconWell $icon 32 "Cat-$($t.Cat)") 0)
             $left = [Windows.Controls.StackPanel]::new(); $left.VerticalAlignment = 'Center'
             $nm = New-Text $t.Name 14 'Ink'; $nm.TextWrapping = 'NoWrap'; $nm.TextTrimming = 'CharacterEllipsis'
             $ds = New-Text $t.Desc 12 'Ink2'; $ds.TextWrapping = 'NoWrap'; $ds.TextTrimming = 'CharacterEllipsis'; $ds.ToolTip = $ds.Text
@@ -1987,7 +1997,7 @@ try {
         }
         $t = $row.Tweak
         $hd = New-Cols @('52', '*')
-        [void](Add-At $hd (New-IconWell $(if ($TweakIcons.ContainsKey($t.Id)) { $TweakIcons[$t.Id] } else { 'gear-six' }) 36) 0)
+        [void](Add-At $hd (New-IconWell $(if ($TweakIcons.ContainsKey($t.Id)) { $TweakIcons[$t.Id] } else { 'gear-six' }) 40 "Cat-$($t.Cat)") 0)
         $tt = New-Text $t.Name 18 'Ink' 'SemiBold'; $tt.FontFamily = $window.FindResource('Display'); $tt.VerticalAlignment = 'Center'
         [void](Add-At $hd $tt 1)
         [void]$d.Children.Add($hd)
@@ -2310,6 +2320,7 @@ try {
         $script:CurrentPage = $Key
         $ui.PageTitle.Text = (T $pg.Title); $ui.PageDesc.Text = (T $pg.Desc)
         $parent = if ($pg.Parent) { $Pages[$pg.Parent] }
+        $ui.PageIcon.Content = if ($pg.Icon) { New-IconWell $pg.Icon 40 $(if ($pg.Color) { $pg.Color } elseif ($parent) { $parent.Color }) } else { $null }
         $multi = $parent -and @($parent.Hub | Where-Object { $Pages[$_] -and -not ($Pages[$_].ProOnly -and -not $script:Pro) }).Count -gt 1
         if ($multi) { $ui.Crumb.Text = "$(T $parent.Title)  ›"; $ui.Crumb.Tag = $pg.Parent; $ui.Crumb.Visibility = 'Visible' } else { $ui.Crumb.Visibility = 'Collapsed' }
         $ui.PageDesc.Visibility = if ($pg.Desc) { 'Visible' } else { 'Collapsed' }

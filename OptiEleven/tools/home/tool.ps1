@@ -5,10 +5,10 @@
 $RingSize = 280; $RingRadius = 116; $RingThick = 18
 # each segment: name, icon, where it leads
 $RingParts = @(
-    @{ Id = 'privacy'; Name = 'Privacidad'; Icon = 'shield-check'; Go = 'c-privacy' }
-    @{ Id = 'perf'; Name = 'Rendimiento'; Icon = 'gauge'; Go = 'c-optimize' }
-    @{ Id = 'space'; Name = 'Espacio'; Icon = 'hard-drives'; Go = 'disk' }
-    @{ Id = 'startup'; Name = 'Arranque'; Icon = 'sign-in'; Go = 'startup' }
+    @{ Id = 'privacy'; Name = 'Privacidad'; Icon = 'shield-check'; Go = 'c-privacy'; Color = 'Cat-Privacidad' }
+    @{ Id = 'perf'; Name = 'Rendimiento'; Icon = 'gauge'; Go = 'c-optimize'; Color = 'Cat-Rendimiento' }
+    @{ Id = 'space'; Name = 'Espacio'; Icon = 'hard-drives'; Go = 'disk'; Color = 'Cat-Juegos' }
+    @{ Id = 'startup'; Name = 'Arranque'; Icon = 'sign-in'; Go = 'startup'; Color = 'Cat-Servicios' }
 )
 
 # ---------- geometry: angles in degrees, 0 at the top, clockwise
@@ -65,14 +65,17 @@ function New-HomePage {
     for ($i = 0; $i -lt $RingParts.Count; $i++) {
         $from = $i * 90 + 5; $to = $i * 90 + 85   # a gap between segments
         $track = New-RingPath 'Track'; $track.Data = Get-ArcGeometry $from $to
-        $fill = New-RingPath 'Accent'; $fill.IsHitTestVisible = $false
-        foreach ($p in $track, $fill) { [void]$cv.Children.Add($p) }
+        $fill = New-RingPath $RingParts[$i].Color; $fill.IsHitTestVisible = $false
+        # glow: the same arc, wider, blurred and faint, behind the fill
+        $glow = New-RingPath $RingParts[$i].Color; $glow.IsHitTestVisible = $false; $glow.StrokeThickness = $RingThick + 8; $glow.Opacity = 0.45
+        $glow.Effect = [Windows.Media.Effects.BlurEffect]@{ Radius = 14 }
+        foreach ($p in $track, $glow, $fill) { [void]$cv.Children.Add($p) }
         $track.Cursor = 'Hand'; $track.Tag = $i
         $track.Add_MouseEnter({ param($s) Set-RingHover ([int]$s.Tag) })
         $track.Add_MouseLeave({ Set-RingHover -1 })
         $track.Add_MouseLeftButtonUp({ param($s) Select-NavKey $RingParts[[int]$s.Tag].Go })
         [Windows.Automation.AutomationProperties]::SetName($track, (T $RingParts[$i].Name))
-        $script:RingSeg += @{ Track = $track; Fill = $fill; From = $from; To = $to; Now = 0.0 }
+        $script:RingSeg += @{ Track = $track; Fill = $fill; Glow = $glow; From = $from; To = $to; Now = 0.0 }
     }
     [void]$hero.Children.Add($cv)
     # center: the score, or the segment under the mouse
@@ -137,7 +140,7 @@ function Set-RingHover([int]$Index) {
         return
     }
     $part = $RingParts[$Index]; $v = $script:RingVals[$part.Id]
-    $script:RingIcon.Content = (New-Icon $part.Icon 22 'Accent'); $script:RingIcon.Visibility = 'Visible'
+    $script:RingIcon.Content = (New-Icon $part.Icon 22 $part.Color); $script:RingIcon.Visibility = 'Visible'
     $script:RingNum.Text = "$([int][math]::Round($v.F * 100))"; $script:RingOf.Text = '%'
     $script:RingLabel.Text = (T $part.Name) + "`n" + $v.Text
 }
@@ -155,8 +158,7 @@ function Start-RingAnimation {
         $e = 1 - [math]::Pow(1 - $t, 3)
         for ($i = 0; $i -lt $script:RingSeg.Count; $i++) {
             $s = $script:RingSeg[$i]; $s.Now = $a.From[$i] + ($a.To[$i] - $a.From[$i]) * $e
-            $s.Fill.Data = Get-ArcGeometry $s.From ($s.From + ($s.To - $s.From) * $s.Now)
-            $s.Fill.SetResourceReference([Windows.Shapes.Shape]::StrokeProperty, $(if ($a.To[$i] -lt 0.5) { 'Amber' } else { 'Accent' }))
+            $s.Fill.Data = Get-ArcGeometry $s.From ($s.From + ($s.To - $s.From) * $s.Now); $s.Glow.Data = $s.Fill.Data
         }
         $script:RingShown = [int][math]::Round($a.FromScore + ($a.ToScore - $a.FromScore) * $e)
         if ($script:RingOf.Text -eq '/100') { $script:RingNum.Text = "$($script:RingShown)" }
@@ -185,12 +187,12 @@ function Update-HomeStats {
         $it.Background = [Windows.Media.Brushes]::Transparent
         $sp = [Windows.Controls.StackPanel]::new(); $sp.Orientation = 'Horizontal'
         $dot = [Windows.Shapes.Ellipse]::new(); $dot.Width = 8; $dot.Height = 8; $dot.Margin = '0,0,7,0'; $dot.VerticalAlignment = 'Center'
-        $dot.SetResourceReference([Windows.Shapes.Shape]::FillProperty, $(if ($f -lt 0.5) { 'Amber' } else { 'Accent' }))
+        $dot.SetResourceReference([Windows.Shapes.Shape]::FillProperty, $RingParts[$i].Color)
         $nm = New-Text $RingParts[$i].Name 13 'Ink2'; $nm.VerticalAlignment = 'Center'
         $pc = New-Text "$([int][math]::Round($f * 100)) %" 13 'Ink' 'SemiBold'; $pc.Margin = '6,0,0,0'; $pc.VerticalAlignment = 'Center'
         foreach ($x in $dot, $nm, $pc) { [void]$sp.Children.Add($x) }
         $it.Child = $sp
-        $it.Add_MouseEnter({ param($s) $s.SetResourceReference([Windows.Controls.Border]::BackgroundProperty, 'AccentSoft'); Set-RingHover ([int]$s.Tag) })
+        $it.Add_MouseEnter({ param($s) $s.SetResourceReference([Windows.Controls.Border]::BackgroundProperty, "Soft$($RingParts[[int]$s.Tag].Color)"); Set-RingHover ([int]$s.Tag) })
         $it.Add_MouseLeave({ param($s) $s.Background = [Windows.Media.Brushes]::Transparent; Set-RingHover -1 })
         $it.Add_MouseLeftButtonUp({ param($s) Select-NavKey $RingParts[[int]$s.Tag].Go })
         [void]$script:RingLegend.Children.Add($it)

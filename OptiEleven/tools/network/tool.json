@@ -16,7 +16,7 @@
                     "en":  "DNS, latency and speed test."
                 },
     "icon":  "wifi-high",
-    "color":  "Cat-Privacidad",
+    "color": "Cat-Latencia",
     "view":  "New-NetworkPage",
     "risk":  "safe",
     "requiresAdmin":  true,
