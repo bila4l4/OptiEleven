@@ -28,7 +28,7 @@ jobs:
       AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
       SIGNPATH_API_TOKEN: ${{ secrets.SIGNPATH_API_TOKEN }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install the Artifact Signing client (only with Azure secrets)
         if: env.AZURE_SIGNING_ENDPOINT != ''
@@ -48,7 +48,7 @@ jobs:
       - name: Upload the unsigned zip for SignPath
         id: unsigned
         if: env.SIGNPATH_API_TOKEN != '' && startsWith(github.ref, 'refs/tags/v')
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: unsigned-${{ github.run_id }}
           path: dist/OptiEleven.zip
@@ -82,7 +82,7 @@ jobs:
           $h = (Get-FileHash dist/OptiEleven.zip -Algorithm SHA256).Hash.ToLowerInvariant()
           [IO.File]::WriteAllText((Resolve-Path dist/SHA256SUMS.txt), "$h  OptiEleven.zip`n")
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: OptiEleven-${{ github.ref_name }}
           path: |
