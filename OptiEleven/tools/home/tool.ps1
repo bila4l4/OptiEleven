@@ -1,182 +1,190 @@
-﻿# Inicio: el estado del equipo primero (cifras reales) y luego sugerencias ordenadas por lo que más aporta, cada una con
-# un solo botón. Todo lo que se calcula aquí es rápido; lo lento (el análisis de Limpieza) solo se usa si ya se hizo.
+﻿# Inicio: un anillo con la nota de tu PC (0-100) que se dibuja al entrar. Tiene cuatro tramos (privacidad, rendimiento,
+# espacio y arranque), y cada uno se ilumina al pasar el ratón y lleva a su sitio al pulsarlo. Debajo, las categorías y
+# lo que se puede mejorar, cada cosa con un botón. Todo lo que se calcula aquí es rápido.
 
-# Lo personal de Inicio (fijados y orden de los bloques) va en home.json, junto al resto de preferencias del panel
-$script:HomePrefsFile = Join-Path $script:Root 'home.json'
-$HomeBlockIds = @('pins', 'status', 'suggestions')
-function Get-HomePrefs {
-    $p = $null
-    try { if (Test-Path -LiteralPath $script:HomePrefsFile) { $p = [IO.File]::ReadAllText($script:HomePrefsFile, [Text.Encoding]::UTF8) | ConvertFrom-Json } } catch {}
-    $pins = @(if ($p -and $p.pins) { foreach ($x in @($p.pins)) { [string]$x } })
-    $order = @(if ($p -and $p.order) { foreach ($x in @($p.order)) { [string]$x } })
-    # bloques que falten (versiones nuevas) al final; los que ya no existan, fuera
-    $order = @($order | Where-Object { $HomeBlockIds -contains $_ }) + @($HomeBlockIds | Where-Object { $order -notcontains $_ })
-    @{ pins = $pins; order = $order }
-}
-function Save-HomePrefs($Prefs) {
-    try { [IO.File]::WriteAllText($script:HomePrefsFile, (ConvertTo-Json @{ pins = @($Prefs.pins); order = @($Prefs.order) } -Depth 3), [Text.UTF8Encoding]::new($false)) }
-    catch { Write-Log "No se pudo guardar la personalización de Inicio: $($_.Exception.Message)" 'WARN' }
-}
-# cada cosa fijable tiene una clave: el id de la página o "tweak:<id>"
-function Get-PinKey($Hit) { if ($Hit.Tweak) { "tweak:$($Hit.Tweak)" } else { [string]$Hit.Key } }
+$RingSize = 280; $RingRadius = 116; $RingThick = 18
+# cada tramo: nombre, icono, a dónde lleva
+$RingParts = @(
+    @{ Id = 'privacy'; Name = 'Privacidad'; Icon = 'shield-check'; Go = 'c-privacy' }
+    @{ Id = 'perf'; Name = 'Rendimiento'; Icon = 'gauge'; Go = 'c-optimize' }
+    @{ Id = 'space'; Name = 'Espacio'; Icon = 'hard-drives'; Go = 'disk' }
+    @{ Id = 'startup'; Name = 'Arranque'; Icon = 'sign-in'; Go = 'startup' }
+)
 
-# cabecera de un bloque, con subir y bajar para cambiar el orden
-function New-HomeBlockHead([string]$Id, [string]$Title, $Extra) {
-    $g = New-Cols @('*', 'Auto', 'Auto', 'Auto'); $g.Margin = '2,14,0,8'
-    $t = New-Text $Title 14 'Ink' 'SemiBold'; $t.VerticalAlignment = 'Center'; [void](Add-At $g $t 0)
-    if ($Extra) { $Extra.Margin = '0,0,8,0'; [void](Add-At $g $Extra 1) }
-    $i = 2
-    foreach ($m in @(@(-1, 0xE70E, 'Subir'), @(1, 0xE70D, 'Bajar'))) {
-        $b = New-Btn ''; $b.Content = (New-Icon $m[1] 12 'Ink2'); $b.MinWidth = 30; $b.MinHeight = 28; $b.Padding = '0'; $b.Margin = '4,0,0,0'
-        $b.ToolTip = T $m[2]; $b.Tag = @($Id, $m[0])
-        [Windows.Automation.AutomationProperties]::SetName($b, (T $m[2]))
-        $b.Add_Click({ param($s) Move-HomeBlock $s.Tag[0] ([int]$s.Tag[1]) })
-        [void](Add-At $g $b $i); $i++
-    }
-    $g
+# ---------- geometría: ángulos en grados, 0 arriba y en el sentido de las agujas del reloj
+function Get-RingPoint([double]$Deg) {
+    $rad = ($Deg - 90) * [math]::PI / 180
+    [Windows.Point]::new($RingSize / 2 + $RingRadius * [math]::Cos($rad), $RingSize / 2 + $RingRadius * [math]::Sin($rad))
 }
-function Move-HomeBlock([string]$Id, [int]$Delta) {
-    $p = Get-HomePrefs; $o = [Collections.Generic.List[string]]::new([string[]]$p.order)
-    $i = $o.IndexOf($Id); $j = $i + $Delta
-    if ($i -lt 0 -or $j -lt 0 -or $j -ge $o.Count) { return }
-    $o.RemoveAt($i); $o.Insert($j, $Id)
-    $p.order = @($o); Save-HomePrefs $p
-    Update-HomeOrder
+function Get-ArcGeometry([double]$From, [double]$To) {
+    if ($To - $From -lt 0.5) { return [Windows.Media.Geometry]::Empty }
+    $fig = [Windows.Media.PathFigure]::new(); $fig.StartPoint = Get-RingPoint $From; $fig.IsClosed = $false
+    $seg = [Windows.Media.ArcSegment]::new((Get-RingPoint $To), [Windows.Size]::new($RingRadius, $RingRadius), 0, (($To - $From) -gt 180), [Windows.Media.SweepDirection]::Clockwise, $true)
+    $fig.Segments.Add($seg)
+    $g = [Windows.Media.PathGeometry]::new(); $g.Figures.Add($fig); $g
 }
-function Update-HomeOrder {
-    $r = $script:HomeRoot; if (-not $r) { return }
-    $r.Children.Clear()
-    [void]$r.Children.Add($script:HomeInfo)
-    foreach ($id in (Get-HomePrefs).order) { [void]$r.Children.Add($script:HomeBlocks[$id]) }
+function New-RingPath([string]$Brush) {
+    $p = [Windows.Shapes.Path]::new(); $p.StrokeThickness = $RingThick
+    $p.StrokeStartLineCap = 'Round'; $p.StrokeEndLineCap = 'Round'
+    $p.SetResourceReference([Windows.Shapes.Shape]::StrokeProperty, $Brush)
+    $p
 }
 
-# ---------- fijados: herramientas, grupos o ajustes que tú eliges, arriba del todo si quieres
-function Update-HomePins {
-    $box = $script:HomePinBox; if (-not $box) { return }
-    $box.Children.Clear()
-    $p = Get-HomePrefs
-    $index = @(try { Get-SearchIndex } catch { })
-    $hits = @(foreach ($k in $p.pins) { $index | Where-Object { (Get-PinKey $_) -eq $k } | Select-Object -First 1 })
-    if (-not $hits.Count) {
-        $em = New-Text 'Fija aquí lo que más uses: una herramienta, un grupo de ajustes o un ajuste suelto.' 13 'Ink2'; $em.TextWrapping = 'Wrap'; $em.Margin = '2,0,0,4'
-        [void]$box.Children.Add($em)
+# ---------- la nota: cada tramo vale de 0 a 1 (los ajustes recomendados aplicados, el espacio libre, cuántas apps arrancan solas)
+function Get-RingValues {
+    $rows = @(if ($script:Rows) { $script:Rows.Values })
+    $known = @($rows | Where-Object { $null -ne $_.Applied }).Count -gt 0
+    $fr = {
+        param($cats)
+        $r = @($rows | Where-Object { $cats -contains $_.Tweak.Cat -and $_.Tweak.Presets -contains 'R' })
+        $a = @($r | Where-Object { $_.Applied -eq $true }).Count
+        @{ F = $(if ($r.Count) { $a / $r.Count } else { 1 }); A = $a; N = $r.Count }
     }
-    $wrap = [Windows.Controls.WrapPanel]::new(); $wrap.Margin = '0,0,-8,0'
-    foreach ($h in $hits) {
-        $tile = [Windows.Controls.Border]::new(); $tile.Style = $window.FindResource('RuleRow'); $tile.Width = 236; $tile.Margin = '0,0,8,8'; $tile.Cursor = 'Hand'; $tile.Tag = $h
-        $g = New-Cols @('36', '*', 'Auto')
-        [void](Add-At $g (New-IconWell $h.Icon 28) 0)
-        $tx = [Windows.Controls.StackPanel]::new(); $tx.VerticalAlignment = 'Center'
-        $n = New-Text $h.Name 13.5 'Ink'; $n.Text = $h.Name; $n.TextTrimming = 'CharacterEllipsis'; $n.TextWrapping = 'NoWrap'; [void]$tx.Children.Add($n)
-        $sub = $h.Cat
-        if ($h.Tweak) { $r = $script:Rows[$h.Tweak]; if ($r -and $r.Applied -eq $true) { $sub = T 'Aplicado' } elseif ($r -and $r.Applied -eq $false) { $sub = T 'No aplicado' } }
-        if ($sub) { $c = New-Text $sub 11.5 'Ink2'; $c.Text = $sub; $c.TextTrimming = 'CharacterEllipsis'; $c.TextWrapping = 'NoWrap'; [void]$tx.Children.Add($c) }
-        [void](Add-At $g $tx 1)
-        $x = New-Btn ''; $x.Content = (New-Icon 0xE711 10 'Ink2'); $x.MinWidth = 26; $x.MinHeight = 26; $x.Padding = '0'; $x.Margin = '6,0,0,0'; $x.VerticalAlignment = 'Center'
-        $x.ToolTip = T 'Quitar de Inicio'; [Windows.Automation.AutomationProperties]::SetName($x, (T 'Quitar de Inicio')); $x.Tag = (Get-PinKey $h)
-        $x.Add_Click({ param($s, $e) $e.Handled = $true; Set-HomePin ([string]$s.Tag) $false })
-        [void](Add-At $g $x 2)
-        $tile.Child = $g
-        $tile.Add_MouseLeftButtonUp({ param($s, $e) if (-not $e.Handled) { Open-SearchHit $s.Tag } })
-        [void]$wrap.Children.Add($tile)
+    $priv = & $fr @('Privacidad')
+    $perf = & $fr @('Rendimiento', 'Latencia', 'Juegos')
+    $free = 0; $total = 1
+    try { $c = [IO.DriveInfo]::new($env:SystemDrive.TrimEnd(':')); $free = [double]$c.AvailableFreeSpace; $total = [double]$c.TotalSize } catch {}
+    $startup = @(try { Get-StartupEntries | Where-Object Enabled } catch { }).Count
+    @{
+        Known = $known
+        privacy = @{ F = $priv.F; Text = (T "$($priv.A) de $($priv.N) recomendados aplicados") }
+        perf = @{ F = $perf.F; Text = (T "$($perf.A) de $($perf.N) recomendados aplicados") }
+        space = @{ F = [math]::Min([double]1, ($free / $total) / 0.25); Text = (T "$(Format-Size $free) libres de $(Format-Size $total)") }   # 25 % libre o más = lleno
+        startup = @{ F = [math]::Max([double]0, [math]::Min([double]1, (12 - $startup) / 9)); Text = (T "$startup apps al iniciar") }   # 3 o menos = lleno, 12 o más = vacío
     }
-    if ($hits.Count) { [void]$box.Children.Add($wrap) }
-    $box.Children.Add($script:HomePicker) | Out-Null
-}
-function Set-HomePin([string]$Key, [bool]$On) {
-    $p = Get-HomePrefs
-    $p.pins = @($p.pins | Where-Object { $_ -ne $Key }); if ($On) { $p.pins += $Key }
-    Save-HomePrefs $p
-    Update-HomePins; Update-HomePicker
-}
-# buscador para fijar: lo mismo que encuentra Ctrl+K, con un botón Fijar
-function Update-HomePicker {
-    $pk = $script:HomePicker; if (-not $pk -or $pk.Visibility -ne 'Visible') { return }
-    $list = $script:HomePickList; $list.Children.Clear()
-    $q = $script:HomePickBox.Text.Trim().ToLower()
-    $pinned = (Get-HomePrefs).pins
-    $words = @($q -split '\s+' | Where-Object { $_ })
-    $hits = @(@(try { Get-SearchIndex } catch { }) | Where-Object { $x = $_; $pinned -notcontains (Get-PinKey $x) -and -not @($words | Where-Object { $x.Text -notlike "*$_*" }).Count } | Select-Object -First 8)
-    foreach ($h in $hits) {
-        $g = New-Cols @('32', '*', 'Auto'); $g.Margin = '4,2,0,2'
-        [void](Add-At $g (New-Icon $h.Icon 16 'Ink2') 0)
-        $tx = [Windows.Controls.StackPanel]::new(); $tx.VerticalAlignment = 'Center'
-        $n = New-Text $h.Name 13.5 'Ink'; $n.Text = $h.Name; [void]$tx.Children.Add($n)
-        if ($h.Cat) { $c = New-Text $h.Cat 11.5 'Ink2'; $c.Text = $h.Cat; [void]$tx.Children.Add($c) }
-        [void](Add-At $g $tx 1)
-        $b = New-Btn 'Fijar'; $b.MinHeight = 28; $b.Padding = '12,0'; $b.Tag = (Get-PinKey $h); $b.Add_Click({ param($s) Set-HomePin ([string]$s.Tag) $true })
-        [void](Add-At $g $b 2)
-        [void]$list.Children.Add($g)
-    }
-    if (-not $hits.Count) { [void]$list.Children.Add((New-Text 'Sin resultados' 13 'Ink2')) }
 }
 
 function New-HomePage {
-    $root = [Windows.Controls.StackPanel]::new(); $script:HomeRoot = $root
-    $script:HomeBlocks = @{}
-    # fijados
-    $pins = [Windows.Controls.StackPanel]::new()
-    $add = New-Btn 'Añadir'; $add.MinHeight = 28; $add.Padding = '12,0'
-    $add.Add_Click({
-        $pk = $script:HomePicker
-        $pk.Visibility = if ($pk.Visibility -eq 'Visible') { 'Collapsed' } else { 'Visible' }
-        if ($pk.Visibility -eq 'Visible') { $script:HomePickBox.Text = ''; Update-HomePicker; [void]$script:HomePickBox.Focus() }
-    })
-    [void]$pins.Children.Add((New-HomeBlockHead 'pins' (T 'Fijados') $add))
-    $script:HomePinBox = [Windows.Controls.StackPanel]::new(); [void]$pins.Children.Add($script:HomePinBox)
-    $pk = [Windows.Controls.Border]::new(); $pk.Style = $window.FindResource('Tile'); $pk.Padding = '12'; $pk.Margin = '0,0,0,8'; $pk.Visibility = 'Collapsed'
-    $pks = [Windows.Controls.StackPanel]::new()
-    $script:HomePickBox = [Windows.Controls.TextBox]::new(); $script:HomePickBox.Margin = '0,0,0,8'; $script:HomePickBox.Padding = '8,6'
-    [Windows.Automation.AutomationProperties]::SetName($script:HomePickBox, (T 'Buscar'))
-    $script:HomePickBox.Add_TextChanged({ Update-HomePicker })
-    [void]$pks.Children.Add($script:HomePickBox)
-    $script:HomePickList = [Windows.Controls.StackPanel]::new(); [void]$pks.Children.Add($script:HomePickList)
-    $pk.Child = $pks; $script:HomePicker = $pk
-    $script:HomeBlocks['pins'] = $pins
-    # estado del equipo
-    $status = [Windows.Controls.StackPanel]::new()
-    [void]$status.Children.Add((New-HomeBlockHead 'status' (T 'Tu equipo') $null))
-    # tira de estado: cuatro cifras separadas por filetes, en una sola tarjeta
-    $strip = [Windows.Controls.Border]::new(); $strip.Style = $window.FindResource('Tile'); $strip.Padding = '0'; $strip.Margin = '0,0,0,4'
-    $g = New-Cols @('*', '*', '*', '*')
-    $script:HomeCells = @{}
-    $cells = @(@('Tweaks', 'Ajustes aplicados'), @('Disk', 'Libres en C:'), @('Startup', 'Apps al iniciar'), @('Last', 'Último cambio'))
-    for ($i = 0; $i -lt $cells.Count; $i++) {
-        $c = [Windows.Controls.Border]::new(); $c.Padding = '18,14,18,14'
-        if ($i -gt 0) { $c.BorderThickness = '1,0,0,0'; $c.SetResourceReference([Windows.Controls.Border]::BorderBrushProperty, 'Rule') }
-        $sp = [Windows.Controls.StackPanel]::new()
-        $v = New-Text '...' 20 'Ink' 'SemiBold'; $v.FontFamily = $window.FindResource('Display'); $v.TextWrapping = 'NoWrap'; $v.TextTrimming = 'CharacterEllipsis'
-        $l = New-Text $cells[$i][1] 12 'Ink2'
-        [void]$sp.Children.Add($v); [void]$sp.Children.Add($l)
-        $c.Child = $sp; [void](Add-At $g $c $i)
-        $script:HomeCells[$cells[$i][0]] = $v
+    $root = [Windows.Controls.StackPanel]::new()
+    $script:HomeInfo = [Windows.Controls.StackPanel]::new(); [void]$root.Children.Add($script:HomeInfo)
+
+    # ---------- anillo
+    $hero = [Windows.Controls.Grid]::new(); $hero.Width = $RingSize; $hero.Height = $RingSize; $hero.HorizontalAlignment = 'Center'; $hero.Margin = '0,8,0,0'
+    $cv = [Windows.Controls.Canvas]::new(); $cv.Width = $RingSize; $cv.Height = $RingSize
+    $script:RingSeg = @()
+    for ($i = 0; $i -lt $RingParts.Count; $i++) {
+        $from = $i * 90 + 5; $to = $i * 90 + 85   # un hueco entre tramos
+        $track = New-RingPath 'Track'; $track.Data = Get-ArcGeometry $from $to
+        $fill = New-RingPath 'Accent'; $fill.IsHitTestVisible = $false
+        foreach ($p in $track, $fill) { [void]$cv.Children.Add($p) }
+        $track.Cursor = 'Hand'; $track.Tag = $i
+        $track.Add_MouseEnter({ param($s) Set-RingHover ([int]$s.Tag) })
+        $track.Add_MouseLeave({ Set-RingHover -1 })
+        $track.Add_MouseLeftButtonUp({ param($s) Select-NavKey $RingParts[[int]$s.Tag].Go })
+        [Windows.Automation.AutomationProperties]::SetName($track, (T $RingParts[$i].Name))
+        $script:RingSeg += @{ Track = $track; Fill = $fill; From = $from; To = $to; Now = 0.0 }
     }
-    $strip.Child = $g
-    [void]$status.Children.Add($strip)
-    $script:HomeBlocks['status'] = $status
-    # sugerencias
-    $sug = [Windows.Controls.StackPanel]::new()
-    [void]$sug.Children.Add((New-HomeBlockHead 'suggestions' (T 'Sugerencias') $null))
-    $script:HomeSug = [Windows.Controls.StackPanel]::new(); [void]$sug.Children.Add($script:HomeSug)
-    $script:HomeBlocks['suggestions'] = $sug
-    # avisos (admin, punto de restauración) siempre arriba, fuera del orden
-    $script:HomeInfo = [Windows.Controls.StackPanel]::new()
-    Update-HomeOrder
+    [void]$hero.Children.Add($cv)
+    # centro: la nota, o el tramo bajo el ratón
+    $mid = [Windows.Controls.StackPanel]::new(); $mid.VerticalAlignment = 'Center'; $mid.HorizontalAlignment = 'Center'; $mid.IsHitTestVisible = $false
+    $script:RingIcon = [Windows.Controls.ContentControl]::new(); $script:RingIcon.HorizontalAlignment = 'Center'; $script:RingIcon.Visibility = 'Collapsed'; $script:RingIcon.Margin = '0,0,0,6'
+    $num = [Windows.Controls.StackPanel]::new(); $num.Orientation = 'Horizontal'; $num.HorizontalAlignment = 'Center'
+    $script:RingNum = New-Text '0' 56 'Ink' 'SemiBold'; $script:RingNum.FontFamily = $window.FindResource('Display'); $script:RingNum.Text = '0'
+    $script:RingOf = New-Text '/100' 16 'Ink2'; $script:RingOf.Text = '/100'; $script:RingOf.VerticalAlignment = 'Bottom'; $script:RingOf.Margin = '4,0,0,12'
+    [void]$num.Children.Add($script:RingNum); [void]$num.Children.Add($script:RingOf)
+    $script:RingLabel = New-Text 'Estado del equipo' 13 'Ink2'; $script:RingLabel.HorizontalAlignment = 'Center'; $script:RingLabel.TextAlignment = 'Center'; $script:RingLabel.MaxWidth = 170; $script:RingLabel.TextWrapping = 'Wrap'
+    foreach ($x in $script:RingIcon, $num, $script:RingLabel) { [void]$mid.Children.Add($x) }
+    [void]$hero.Children.Add($mid)
+    [void]$root.Children.Add($hero)
+
+    $script:RingSummary = New-Text '' 15 'Ink' 'Medium'; $script:RingSummary.HorizontalAlignment = 'Center'; $script:RingSummary.Margin = '0,14,0,2'
+    [void]$root.Children.Add($script:RingSummary)
+    # leyenda: qué es cada tramo y cuánto tiene; también se puede pasar el ratón y pulsar
+    $script:RingLegend = [Windows.Controls.WrapPanel]::new(); $script:RingLegend.HorizontalAlignment = 'Center'; $script:RingLegend.Margin = '0,6,0,0'
+    [void]$root.Children.Add($script:RingLegend)
+
+    # ---------- categorías, como accesos rápidos
+    $cats = [Windows.Controls.WrapPanel]::new(); $cats.HorizontalAlignment = 'Center'; $cats.Margin = '0,20,0,4'
+    foreach ($k in @($Pages.Keys | Where-Object { $_ -like 'c-*' })) {
+        $pg = $Pages[$k]
+        $b = New-Btn ''; $b.MinHeight = 36; $b.Padding = '14,0'; $b.Margin = '4'; $b.Tag = $k
+        $sp = [Windows.Controls.StackPanel]::new(); $sp.Orientation = 'Horizontal'
+        $ic = New-BtnIcon $pg.Icon 16; $ic.Margin = '0,0,8,0'; [void]$sp.Children.Add($ic)
+        $tl = [Windows.Controls.TextBlock]::new(); $tl.Text = T $pg.Label; $tl.VerticalAlignment = 'Center'; [void]$sp.Children.Add($tl)
+        $b.Content = $sp
+        $b.Add_Click({ param($s) Select-NavKey ([string]$s.Tag) })
+        [void]$cats.Children.Add($b)
+    }
+    [void]$root.Children.Add($cats)
+
+    # ---------- qué mejorar
+    $st = New-Text 'Qué mejorar' 14 'Ink' 'SemiBold'; $st.Margin = '2,22,0,8'; [void]$root.Children.Add($st)
+    $script:HomeSug = [Windows.Controls.StackPanel]::new(); [void]$root.Children.Add($script:HomeSug)
     $root
 }
 
-# la cifra de ajustes cambia al aplicar o al terminar la comprobación; el núcleo la llama en cada cambio
-function Update-HomeStats {
-    if (-not $script:HomeCells -or -not $script:Rows) { return }
-    $known = @($script:Rows.Values | Where-Object { $null -ne $_.Applied }).Count
-    $applied = @($script:Rows.Values | Where-Object { $_.Applied -eq $true }).Count
-    $script:HomeCells.Tweaks.Text = if ($known) { "$applied / $($script:Rows.Count)" } else { '...' }
+# el centro del anillo enseña la nota, o el tramo que tienes bajo el ratón (y ese tramo se hace más grueso)
+function Set-RingHover([int]$Index) {
+    for ($i = 0; $i -lt $script:RingSeg.Count; $i++) {
+        $t = if ($i -eq $Index) { $RingThick + 6 } else { $RingThick }
+        $script:RingSeg[$i].Track.StrokeThickness = $t; $script:RingSeg[$i].Fill.StrokeThickness = $t
+    }
+    if ($Index -lt 0 -or -not $script:RingVals) {
+        $script:RingIcon.Visibility = 'Collapsed'
+        $script:RingNum.Text = "$($script:RingScore)"; $script:RingOf.Text = '/100'
+        $script:RingLabel.Text = T 'Estado del equipo'
+        return
+    }
+    $part = $RingParts[$Index]; $v = $script:RingVals[$part.Id]
+    $script:RingIcon.Content = (New-Icon $part.Icon 22 'Accent'); $script:RingIcon.Visibility = 'Visible'
+    $script:RingNum.Text = "$([int][math]::Round($v.F * 100))"; $script:RingOf.Text = '%'
+    $script:RingLabel.Text = (T $part.Name) + "`n" + $v.Text
 }
 
-function Format-Ago([datetime]$When) {
-    $d = (Get-Date) - $When
-    if ($d.TotalMinutes -lt 1) { T 'Ahora' } elseif ($d.TotalHours -lt 1) { T "Hace $([int]$d.TotalMinutes) min" }
-    elseif ($d.TotalDays -lt 1) { T "Hace $([int]$d.TotalHours) h" } else { T "Hace $([int]$d.TotalDays) d" }
+# animación: los tramos crecen desde donde estaban hasta su valor y la nota cuenta a la vez (~0,9 s, con frenada al final)
+function Start-RingAnimation {
+    $vals = $script:RingVals
+    if ($script:RingHandler) { [Windows.Media.CompositionTarget]::remove_Rendering($script:RingHandler); $script:RingHandler = $null }
+    $script:RingAnim = @{ Clock = [Diagnostics.Stopwatch]::StartNew(); From = @($script:RingSeg | ForEach-Object { $_.Now }); FromScore = [int]$script:RingShown
+                          To = @($RingParts | ForEach-Object { [double]$vals[$_.Id].F }); ToScore = [int]$script:RingScore }
+    $step = {
+        $a = $script:RingAnim
+        $t = [math]::Min([double]1, $a.Clock.Elapsed.TotalMilliseconds / 900)
+        if (-not [Windows.SystemParameters]::ClientAreaAnimation) { $t = 1 }   # sin animaciones en Windows: directo al final
+        $e = 1 - [math]::Pow(1 - $t, 3)
+        for ($i = 0; $i -lt $script:RingSeg.Count; $i++) {
+            $s = $script:RingSeg[$i]; $s.Now = $a.From[$i] + ($a.To[$i] - $a.From[$i]) * $e
+            $s.Fill.Data = Get-ArcGeometry $s.From ($s.From + ($s.To - $s.From) * $s.Now)
+            $s.Fill.SetResourceReference([Windows.Shapes.Shape]::StrokeProperty, $(if ($a.To[$i] -lt 0.5) { 'Amber' } else { 'Accent' }))
+        }
+        $script:RingShown = [int][math]::Round($a.FromScore + ($a.ToScore - $a.FromScore) * $e)
+        if ($script:RingOf.Text -eq '/100') { $script:RingNum.Text = "$($script:RingShown)" }
+        if ($t -ge 1) { [Windows.Media.CompositionTarget]::remove_Rendering($script:RingHandler); $script:RingHandler = $null }
+    }
+    $script:RingHandler = [EventHandler]$step
+    [Windows.Media.CompositionTarget]::add_Rendering($script:RingHandler)
+}
+
+# el núcleo la llama cuando cambia el estado de los ajustes (al terminar la comprobación o tras aplicar)
+function Update-HomeStats {
+    if (-not $script:RingSeg) { return }
+    $script:RingVals = Get-RingValues
+    $sum = 0.0; foreach ($p in $RingParts) { $sum += $script:RingVals[$p.Id].F }
+    $script:RingScore = [int][math]::Round($sum / $RingParts.Count * 100)
+    $low = @($RingParts | Where-Object { $script:RingVals[$_.Id].F -lt 0.8 }).Count
+    $script:RingSummary.Text = if (-not $script:RingVals.Known) { T 'Comprobando el estado de los ajustes...' }
+                               elseif ($script:RingScore -ge 80) { T 'Tu PC está en buena forma.' }
+                               elseif ($script:RingScore -ge 50) { T 'Tu PC está bien, pero hay cosas que mejorar.' }
+                               else { T 'Tu PC puede ir bastante mejor.' }
+    $script:RingOf.Text = '/100'
+    $script:RingLegend.Children.Clear()
+    for ($i = 0; $i -lt $RingParts.Count; $i++) {
+        $f = $script:RingVals[$RingParts[$i].Id].F
+        $it = [Windows.Controls.Border]::new(); $it.Padding = '10,5'; $it.Margin = '2'; $it.CornerRadius = 4; $it.Cursor = 'Hand'; $it.Tag = $i
+        $it.Background = [Windows.Media.Brushes]::Transparent
+        $sp = [Windows.Controls.StackPanel]::new(); $sp.Orientation = 'Horizontal'
+        $dot = [Windows.Shapes.Ellipse]::new(); $dot.Width = 8; $dot.Height = 8; $dot.Margin = '0,0,7,0'; $dot.VerticalAlignment = 'Center'
+        $dot.SetResourceReference([Windows.Shapes.Shape]::FillProperty, $(if ($f -lt 0.5) { 'Amber' } else { 'Accent' }))
+        $nm = New-Text $RingParts[$i].Name 13 'Ink2'; $nm.VerticalAlignment = 'Center'
+        $pc = New-Text "$([int][math]::Round($f * 100)) %" 13 'Ink' 'SemiBold'; $pc.Margin = '6,0,0,0'; $pc.VerticalAlignment = 'Center'
+        foreach ($x in $dot, $nm, $pc) { [void]$sp.Children.Add($x) }
+        $it.Child = $sp
+        $it.Add_MouseEnter({ param($s) $s.SetResourceReference([Windows.Controls.Border]::BackgroundProperty, 'AccentSoft'); Set-RingHover ([int]$s.Tag) })
+        $it.Add_MouseLeave({ param($s) $s.Background = [Windows.Media.Brushes]::Transparent; Set-RingHover -1 })
+        $it.Add_MouseLeftButtonUp({ param($s) Select-NavKey $RingParts[[int]$s.Tag].Go })
+        [void]$script:RingLegend.Children.Add($it)
+    }
+    Start-RingAnimation
 }
 
 function New-Suggestion([string]$Icon, [string]$Title, [string]$Sub, [string]$Button, [scriptblock]$Action, [switch]$Primary) {
@@ -194,33 +202,28 @@ function New-Suggestion([string]$Icon, [string]$Title, [string]$Sub, [string]$Bu
     $row
 }
 
-# "onShow" del tool.json: se recalcula cada vez que se abre Inicio
+# "onShow" del tool.json: cada vez que se abre Inicio se recalcula y el anillo se vuelve a dibujar desde cero
 function Update-HomeView {
-    if (-not $script:HomeCells) { return }
-    # una línea con Windows y los permisos
-    $cv = Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -ErrorAction SilentlyContinue
-    $os = if ($cv) { ([string]$cv.ProductName -replace 'Windows 10', $(if ([int]$cv.CurrentBuild -ge 22000) { 'Windows 11' } else { 'Windows 10' })) + " $($cv.DisplayVersion)" } else { 'Windows 11' }
+    if (-not $script:RingSeg) { return }
     # saludo según la hora, con tu usuario de Windows y el nombre del equipo
     $hour = (Get-Date).Hour
     $hi = if ($hour -lt 12) { T 'Buenos días' } elseif ($hour -lt 20) { T 'Buenas tardes' } else { T 'Buenas noches' }
     $ui.PageTitle.Text = "$hi, $env:USERNAME"
+    $cv = Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -ErrorAction SilentlyContinue
+    $os = if ($cv) { ([string]$cv.ProductName -replace 'Windows 10', $(if ([int]$cv.CurrentBuild -ge 22000) { 'Windows 11' } else { 'Windows 10' })) + " $($cv.DisplayVersion)" } else { 'Windows 11' }
     $ui.PageDesc.Text = "$env:COMPUTERNAME  ·  $os  ·  " + (T $(if ($script:IsAdmin) { 'Administrador' } else { 'Sin permisos de administrador' }))
     $ui.PageDesc.Visibility = 'Visible'
+    foreach ($s in $script:RingSeg) { $s.Now = 0.0 }; $script:RingShown = 0
     Update-HomeStats
-    try { $c = [IO.DriveInfo]::new($env:SystemDrive.TrimEnd(':')); $script:HomeCells.Disk.Text = Format-Size $c.AvailableFreeSpace } catch { $script:HomeCells.Disk.Text = '--' }
-    $startup = @(try { Get-StartupEntries | Where-Object Enabled } catch { })
-    $script:HomeCells.Startup.Text = "$($startup.Count)"
-    $last = @(Get-History) | Sort-Object { [string]$_.time } -Descending | Select-Object -First 1
-    $script:HomeCells.Last.Text = if ($last) { try { Format-Ago ([datetime]::Parse([string]$last.time)) } catch { '--' } } else { T 'Ninguno' }
 
     $script:HomeInfo.Children.Clear()
     if (-not $script:IsAdmin) {
         [void]$script:HomeInfo.Children.Add((New-InfoBar 'lock-simple' 'Ves el estado de todo, pero para aplicar cambios hace falta abrir el panel como administrador.' 'warn' 'Reiniciar como admin' { Restart-AsAdmin }))
     }
 
-    # sugerencias, de más a menos importante; solo las que tocan en este equipo
+    # qué mejorar, de más a menos importante; solo lo que toca en este equipo
     $script:HomeSug.Children.Clear()
-    $ready = $script:StatusReady -or @($script:Rows.Values | Where-Object { $null -ne $_.Applied }).Count -gt 0   # la comprobación ya ha rellenado el estado
+    $ready = $script:StatusReady -or @($script:Rows.Values | Where-Object { $null -ne $_.Applied }).Count -gt 0
     $outside = @($script:Rows.Values | Where-Object { $_.Applied -eq $false -and (Get-Backup $_.Tweak.Id) })
     if ($ready -and $outside.Count) {
         [void]$script:HomeSug.Children.Add((New-Suggestion 'warning' (T "Windows ha deshecho $($outside.Count) ajustes") (($outside | Select-Object -First 3 | ForEach-Object { $_.Tweak.Name }) -join ', ') 'Revisar' { Select-NavKey 'all' } -Primary))
@@ -232,10 +235,9 @@ function Update-HomeView {
     $clean = 0; if ($script:CleanRows) { foreach ($r in $script:CleanRows.Values) { if ($null -ne $r.Bytes) { $clean += $r.Bytes } } }
     if ($clean -ge 200MB) { [void]$script:HomeSug.Children.Add((New-Suggestion 'broom' (T "Liberar $(Format-Size $clean)") (T 'Temporales, cachés y restos de actualizaciones.') 'Abrir' { Select-NavKey 'cleanup' })) }
     elseif (-not $script:CleanRows) { [void]$script:HomeSug.Children.Add((New-Suggestion 'broom' (T 'Mira cuánto espacio puedes liberar') (T 'Temporales, cachés y restos de actualizaciones.') 'Analizar' { Select-NavKey 'cleanup' })) }
+    $startup = @(try { Get-StartupEntries | Where-Object Enabled } catch { })
     if ($startup.Count -ge 6) {
         [void]$script:HomeSug.Children.Add((New-Suggestion 'sign-in' (T "$($startup.Count) apps se abren al iniciar Windows") (($startup | Select-Object -First 3 | ForEach-Object { $_.Name }) -join ', ') 'Revisar' { Select-NavKey 'startup' }))
     }
     [void]$script:HomeSug.Children.Add((New-Suggestion 'lightning' (T 'Antes de jugar') (T 'Sesión de juego cierra lo que sobra y lo devuelve al terminar.') 'Abrir' { Select-NavKey 'booster' }))
-    if (-not $ready) { $w = New-Text 'Comprobando el estado de los ajustes...' 12 'Ink2'; $w.Margin = '2,6,0,0'; [void]$script:HomeSug.Children.Add($w) }
-    Update-HomePins
 }
