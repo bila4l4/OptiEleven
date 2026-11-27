@@ -171,15 +171,22 @@ function Update-AppBar {
 }
 
 function Start-AppScan {
+    # what's installed, according to winget; in a background runspace (Start-Job started a whole PowerShell process and froze the page)
     $script:AppStatus.Text = (T 'Comprobando qué tienes instalado...')
-    $tmp = Join-Path $env:TEMP 'optieleven-winget.json'
-    $script:AppJob = Start-Job -ArgumentList $tmp -ScriptBlock {
-        param($f)
-        Remove-Item $f -ErrorAction SilentlyContinue
-        winget export -o $f --source winget --accept-source-agreements --disable-interactivity *> $null
-        if (Test-Path $f) { (Get-Content $f -Raw | ConvertFrom-Json).Sources.Packages.PackageIdentifier }
+    Start-Bg -Work {
+        param($A)
+        Remove-Item $A.File -ErrorAction SilentlyContinue
+        winget export -o $A.File --source winget --accept-source-agreements --disable-interactivity *> $null
+        if (Test-Path $A.File) { $j = Get-Content $A.File -Raw | ConvertFrom-Json; $j.Sources.Packages.PackageIdentifier }
+    } -ArgList @(@{ File = (Join-Path $env:TEMP 'optieleven-winget.json') }) -Done {
+        param($ids)
+        $script:AppInstalled = @($ids | Where-Object { $_ })
+        foreach ($id in $script:AppCards.Keys) { Update-AppCard $id }
+        # counted on the whole catalog: the cards may still be filling in
+        $all = @($AppCatalog.Values | ForEach-Object { $_ })
+        $have = @($all | Where-Object { $script:AppInstalled -contains $_.Id }).Count
+        $script:AppStatus.Text = (T "Tienes $have de $($all.Count) instaladas. Márcalas y pulsa Instalar ahora, o crea un instalador para otro PC.")
     }
-    $script:AppScanTimer.Start()
 }
 
 function Start-WingetConsole([string]$Title, [string[]]$Commands) {
@@ -194,11 +201,6 @@ function Start-WingetConsole([string]$Title, [string[]]$Commands) {
 }
 
 # ---------- single installer (like Ninite): one file that installs everything selected, on any PC
-function Remove-Accents([string]$Text) {
-    # the .cmd is saved as ASCII: cmd.exe doesn't handle the UTF-8 BOM at the start of the file
-    $n = $Text.Normalize([Text.NormalizationForm]::FormD)
-    (-join ($n.ToCharArray() | Where-Object { [Globalization.CharUnicodeInfo]::GetUnicodeCategory($_) -ne 'NonSpacingMark' })) -replace '[^\x20-\x7E\r\n\t]', ''
-}
 function Get-AppInstallScript([object[]]$Apps) {
     $q = { param($x) "'" + ($x -replace "'", "''") + "'" }
     $list = ($Apps | ForEach-Object { "    @{ Id = $(& $q $_.Id); Name = $(& $q (T $_.Name)); Args = $(& $q ([string]$_.Args)) }" }) -join "`r`n"
@@ -305,6 +307,52 @@ function New-AppLogo($App, [double]$Box = 40) {
     $w.Child = $img
     $w
 }
+# builds one group of app cards and schedules the next one (see New-AppsPage)
+function Add-NextAppGroup {
+    # up to 4 queue items per dispatcher turn: a group starts with its heading and grid, then one card per item
+    for ($n = 0; $n -lt 4; $n++) {
+        if (-not $script:AppQueue -or $script:AppQueue.Count -eq 0) { return }
+        $item = $script:AppQueue.Dequeue()
+        if (-not $item.App) {
+            $secHead = New-Section $item.Group; [void]$script:AppRoot.Children.Add($secHead)
+            $wrap = [Windows.Controls.Primitives.UniformGrid]::new(); $wrap.Columns = 4; $wrap.Margin = '0,0,-10,0'
+            [void]$script:AppRoot.Children.Add($wrap)
+            $script:AppCurSection = @{ Head = $secHead; Wrap = $wrap; Cards = [Collections.ArrayList]::new() }
+            $script:AppSections += $script:AppCurSection
+            continue
+        }
+        $app = $item.App
+        $card = [Windows.Controls.Border]::new()
+        $card.Style = $window.FindResource('Row'); $card.RenderTransform = [Windows.Media.TranslateTransform]::new()
+        $card.Margin = '0,0,10,10'; $card.Padding = '16,14'; $card.Cursor = 'Hand'; $card.Tag = $app.Id
+        $g = New-Cols @('50', '*', 'Auto')
+        [void](Add-At $g (New-AppLogo $app 40) 0)
+        $sp = [Windows.Controls.StackPanel]::new(); $sp.VerticalAlignment = 'Center'
+        $nm = New-Text $app.Name 14 'Ink' 'Medium'
+        $st = New-Text '' 12 'Muted'; $st.Margin = '0,3,0,0'
+        [void]$sp.Children.Add($nm); [void]$sp.Children.Add($st)
+        [void](Add-At $g $sp 1)
+        $chk = [Windows.Controls.Border]::new(); $chk.Width = 22; $chk.Height = 22; $chk.CornerRadius = 11; $chk.BorderThickness = 1
+        $chk.VerticalAlignment = 'Center'; $chk.Margin = '12,0,0,0'
+        $gl = New-Icon 'check' 13 'AccentInk'; $gl.HorizontalAlignment = 'Center'; $gl.Visibility = 'Hidden'
+        $chk.Child = $gl
+        [void](Add-At $g $chk 2)
+        $card.Child = $g
+        $card.Add_MouseLeftButtonUp({
+            param($src, $e)
+            $id = [string]$src.Tag
+            if (-not $script:AppSel.Remove($id)) { [void]$script:AppSel.Add($id) }
+            Update-AppCard $id; Update-AppBar
+        })
+        [void]$script:AppCurSection.Wrap.Children.Add($card)
+        $script:AppCards[$app.Id] = @{ App = $app; Border = $card; State = $st; Check = $chk; Glyph = $gl }
+        [void]$script:AppCurSection.Cards.Add(@{ Card = $card; Name = $app.Name })
+        Update-AppCard $app.Id
+        # a search typed before this card existed still applies to it
+        $q = $script:AppSearch.Text.Trim(); if ($q -and $app.Name -notlike "*$q*") { $card.Visibility = 'Collapsed' }
+    }
+    [void]$window.Dispatcher.BeginInvoke([Action] { Add-NextAppGroup }, [Windows.Threading.DispatcherPriority]::Background)
+}
 function New-AppsPage {
     $root = [Windows.Controls.StackPanel]::new()
     $script:AppSel = New-Object 'System.Collections.Generic.HashSet[string]'
@@ -365,42 +413,11 @@ function New-AppsPage {
     [void]$root.Children.Add($sb)
     $script:AppSections = @()
 
-    $groupIcons = @{}
-    foreach ($group in $AppCatalog.Keys) {
-        $secHead = New-Section $group; [void]$root.Children.Add($secHead)
-        $wrap = [Windows.Controls.Primitives.UniformGrid]::new(); $wrap.Columns = 4; $wrap.Margin = '0,0,-10,0'
-        $secCards = @()
-        foreach ($app in $AppCatalog[$group]) {
-            $card = [Windows.Controls.Border]::new()
-            $card.Style = $window.FindResource('Row'); $card.RenderTransform = [Windows.Media.TranslateTransform]::new()
-            $card.Margin = '0,0,10,10'; $card.Padding = '16,14'; $card.Cursor = 'Hand'; $card.Tag = $app.Id
-            $g = New-Cols @('50', '*', 'Auto')
-            [void](Add-At $g (New-AppLogo $app 40) 0)
-            $sp = [Windows.Controls.StackPanel]::new(); $sp.VerticalAlignment = 'Center'
-            $nm = New-Text $app.Name 14 'Ink' 'Medium'
-            $st = New-Text '' 12 'Muted'; $st.Margin = '0,3,0,0'
-            [void]$sp.Children.Add($nm); [void]$sp.Children.Add($st)
-            [void](Add-At $g $sp 1)
-            $chk = [Windows.Controls.Border]::new(); $chk.Width = 22; $chk.Height = 22; $chk.CornerRadius = 11; $chk.BorderThickness = 1
-            $chk.VerticalAlignment = 'Center'; $chk.Margin = '12,0,0,0'
-            $gl = New-Icon 'check' 13 'AccentInk'; $gl.HorizontalAlignment = 'Center'; $gl.Visibility = 'Hidden'
-            $chk.Child = $gl
-            [void](Add-At $g $chk 2)
-            $card.Child = $g
-            $card.Add_MouseLeftButtonUp({
-                param($src, $e)
-                $id = [string]$src.Tag
-                if (-not $script:AppSel.Remove($id)) { [void]$script:AppSel.Add($id) }
-                Update-AppCard $id; Update-AppBar
-            })
-            [void]$wrap.Children.Add($card)
-            $script:AppCards[$app.Id] = @{ App = $app; Border = $card; State = $st; Check = $chk; Glyph = $gl }
-            $secCards += @{ Card = $card; Name = $app.Name }
-            Update-AppCard $app.Id
-        }
-        [void]$root.Children.Add($wrap)
-        $script:AppSections += @{ Head = $secHead; Wrap = $wrap; Cards = $secCards }
-    }
+    # the 107 cards take over a second to build, so the page shows at once and each group is added on its own
+    # dispatcher turn (background priority): the window stays responsive while the list fills in
+    $script:AppRoot = $root
+    $script:AppQueue = [Collections.Queue]::new(); foreach ($grp in $AppCatalog.Keys) { $script:AppQueue.Enqueue(@{ Group = $grp }); foreach ($a in $AppCatalog[$grp]) { $script:AppQueue.Enqueue(@{ Group = $grp; App = $a }) } }
+    [void]$window.Dispatcher.BeginInvoke([Action] { Add-NextAppGroup }, [Windows.Threading.DispatcherPriority]::Background)
 
     $script:AppBtnInstall.Add_Click({
         $apps = Get-SelectedApps
@@ -434,16 +451,7 @@ function New-AppsPage {
             'winget upgrade --all --source winget --accept-package-agreements --accept-source-agreements --disable-interactivity')
     })
 
-    $script:AppScanTimer = New-Timer 0.5 {
-        if ($script:AppJob.State -in 'Completed', 'Failed', 'Stopped') {
-            $script:AppScanTimer.Stop()
-            $ids = @(Receive-Job $script:AppJob -ErrorAction SilentlyContinue); Remove-Job $script:AppJob -Force
-            $script:AppInstalled = @($ids | Where-Object { $_ })
-            foreach ($id in $script:AppCards.Keys) { Update-AppCard $id }
-            $have = @($script:AppCards.Keys | Where-Object { $script:AppInstalled -contains $_ }).Count
-            $script:AppStatus.Text = (T "Tienes $have de $($script:AppCards.Count) instaladas. Márcalas y pulsa Instalar ahora, o crea un instalador para otro PC.")
-        }
-    }
+
     $script:AppProcTimer = New-Timer 1 {
         if ($script:AppProc.HasExited) {
             $script:AppProcTimer.Stop(); $script:AppRunning = $false

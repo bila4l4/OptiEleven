@@ -22,16 +22,6 @@ function Get-ActiveAdapters {
     }
 }
 
-function Measure-Latency([string]$Target, [int]$Count = 4) {
-    if (-not $Target) { return $null }
-    $ping = New-Object System.Net.NetworkInformation.Ping
-    $times = @()
-    for ($i = 0; $i -lt $Count; $i++) {
-        try { $r = $ping.Send($Target, 1000); if ($r.Status -eq 'Success') { $times += $r.RoundtripTime } } catch {}
-        Update-Ui
-    }
-    if ($times) { [math]::Round(($times | Measure-Object -Average).Average) } else { $null }
-}
 
 function Update-NetInfo {
     # Get-NetAdapter and friends load CIM modules (a couple of seconds): in the background

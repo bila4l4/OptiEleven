@@ -127,10 +127,11 @@ function Invoke-CleanScan {
     $jobs = @()
     foreach ($r in $script:CleanRows.Values) {
         if ($r.Item.Admin -and -not $script:IsAdmin) { $r.Bytes = $null; $r.SizeTb.Text = (T 'admin'); continue }
-        if ($r.Item.Size) { $r.Bytes = Get-CleanBytes $r.Item; $r.SizeTb.Text = Format-Size $r.Bytes; continue }
         $r.SizeTb.Text = (T '...')
+        # items with their own Size (the Recycle Bin, counted item by item) are measured in the background too, from the block's text
+        if ($r.Item.Size) { $jobs += , @($r.Item.Id, @(), $r.Item.Size.ToString()); continue }
         $paths = @(); if ($r.Item.Paths) { $paths += @(& $r.Item.Paths) }; if ($r.Item.Files) { $paths += @(& $r.Item.Files) }
-        $jobs += , @($r.Item.Id, $paths)
+        $jobs += , @($r.Item.Id, $paths, $null)
     }
     Update-CleanTotal
     $progress = [hashtable]::Synchronized(@{})
@@ -138,6 +139,7 @@ function Invoke-CleanScan {
         param($A, $P)
         foreach ($j in $A.Jobs) {
             $total = 0
+            if ($j[2]) { try { $total = [double](& ([scriptblock]::Create($j[2]))) } catch {}; $P[$j[0]] = $total; continue }
             foreach ($path in $j[1]) {
                 try {
                     if (-not (Test-Path -LiteralPath $path)) { continue }

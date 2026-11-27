@@ -171,14 +171,17 @@ function Update-BoostView {
                             else { 'Marca lo que quieres apartar mientras juegas y actívalo.' })
     $script:BoostBtn.Content = T $(if ($on) { 'Terminar y restaurar' } else { 'Activar booster' })
     $script:BoostBtn.IsEnabled = $script:IsAdmin
+    # one process list and one service query for every row (one call per app made the page take half a second)
+    $byName = @{}; foreach ($p in Get-Process) { $byName[$p.ProcessName] += [double]$p.WorkingSet64 }
+    $svcs = @{}; foreach ($s in @(Get-Service -Name @($script:BoostSvcRows | ForEach-Object { $_.Svc.Name }) -ErrorAction SilentlyContinue)) { $svcs[$s.Name] = $s }
     foreach ($r in $script:BoostAppRows) {
-        $mem = Get-AppMemory $r.App
+        $mem = $null; foreach ($n in @($r.App.Proc)) { if ($byName.ContainsKey($n)) { $mem += $byName[$n] } }
         $r.Mem.Text = T $(if ($null -ne $mem) { Format-Size $mem } else { 'cerrada' })
         $r.Mem.SetResourceReference($FgProp, $(if ($null -ne $mem) { 'Ink' } else { 'Muted' }))
         $r.Switch.IsEnabled = -not $on
     }
     foreach ($r in $script:BoostSvcRows) {
-        $svc = Get-Service -Name $r.Svc.Name -ErrorAction SilentlyContinue
+        $svc = $svcs[$r.Svc.Name]
         $r.State.Text = T $(if (-not $svc) { 'no existe' } elseif ($svc.Status -eq 'Running') { 'en marcha' } else { 'parado' })
         $r.Switch.IsEnabled = -not $on
     }

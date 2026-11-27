@@ -44,7 +44,7 @@ function Get-RingValues {
     $perf = & $fr @('Rendimiento', 'Latencia', 'Juegos')
     $free = 0; $total = 1
     try { $c = [IO.DriveInfo]::new($env:SystemDrive.TrimEnd(':')); $free = [double]$c.AvailableFreeSpace; $total = [double]$c.TotalSize } catch {}
-    $startup = @(try { Get-StartupEntries | Where-Object Enabled } catch { }).Count
+    $startup = @($script:HomeStartup).Count   # read once per Home open in Update-HomeView, not on every tweak change
     @{
         Known = $known
         privacy = @{ F = $priv.F; Text = (T "$($priv.A) de $($priv.N) recomendados aplicados") }
@@ -168,7 +168,7 @@ function Start-RingAnimation {
 
 # the core calls it when the tweak state changes (after the check finishes or after applying)
 function Update-HomeStats {
-    if (-not $script:RingSeg) { return }
+    if (-not $script:RingSeg -or $script:CurrentPage -ne 'home') { return }   # off Home there is nothing to redraw; opening Home recalculates
     $script:RingVals = Get-RingValues
     $sum = 0.0; foreach ($p in $RingParts) { $sum += $script:RingVals[$p.Id].F }
     $script:RingScore = [int][math]::Round($sum / $RingParts.Count * 100)
@@ -256,6 +256,7 @@ function Update-HomeView {
     $os = if ($cv) { ([string]$cv.ProductName -replace 'Windows 10', $(if ([int]$cv.CurrentBuild -ge 22000) { 'Windows 11' } else { 'Windows 10' })) + " $($cv.DisplayVersion)" } else { 'Windows 11' }
     $ui.PageDesc.Text = "$env:COMPUTERNAME  ·  $os  ·  " + (T $(if ($script:IsAdmin) { 'Administrador' } else { 'Sin permisos de administrador' }))
     $ui.PageDesc.Visibility = 'Visible'
+    $script:HomeStartup = @(try { Get-StartupEntries | Where-Object Enabled } catch { })
     foreach ($s in $script:RingSeg) { $s.Now = 0.0 }; $script:RingShown = 0
     Update-HomeStats
 
@@ -278,7 +279,7 @@ function Update-HomeView {
     $clean = 0; if ($script:CleanRows) { foreach ($r in $script:CleanRows.Values) { if ($null -ne $r.Bytes) { $clean += $r.Bytes } } }
     if ($clean -ge 200MB) { [void]$script:HomeSug.Children.Add((New-Suggestion 'broom' (T "Liberar $(Format-Size $clean)") (T 'Temporales, cachés y restos de actualizaciones.') 'Abrir' { Select-NavKey 'cleanup' })) }
     elseif (-not $script:CleanRows) { [void]$script:HomeSug.Children.Add((New-Suggestion 'broom' (T 'Mira cuánto espacio puedes liberar') (T 'Temporales, cachés y restos de actualizaciones.') 'Analizar' { Select-NavKey 'cleanup' })) }
-    $startup = @(try { Get-StartupEntries | Where-Object Enabled } catch { })
+    $startup = $script:HomeStartup
     if ($startup.Count -ge 6) {
         [void]$script:HomeSug.Children.Add((New-Suggestion 'sign-in' (T "$($startup.Count) apps se abren al iniciar Windows") (($startup | Select-Object -First 3 | ForEach-Object { $_.Name }) -join ', ') 'Revisar' { Select-NavKey 'startup' }))
     }

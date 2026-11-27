@@ -1,6 +1,7 @@
 {
   "name": "English",
   "strings": {
+    "No se pudo comprobar el estado de los ajustes.": "Couldn't check the state of the tweaks.",
     "Liberar memoria": "Free up memory",
     "Liberando memoria": "Freeing up memory",
     "Libera RAM, borra archivos temporales y vacía la caché DNS. No cambia ningún ajuste.": "Frees RAM, deletes temp files and clears the DNS cache. No tweaks are changed.",

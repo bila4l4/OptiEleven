@@ -15,7 +15,8 @@ param(
     [string]$Config,
     [string]$Page = 'home',
     [switch]$NoGui,
-    [switch]$Status
+    [switch]$Status,
+    [switch]$StatusData   # internal: the panel runs itself with this in the background to check every tweak without freezing the window
 )
 
 $ErrorActionPreference = 'Stop'
@@ -572,7 +573,7 @@ $Tweaks = Import-Tweaks (Join-Path $PSScriptRoot 'tools\tweaks')
 
 # what was applied with v1 is already in backup.json (same file and format), so it can be undone the same way;
 # the first time it is also added to the history, with the date it was applied
-if ($script:Store -and -not (Test-Path -LiteralPath $script:HistoryFile)) {
+if ($script:Store -and -not $StatusData -and -not (Test-Path -LiteralPath $script:HistoryFile)) {
     $known = @($Tweaks | ForEach-Object { $_.Id })
     foreach ($p in @($script:Store.PSObject.Properties | Where-Object { $known -contains $_.Name } | Sort-Object { [string]$_.Value.Time })) {
         Add-History 'tweak' 'apply' 'Aplicado con una versión anterior' $p.Name $true $null '' ([string]$p.Value.Time)
@@ -790,6 +791,12 @@ $CustomDiff = @{
 }
 
 # ============================================================ no-UI modes
+if ($StatusData) {
+    # one object per tweak: { Id, Applied } (true / false / null when it can't be checked); read by Update-Status
+    $script:AppxNames = @(Get-AppxPackage -ErrorAction SilentlyContinue | ForEach-Object Name)
+    foreach ($t in $Tweaks) { [pscustomobject]@{ Id = $t.Id; Applied = $(try { Test-Tweak $t } catch { $null }) } }
+    return
+}
 if ($Status) {
     $Tweaks | ForEach-Object {
         $s = try { Test-Tweak $_ } catch { 'error' }
@@ -1512,7 +1519,6 @@ try {
         $b.Style = $window.FindResource($(if ($Primary) { 'BtnPrimary' } else { 'Btn' })); $b.Content = (T $Text)
         $b
     }
-    function New-Card { $b = [Windows.Controls.Border]::new(); $b.Style = $window.FindResource('Tile'); $b.Margin = '0,0,0,10'; $b }
     function New-Section([string]$Text) { $t = New-Text $Text 18 'Ink' 'SemiBold'; $t.FontFamily = $window.FindResource('Display'); $t.Margin = '0,22,0,8'; $t }
     function New-Ruled { $s = [Windows.Controls.Border]::new(); $s.SetResourceReference([Windows.Controls.Border]::BorderBrushProperty, 'Rule'); $s.BorderThickness = '0,1,0,0'; $s.Margin = '0,0,0,8'; $s }
     function New-Cols([string[]]$Widths) {
@@ -2200,19 +2206,21 @@ try {
     function Update-Pending {
         $applied = 0
         foreach ($row in $script:Rows.Values) {
-            if ($null -eq $row.Applied) { Set-Chip $row.State 'No disponible' 'Subtle' 'Ink2'; $row.Mark.Visibility = 'Hidden'; continue }
-            if ($row.Applied) { $applied++ }
+            # each card's chip is repainted only when its state changes: this runs on every switch flip
             $want = [bool]$row.Switch.IsChecked
-            if ($want -ne $row.Applied) {
-                Set-Chip $row.State $(if ($want) { 'Se aplicará' } else { 'Se revertirá' }) 'Accent' 'AccentInk'
-                $row.Mark.Visibility = 'Visible'
+            $key = if ($null -eq $row.Applied) { 'na' } elseif ($want -ne $row.Applied) { "pending-$want" } elseif ($row.Applied) { 'applied' } elseif (Get-Backup $row.Tweak.Id) { 'outside' } else { 'off' }
+            if ($row.Applied -eq $true) { $applied++ }
+            if ($row.ChipKey -eq $key) { continue }
+            $row.ChipKey = $key
+            switch ($key) {
+                'na' { Set-Chip $row.State 'No disponible' 'Subtle' 'Ink2' }
+                'pending-True' { Set-Chip $row.State 'Se aplicará' 'Accent' 'AccentInk' }
+                'pending-False' { Set-Chip $row.State 'Se revertirá' 'Accent' 'AccentInk' }
+                'applied' { Set-Chip $row.State 'Aplicado' 'GreenSoft' 'Green' }
+                'outside' { Set-Chip $row.State 'Cambiado fuera' 'AmberSoft' 'Amber'; $row.State.ToolTip = T 'Lo aplicaste con el panel, pero Windows u otro programa lo ha vuelto a cambiar.' }
+                default { Set-Chip $row.State $null $null $null }
             }
-            else {
-                if ($row.Applied) { Set-Chip $row.State 'Aplicado' 'GreenSoft' 'Green' }
-                elseif (Get-Backup $row.Tweak.Id) { Set-Chip $row.State 'Cambiado fuera' 'AmberSoft' 'Amber'; $row.State.ToolTip = T 'Lo aplicaste con el panel, pero Windows u otro programa lo ha vuelto a cambiar.' }
-                else { Set-Chip $row.State $null $null $null }
-                $row.Mark.Visibility = 'Hidden'
-            }
+            $row.Mark.Visibility = if ($key -like 'pending-*') { 'Visible' } else { 'Hidden' }
         }
         $script:Stats.Tweaks.Text = T "$applied de $($script:Rows.Count)"
         Update-HomeStats
@@ -2244,21 +2252,34 @@ try {
         $ui.BtnApply.IsEnabled = $script:IsAdmin -and $pend.Count -gt 0 -and -not $script:Busy
         $ui.BtnDiscard.IsEnabled = $pend.Count -gt 0 -and -not $script:Busy
     }
+    # Checking the 60 tweaks takes seconds (registry, services, tasks, installed apps), so it runs in the background:
+    # the script runs itself with -StatusData in a runspace and the window only paints the result.
     function Update-Status {
-        $ui.LedgerSub.Text = T 'Comprobando el estado...'; Update-Ui
-        $script:AppxNames = @(Get-AppxPackage -ErrorAction SilentlyContinue | ForEach-Object Name)
-        $i = 0
-        foreach ($row in @($script:Rows.Values)) {
-            $row.Applied = try { Test-Tweak $row.Tweak } catch { $null }
-            if ((++$i % 4) -eq 0) { Update-Ui }   # the window stays responsive while checking
-            if ($null -eq $row.Applied) { $row.Switch.IsEnabled = $false }
-            else { $row.Switch.IsEnabled = -not $script:Busy; $row.Switch.IsChecked = [bool]$row.Applied }
+        $ui.LedgerSub.Text = T 'Comprobando el estado...'
+        if ($script:StatusRunning) { $script:StatusAgain = $true; return }   # one check at a time; a request meanwhile runs right after
+        $script:StatusRunning = $true
+        Start-Bg -Work { param($A) & $A.Script -StatusData } -ArgList @(@{ Script = $PSCommandPath }) -Done {
+            param($r)
+            $script:StatusRunning = $false
+            $map = @{}; foreach ($x in @($r)) { if ($x -and $x.Id) { $map[[string]$x.Id] = $x.Applied } }
+            if ($map.Count) {
+                foreach ($row in @($script:Rows.Values)) {
+                    $row.Applied = $map[[string]$row.Tweak.Id]
+                    if ($null -eq $row.Applied) { $row.Switch.IsEnabled = $false }
+                    else { $row.Switch.IsEnabled = -not $script:Busy; $row.Switch.IsChecked = [bool]$row.Applied }
+                }
+            } else { Write-Log 'No se pudo comprobar el estado de los ajustes.' 'WARN' }
+            Update-Pending
+            Show-Detail $script:Selected
+            if (-not $script:StatusReady) {
+                $script:StatusReady = $true
+                if ($script:CleanPending) { $script:CleanPending = $false; Invoke-CleanScan }
+            }
+            # the open page may depend on the state (e.g. History and its undo buttons): it is redrawn with its "onShow"
+            $cp = if ($script:CurrentPage) { $Pages[$script:CurrentPage] }
+            if ($cp -and $cp.OnShow -and $script:ModuleCache.ContainsKey($script:CurrentPage)) { try { & $cp.OnShow } catch {} }
+            if ($script:StatusAgain) { $script:StatusAgain = $false; Update-Status }
         }
-        Update-Pending
-        Show-Detail $script:Selected
-        # the open page may depend on the state (e.g. History and its undo buttons): it is redrawn with its "onShow"
-        $cp = if ($script:CurrentPage) { $Pages[$script:CurrentPage] }
-        if ($cp -and $cp.OnShow -and $script:ModuleCache.ContainsKey($script:CurrentPage)) { try { & $cp.OnShow } catch {} }
     }
     function Set-Busy([bool]$Busy) {
         $script:Busy = $Busy
@@ -2403,9 +2424,7 @@ try {
 
     $window.Add_ContentRendered({
         $timer.Start(); & $updateStats
-        Update-Status
-        $script:StatusReady = $true
-        if ($script:CleanPending) { $script:CleanPending = $false; Invoke-CleanScan }
+        Update-Status   # background; StatusReady and the pending cleanup scan are set when it finishes
         Write-Log ("Panel listo. {0} ajustes. Copias de seguridad en {1}" -f $Tweaks.Count, $script:Root)
         if (-not $script:IsAdmin) { Write-Log 'Sin permisos de administrador: solo se muestra el estado.' 'WARN' }
     })
