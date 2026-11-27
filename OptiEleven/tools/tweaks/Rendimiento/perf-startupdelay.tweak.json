@@ -4,12 +4,12 @@
     "category":  "Rendimiento",
     "order":  270,
     "name":  {
-                 "es":  "Sin retraso de las apps de inicio",
-                 "en":  "No startup app delay"
+                 "es":  "Apps de inicio sin espera",
+                 "en":  "No startup delay"
              },
     "summary":  {
-                    "es":  "Windows espera unos segundos antes de abrir las apps de inicio. Con SSD no hace falta.",
-                    "en":  "Windows waits a few seconds before opening startup apps. Not needed with an SSD."
+                    "es":  "Las apps de inicio se abren al momento.",
+                    "en":  "Startup apps open right away."
                 },
     "risk":  "safe",
     "presets":  [
@@ -30,5 +30,9 @@
                         "value":  0,
                         "default":  null
                     }
-                ]
+                ],
+    "details":  {
+                    "es":  "Windows espera unos segundos antes de abrir las apps de inicio. Con SSD no hace falta.",
+                    "en":  "Windows waits a few seconds before opening startup apps. Not needed with an SSD."
+                }
 }

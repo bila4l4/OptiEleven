@@ -1,8 +1,8 @@
 {
     "id":  "cleanup",
     "kind":  "tool",
-    "category":  "tools",
-    "order":  30,
+    "category":  "clean",
+    "order":  10,
     "name":  {
                  "es":  "Limpieza",
                  "en":  "Cleanup"
@@ -12,8 +12,8 @@
                   "en":  "Cleanup"
               },
     "summary":  {
-                    "es":  "Temporales, cachés y restos de actualizaciones. Primero ves cuánto ocupa cada cosa.",
-                    "en":  "Temp files, caches and update leftovers. You see how much each one takes first."
+                    "es":  "Temporales, cachés y restos de actualizaciones.",
+                    "en":  "Temp files, caches and update leftovers."
                 },
     "icon":  "broom",
     "color":  "Cat-Interfaz",
@@ -28,5 +28,13 @@
                               "es":  "Solo borra temporales y cachés que Windows y las apps vuelven a crear.",
                               "en":  "Only deletes temp files and caches that Windows and apps create again."
                           }
-             }
+             },
+    "keywords":  [
+                     "temporales",
+                     "cache",
+                     "liberar",
+                     "borrar",
+                     "temp",
+                     "clean"
+                 ]
 }

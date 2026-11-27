@@ -4,12 +4,12 @@
     "category":  "Juegos",
     "order":  250,
     "name":  {
-                 "es":  "Sin aceleración del ratón",
-                 "en":  "No mouse acceleration"
+                 "es":  "Ratón sin aceleración",
+                 "en":  "Mouse acceleration off"
              },
     "summary":  {
-                    "es":  "Desactiva \"Mejorar la precisión del puntero\": el movimiento es 1:1, mejor para apuntar. Requiere cerrar sesión.",
-                    "en":  "Turns off \"Enhance pointer precision\": movement is 1:1, better for aiming. Needs a sign-out."
+                    "es":  "El puntero se mueve lo mismo que tu mano.",
+                    "en":  "The pointer moves exactly as much as your hand."
                 },
     "risk":  "safe",
     "presets":  [
@@ -43,5 +43,9 @@
                         "value":  "0",
                         "default":  null
                     }
-                ]
+                ],
+    "details":  {
+                    "es":  "Desactiva \"Mejorar la precisión del puntero\": el movimiento es 1:1, mejor para apuntar. Requiere cerrar sesión.",
+                    "en":  "Turns off \"Enhance pointer precision\": movement is 1:1, better for aiming. Needs a sign-out."
+                }
 }

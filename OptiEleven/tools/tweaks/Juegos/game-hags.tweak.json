@@ -4,12 +4,12 @@
     "category":  "Juegos",
     "order":  230,
     "name":  {
-                 "es":  "Programación de GPU acelerada por hardware",
-                 "en":  "Hardware-accelerated GPU scheduling"
+                 "es":  "Programación de GPU (HAGS)",
+                 "en":  "GPU scheduling (HAGS)"
              },
     "summary":  {
-                    "es":  "La GPU gestiona su propia cola de trabajo: menos latencia y menos carga de CPU. Necesario para Frame Generation.",
-                    "en":  "The GPU manages its own work queue: lower latency and less CPU load. Required for Frame Generation."
+                    "es":  "La GPU gestiona su propia cola: menos latencia.",
+                    "en":  "The GPU manages its own queue: lower latency."
                 },
     "risk":  "safe",
     "presets":  [
@@ -30,5 +30,9 @@
                         "value":  2,
                         "default":  null
                     }
-                ]
+                ],
+    "details":  {
+                    "es":  "La GPU gestiona su propia cola de trabajo: menos latencia y menos carga de CPU. Necesario para Frame Generation.",
+                    "en":  "The GPU manages its own work queue: lower latency and less CPU load. Required for Frame Generation."
+                }
 }

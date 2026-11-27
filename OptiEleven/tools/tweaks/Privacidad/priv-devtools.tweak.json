@@ -5,11 +5,11 @@
     "order":  480,
     "name":  {
                  "es":  "PowerShell y .NET sin telemetría",
-                 "en":  "PowerShell and .NET without telemetry"
+                 "en":  "PowerShell and .NET telemetry off"
              },
     "summary":  {
-                    "es":  "Variables de entorno oficiales para que PowerShell 7 y las herramientas de .NET no envíen datos de uso.",
-                    "en":  "Official environment variables so PowerShell 7 and the .NET tools don\u0027t send usage data."
+                    "es":  "Para quien programa.",
+                    "en":  "For developers."
                 },
     "risk":  "safe",
     "presets":  [
@@ -37,5 +37,9 @@
                         "value":  "1",
                         "default":  null
                     }
-                ]
+                ],
+    "details":  {
+                    "es":  "Variables de entorno oficiales para que PowerShell 7 y las herramientas de .NET no envíen datos de uso.",
+                    "en":  "Official environment variables so PowerShell 7 and the .NET tools don\u0027t send usage data."
+                }
 }

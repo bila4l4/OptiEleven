@@ -8,8 +8,8 @@
                  "en":  "Classic context menu"
              },
     "summary":  {
-                    "es":  "Recupera el menú de clic derecho completo de Windows 10 (sin \"Mostrar más opciones\"). Reinicia el Explorador para verlo.",
-                    "en":  "Brings back the full Windows 10 right-click menu (no \"Show more options\"). Restart File Explorer to see it."
+                    "es":  "Sin «Mostrar más opciones».",
+                    "en":  "No more “Show more options”."
                 },
     "risk":  "safe",
     "presets":  [
@@ -24,5 +24,9 @@
     "actions":  [
 
                 ],
-    "script":  "ui-context.tweak.ps1"
+    "script":  "ui-context.tweak.ps1",
+    "details":  {
+                    "es":  "Recupera el menú de clic derecho completo de Windows 10 (sin \"Mostrar más opciones\"). Reinicia el Explorador para verlo.",
+                    "en":  "Brings back the full Windows 10 right-click menu (no \"Show more options\"). Restart File Explorer to see it."
+                }
 }

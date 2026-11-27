@@ -5,11 +5,11 @@
     "order":  470,
     "name":  {
                  "es":  "Office sin telemetría",
-                 "en":  "Office without telemetry"
+                 "en":  "Office telemetry off"
              },
     "summary":  {
-                    "es":  "Word, Excel y compañía dejan de enviar datos de uso y de pedir opinión. Si no tienes Office, no hace nada.",
-                    "en":  "Word, Excel and the rest stop sending usage data and asking for feedback. Does nothing if you don\u0027t have Office."
+                    "es":  "Word, Excel y compañía no envían datos de uso.",
+                    "en":  "Word, Excel and the rest stop sending usage data."
                 },
     "risk":  "safe",
     "presets":  [
@@ -51,5 +51,9 @@
                         "value":  3,
                         "default":  null
                     }
-                ]
+                ],
+    "details":  {
+                    "es":  "Word, Excel y compañía dejan de enviar datos de uso y de pedir opinión. Si no tienes Office, no hace nada.",
+                    "en":  "Word, Excel and the rest stop sending usage data and asking for feedback. Does nothing if you don\u0027t have Office."
+                }
 }

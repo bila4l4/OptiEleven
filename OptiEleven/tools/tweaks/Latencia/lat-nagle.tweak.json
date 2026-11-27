@@ -4,12 +4,12 @@
     "category":  "Latencia",
     "order":  410,
     "name":  {
-                 "es":  "Desactivar el algoritmo de Nagle",
-                 "en":  "Turn off Nagle\u0027s algorithm"
+                 "es":  "Sin algoritmo de Nagle",
+                 "en":  "Nagle\u0027s algorithm off"
              },
     "summary":  {
-                    "es":  "TCP envía cada paquete al momento en vez de agruparlos. Solo ayuda en juegos que usan TCP (MMO, MOBA antiguos); los shooters usan UDP.",
-                    "en":  "TCP sends every packet right away instead of batching them. Only helps games that use TCP (MMOs, older MOBAs); shooters use UDP."
+                    "es":  "Solo ayuda en juegos que usan TCP.",
+                    "en":  "Only helps games that use TCP."
                 },
     "risk":  "advanced",
     "presets":  [
@@ -24,5 +24,9 @@
     "actions":  [
 
                 ],
-    "script":  "lat-nagle.tweak.ps1"
+    "script":  "lat-nagle.tweak.ps1",
+    "details":  {
+                    "es":  "TCP envía cada paquete al momento en vez de agruparlos. Solo ayuda en juegos que usan TCP (MMO, MOBA antiguos); los shooters usan UDP.",
+                    "en":  "TCP sends every packet right away instead of batching them. Only helps games that use TCP (MMOs, older MOBAs); shooters use UDP."
+                }
 }

@@ -4,12 +4,12 @@
     "category":  "Servicios",
     "order":  80,
     "name":  {
-                 "es":  "Servicios que nadie usa",
-                 "en":  "Services nobody uses"
+                 "es":  "Sin servicios innecesarios",
+                 "en":  "Unneeded services off"
              },
     "summary":  {
-                    "es":  "Mapas sin conexión, modo demo de tienda y fax.",
-                    "en":  "Offline maps, retail demo mode and fax."
+                    "es":  "Mapas sin conexión, modo demo y fax.",
+                    "en":  "Offline maps, retail demo and fax."
                 },
     "risk":  "safe",
     "presets":  [
@@ -38,5 +38,9 @@
                         "startup":  "Disabled",
                         "default":  "Manual"
                     }
-                ]
+                ],
+    "details":  {
+                    "es":  "Mapas sin conexión, modo demo de tienda y fax.",
+                    "en":  "Offline maps, retail demo mode and fax."
+                }
 }

@@ -1,19 +1,19 @@
 {
     "id":  "hardware",
     "kind":  "tool",
-    "category":  "tools",
-    "order":  70,
+    "category":  "system",
+    "order":  10,
     "name":  {
-                 "es":  "Equipo",
-                 "en":  "Hardware"
+                 "es":  "Mi equipo",
+                 "en":  "My PC"
              },
     "title":  {
-                  "es":  "Tu equipo",
-                  "en":  "Your PC"
+                  "es":  "Mi equipo",
+                  "en":  "My PC"
               },
     "summary":  {
-                    "es":  "Procesador, gráfica, memoria, discos y el estado de Windows que afecta a los juegos.",
-                    "en":  "CPU, graphics, memory, disks and the Windows state that affects games."
+                    "es":  "Procesador, gráfica, memoria y discos.",
+                    "en":  "Processor, graphics, memory and drives."
                 },
     "icon":  "laptop",
     "color":  "Cat-Apps",
@@ -27,5 +27,13 @@
                               "es":  "Solo muestra información.",
                               "en":  "Only shows information."
                           }
-             }
+             },
+    "keywords":  [
+                     "hardware",
+                     "cpu",
+                     "gpu",
+                     "ram",
+                     "specs",
+                     "equipo"
+                 ]
 }

@@ -262,7 +262,7 @@ function Show-DiskResult([string]$Root) {
     $BgP = [Windows.Controls.Border]::BackgroundProperty; $BrP = [Windows.Controls.Border]::BorderBrushProperty
     $grid = New-Cols @('*', '250')
     # árbol
-    $card = [Windows.Controls.Border]::new(); $card.CornerRadius = 14; $card.Padding = '10,10,10,10'; $card.BorderThickness = 1; $card.Margin = '0,0,14,0'
+    $card = [Windows.Controls.Border]::new(); $card.CornerRadius = 8; $card.Padding = '10,10,10,10'; $card.BorderThickness = 1; $card.Margin = '0,0,14,0'
     $card.SetResourceReference($BgP, 'Glass'); $card.SetResourceReference($BrP, 'GlassEdge')
     $cs = [Windows.Controls.StackPanel]::new()
     # barra de acciones sobre lo elegido (lo mismo que el clic derecho)
@@ -290,7 +290,7 @@ function Show-DiskResult([string]$Root) {
     $card.Child = $cs
     [void](Add-At $grid $card 0)
     # extensiones
-    $ec = [Windows.Controls.Border]::new(); $ec.CornerRadius = 14; $ec.Padding = '16,14'; $ec.BorderThickness = 1; $ec.VerticalAlignment = 'Top'
+    $ec = [Windows.Controls.Border]::new(); $ec.CornerRadius = 8; $ec.Padding = '16,14'; $ec.BorderThickness = 1; $ec.VerticalAlignment = 'Top'
     $ec.SetResourceReference($BgP, 'Glass'); $ec.SetResourceReference($BrP, 'GlassEdge')
     $es = [Windows.Controls.StackPanel]::new()
     $et = New-Text 'Extensiones' 15 'Ink' 'SemiBold'; $et.Margin = '0,0,0,10'; [void]$es.Children.Add($et)
@@ -318,7 +318,7 @@ function Show-DiskResult([string]$Root) {
 function New-DiskPage {
     $BgP = [Windows.Controls.Border]::BackgroundProperty
     $root = [Windows.Controls.StackPanel]::new()
-    $hint = New-Text 'Elige un disco. Pulsa una carpeta para desplegarla y doble clic para abrirla en el Explorador. Con clic derecho, más opciones, como borrar.' 14 'Muted'
+    $hint = New-Text 'Clic para desplegar, doble clic para abrir y clic derecho para borrar.' 13 'Ink2'
     if (-not $script:IsAdmin) { $hint.Text += ' ' + (T 'Sin administrador, algunas carpetas del sistema no se pueden medir.') }
     $hint.Margin = '0,0,0,14'
     [void]$root.Children.Add($hint)

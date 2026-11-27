@@ -4,12 +4,12 @@
     "category":  "Apps",
     "order":  600,
     "name":  {
-                 "es":  "Desinstalar Microsoft Edge",
-                 "en":  "Uninstall Microsoft Edge"
+                 "es":  "Desinstalar Edge",
+                 "en":  "Uninstall Edge"
              },
     "summary":  {
-                    "es":  "Quita el navegador Edge y evita que Windows Update lo reinstale. WebView2, que usan muchos launchers, se queda. Instala otro navegador antes. Windows solo lo permite del todo en Europa; si no, puede negarse.",
-                    "en":  "Removes the Edge browser and stops Windows Update from reinstalling it. WebView2, used by many launchers, stays. Install another browser first. Windows only fully allows this in Europe; elsewhere it may refuse."
+                    "es":  "Y evita que Windows Update lo reinstale.",
+                    "en":  "And stops Windows Update from reinstalling it."
                 },
     "risk":  "advanced",
     "presets":  [
@@ -28,5 +28,9 @@
     "actions":  [
 
                 ],
-    "script":  "app-edge.tweak.ps1"
+    "script":  "app-edge.tweak.ps1",
+    "details":  {
+                    "es":  "Quita el navegador Edge y evita que Windows Update lo reinstale. WebView2, que usan muchos launchers, se queda. Instala otro navegador antes. Windows solo lo permite del todo en Europa; si no, puede negarse.",
+                    "en":  "Removes the Edge browser and stops Windows Update from reinstalling it. WebView2, used by many launchers, stays. Install another browser first. Windows only fully allows this in Europe; elsewhere it may refuse."
+                }
 }

@@ -4,12 +4,12 @@
     "category":  "Privacidad",
     "order":  10,
     "name":  {
-                 "es":  "Telemetría al mínimo",
+                 "es":  "Telemetría mínima",
                  "en":  "Minimal telemetry"
              },
     "summary":  {
-                    "es":  "Diagnósticos al mínimo que permite Windows Pro, sin programa de mejora (CEIP), sin inventario de apps y sin las tareas programadas que recogen datos.",
-                    "en":  "Diagnostics at the minimum Windows Pro allows, no improvement program (CEIP), no app inventory and none of the scheduled tasks that collect data."
+                    "es":  "Lo mínimo que permite tu edición de Windows.",
+                    "en":  "The minimum your Windows edition allows."
                 },
     "risk":  "safe",
     "presets":  [
@@ -166,5 +166,9 @@
                     {
                         "task":  "\\Microsoft\\Windows\\Autochk\\Proxy"
                     }
-                ]
+                ],
+    "details":  {
+                    "es":  "Diagnósticos al mínimo que permite Windows Pro, sin programa de mejora (CEIP), sin inventario de apps y sin las tareas programadas que recogen datos.",
+                    "en":  "Diagnostics at the minimum Windows Pro allows, no improvement program (CEIP), no app inventory and none of the scheduled tasks that collect data."
+                }
 }

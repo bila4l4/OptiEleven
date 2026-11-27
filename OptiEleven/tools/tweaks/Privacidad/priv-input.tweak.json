@@ -4,12 +4,12 @@
     "category":  "Privacidad",
     "order":  440,
     "name":  {
-                 "es":  "Escritura y voz sin enviar datos",
-                 "en":  "Typing and voice without sending data"
+                 "es":  "Escritura y voz privadas",
+                 "en":  "Private typing and voice"
              },
     "summary":  {
-                    "es":  "Windows deja de aprender de lo que escribes y dibujas, de leer tus contactos para el teclado y de mandar la voz a Microsoft.",
-                    "en":  "Windows stops learning from what you type and draw, reading your contacts for the keyboard, and sending your voice to Microsoft."
+                    "es":  "Windows no aprende de lo que escribes o dictas.",
+                    "en":  "Windows stops learning from what you type or say."
                 },
     "risk":  "safe",
     "presets":  [
@@ -58,5 +58,9 @@
                         "value":  0,
                         "default":  null
                     }
-                ]
+                ],
+    "details":  {
+                    "es":  "Windows deja de aprender de lo que escribes y dibujas, de leer tus contactos para el teclado y de mandar la voz a Microsoft.",
+                    "en":  "Windows stops learning from what you type and draw, reading your contacts for the keyboard, and sending your voice to Microsoft."
+                }
 }

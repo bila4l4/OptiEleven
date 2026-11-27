@@ -4,12 +4,12 @@
     "category":  "Privacidad",
     "order":  460,
     "name":  {
-                 "es":  "Microsoft Edge sin segundo plano ni telemetría",
-                 "en":  "Microsoft Edge without background or telemetry"
+                 "es":  "Edge sin segundo plano",
+                 "en":  "Edge without background"
              },
     "summary":  {
-                    "es":  "Edge deja de quedarse abierto al cerrarlo y de precargarse al encender (son 6 a 10 procesos y unos 300 MB de RAM), sin barra de Copilot, sin compras ni recomendaciones. Edge dirá \"administrado por tu organización\".",
-                    "en":  "Edge stops staying open after you close it and preloading at startup (6 to 10 processes and about 300 MB of RAM), with no Copilot sidebar, shopping or recommendations. Edge will say \"managed by your organization\"."
+                    "es":  "Edge no se queda abierto ni envía telemetría.",
+                    "en":  "Edge stops staying open and sending telemetry."
                 },
     "risk":  "safe",
     "presets":  [
@@ -100,5 +100,9 @@
                         "value":  0,
                         "default":  null
                     }
-                ]
+                ],
+    "details":  {
+                    "es":  "Edge deja de quedarse abierto al cerrarlo y de precargarse al encender (son 6 a 10 procesos y unos 300 MB de RAM), sin barra de Copilot, sin compras ni recomendaciones. Edge dirá \"administrado por tu organización\".",
+                    "en":  "Edge stops staying open after you close it and preloading at startup (6 to 10 processes and about 300 MB of RAM), with no Copilot sidebar, shopping or recommendations. Edge will say \"managed by your organization\"."
+                }
 }

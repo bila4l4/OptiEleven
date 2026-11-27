@@ -8,8 +8,8 @@
                  "en":  "Uninstall OneDrive"
              },
     "summary":  {
-                    "es":  "Quita OneDrive y su sincronización en segundo plano. Tus archivos de la carpeta OneDrive se quedan en el disco. Se puede reinstalar desde onedrive.com.",
-                    "en":  "Removes OneDrive and its background sync. Your files in the OneDrive folder stay on disk. It can be reinstalled from onedrive.com."
+                    "es":  "Tus archivos se quedan en el PC.",
+                    "en":  "Your files stay on the PC."
                 },
     "risk":  "moderate",
     "presets":  [
@@ -28,5 +28,9 @@
     "actions":  [
 
                 ],
-    "script":  "app-onedrive.tweak.ps1"
+    "script":  "app-onedrive.tweak.ps1",
+    "details":  {
+                    "es":  "Quita OneDrive y su sincronización en segundo plano. Tus archivos de la carpeta OneDrive se quedan en el disco. Se puede reinstalar desde onedrive.com.",
+                    "en":  "Removes OneDrive and its background sync. Your files in the OneDrive folder stay on disk. It can be reinstalled from onedrive.com."
+                }
 }

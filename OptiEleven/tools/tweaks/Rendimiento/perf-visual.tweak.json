@@ -8,8 +8,8 @@
                  "en":  "Fewer visual effects"
              },
     "summary":  {
-                    "es":  "Quita las transparencias y las animaciones de ventanas y barra de tareas. Requiere cerrar sesión.",
-                    "en":  "Removes transparency and window and taskbar animations. Needs a sign-out."
+                    "es":  "Sin transparencias ni animaciones de ventanas.",
+                    "en":  "No transparency or window animations."
                 },
     "risk":  "safe",
     "presets":  [
@@ -43,5 +43,9 @@
                         "value":  "0",
                         "default":  null
                     }
-                ]
+                ],
+    "details":  {
+                    "es":  "Quita las transparencias y las animaciones de ventanas y barra de tareas. Requiere cerrar sesión.",
+                    "en":  "Removes transparency and window and taskbar animations. Needs a sign-out."
+                }
 }

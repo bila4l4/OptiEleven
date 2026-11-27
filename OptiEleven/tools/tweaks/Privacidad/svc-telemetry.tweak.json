@@ -1,15 +1,15 @@
 {
     "id":  "svc-telemetry",
     "kind":  "tweak",
-    "category":  "Servicios",
+    "category":  "Privacidad",
     "order":  70,
     "name":  {
-                 "es":  "Servicios de telemetría e informes de errores",
-                 "en":  "Telemetry and error reporting services"
+                 "es":  "Sin servicios de telemetría",
+                 "en":  "Telemetry services off"
              },
     "summary":  {
-                    "es":  "DiagTrack (experiencias del usuario conectado), dmwappushservice, InventorySvc (inventario de apps para Microsoft) y WerSvc.",
-                    "en":  "DiagTrack (connected user experiences), dmwappushservice, InventorySvc (app inventory for Microsoft) and WerSvc."
+                    "es":  "DiagTrack, informes de errores e inventario.",
+                    "en":  "DiagTrack, error reporting and inventory."
                 },
     "risk":  "safe",
     "presets":  [
@@ -48,5 +48,9 @@
                         "startup":  "Disabled",
                         "default":  "Manual"
                     }
-                ]
+                ],
+    "details":  {
+                    "es":  "DiagTrack (experiencias del usuario conectado), dmwappushservice, InventorySvc (inventario de apps para Microsoft) y WerSvc.",
+                    "en":  "DiagTrack (connected user experiences), dmwappushservice, InventorySvc (app inventory for Microsoft) and WerSvc."
+                }
 }

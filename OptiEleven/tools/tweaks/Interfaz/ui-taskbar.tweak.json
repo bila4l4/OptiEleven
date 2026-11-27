@@ -8,8 +8,8 @@
                  "en":  "Clean taskbar"
              },
     "summary":  {
-                    "es":  "Quita el botón de Vista de tareas y deja la búsqueda solo como icono. Win+Tab y Win+S siguen funcionando.",
-                    "en":  "Removes the Task View button and leaves search as an icon only. Win+Tab and Win+S still work."
+                    "es":  "Sin Vista de tareas y con la búsqueda como icono.",
+                    "en":  "No Task View, and search as an icon."
                 },
     "risk":  "safe",
     "presets":  [
@@ -36,5 +36,9 @@
                         "value":  1,
                         "default":  null
                     }
-                ]
+                ],
+    "details":  {
+                    "es":  "Quita el botón de Vista de tareas y deja la búsqueda solo como icono. Win+Tab y Win+S siguen funcionando.",
+                    "en":  "Removes the Task View button and leaves search as an icon only. Win+Tab and Win+S still work."
+                }
 }

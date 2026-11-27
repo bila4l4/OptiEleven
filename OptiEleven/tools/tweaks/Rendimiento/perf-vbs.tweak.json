@@ -4,12 +4,12 @@
     "category":  "Rendimiento",
     "order":  210,
     "name":  {
-                 "es":  "Desactivar VBS / Integridad de memoria",
-                 "en":  "Turn off VBS / Memory integrity"
+                 "es":  "Sin VBS ni integridad de memoria",
+                 "en":  "VBS and memory integrity off"
              },
     "summary":  {
-                    "es":  "Puede dar un 5-10 % más de FPS en algunos juegos, a cambio de menos protección contra malware a nivel de kernel. Algunos anticheat pueden pedir que esté activado.",
-                    "en":  "Can give 5-10% more FPS in some games, at the cost of less protection against kernel-level malware. Some anti-cheats may require it on."
+                    "es":  "Algo más de FPS a cambio de menos protección.",
+                    "en":  "A few more FPS in exchange for less protection."
                 },
     "risk":  "advanced",
     "presets":  [
@@ -36,5 +36,9 @@
                         "value":  0,
                         "default":  null
                     }
-                ]
+                ],
+    "details":  {
+                    "es":  "Puede dar un 5-10 % más de FPS en algunos juegos, a cambio de menos protección contra malware a nivel de kernel. Algunos anticheat pueden pedir que esté activado.",
+                    "en":  "Can give 5-10% more FPS in some games, at the cost of less protection against kernel-level malware. Some anti-cheats may require it on."
+                }
 }

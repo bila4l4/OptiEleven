@@ -4,12 +4,12 @@
     "category":  "Privacidad",
     "order":  50,
     "name":  {
-                 "es":  "Sin Bing en el menú Inicio",
+                 "es":  "Inicio sin Bing",
                  "en":  "No Bing in Start"
              },
     "summary":  {
-                    "es":  "La búsqueda del menú Inicio solo busca en tu PC: sin resultados web, sin \"destacados\" del día y sin buscar en tu cuenta en la nube.",
-                    "en":  "Start search only searches your PC: no web results, no daily \"highlights\" and no cloud account search."
+                    "es":  "Buscar en Inicio solo busca en tu PC.",
+                    "en":  "Start search only searches your PC."
                 },
     "risk":  "safe",
     "presets":  [
@@ -72,5 +72,9 @@
                         "value":  0,
                         "default":  null
                     }
-                ]
+                ],
+    "details":  {
+                    "es":  "La búsqueda del menú Inicio solo busca en tu PC: sin resultados web, sin \"destacados\" del día y sin buscar en tu cuenta en la nube.",
+                    "en":  "Start search only searches your PC: no web results, no daily \"highlights\" and no cloud account search."
+                }
 }

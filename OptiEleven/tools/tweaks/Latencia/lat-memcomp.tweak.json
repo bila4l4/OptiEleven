@@ -5,11 +5,11 @@
     "order":  430,
     "name":  {
                  "es":  "Sin compresión de memoria",
-                 "en":  "No memory compression"
+                 "en":  "Memory compression off"
              },
     "summary":  {
-                    "es":  "Con 16 GB o más, comprimir la RAM gasta CPU sin necesidad. Con poca memoria es mejor dejarla activada.",
-                    "en":  "With 16 GB or more, compressing RAM wastes CPU. With little memory it\u0027s better to leave it on."
+                    "es":  "Para equipos con 16 GB o más.",
+                    "en":  "For PCs with 16 GB or more."
                 },
     "risk":  "moderate",
     "presets":  [
@@ -24,5 +24,9 @@
     "actions":  [
 
                 ],
-    "script":  "lat-memcomp.tweak.ps1"
+    "script":  "lat-memcomp.tweak.ps1",
+    "details":  {
+                    "es":  "Con 16 GB o más, comprimir la RAM gasta CPU sin necesidad. Con poca memoria es mejor dejarla activada.",
+                    "en":  "With 16 GB or more, compressing RAM wastes CPU. With little memory it\u0027s better to leave it on."
+                }
 }
