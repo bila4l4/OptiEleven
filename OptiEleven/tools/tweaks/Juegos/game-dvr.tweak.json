@@ -4,12 +4,12 @@
     "category":  "Juegos",
     "order":  240,
     "name":  {
-                 "es":  "Sin grabación en segundo plano (Game DVR)",
-                 "en":  "No background recording (Game DVR)"
+                 "es":  "Sin grabación en segundo plano",
+                 "en":  "Background recording off"
              },
     "summary":  {
-                    "es":  "Desactiva la captura continua de la Xbox Game Bar. Si grabas clips con Win+G, déjalo como está.",
-                    "en":  "Turns off the Xbox Game Bar\u0027s continuous capture. If you record clips with Win+G, leave it as it is."
+                    "es":  "La Game Bar deja de grabar sin parar.",
+                    "en":  "Game Bar stops recording all the time."
                 },
     "risk":  "safe",
     "presets":  [
@@ -37,5 +37,9 @@
                         "value":  0,
                         "default":  null
                     }
-                ]
+                ],
+    "details":  {
+                    "es":  "Desactiva la captura continua de la Xbox Game Bar. Si grabas clips con Win+G, déjalo como está.",
+                    "en":  "Turns off the Xbox Game Bar\u0027s continuous capture. If you record clips with Win+G, leave it as it is."
+                }
 }

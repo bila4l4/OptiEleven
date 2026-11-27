@@ -1,15 +1,15 @@
 {
     "id":  "svc-diag",
     "kind":  "tweak",
-    "category":  "Servicios",
+    "category":  "Privacidad",
     "order":  510,
     "name":  {
-                 "es":  "Diagnóstico y solucionadores de Windows",
-                 "en":  "Windows diagnostics and troubleshooters"
+                 "es":  "Sin diagnósticos de Windows",
+                 "en":  "Windows diagnostics off"
              },
     "summary":  {
-                    "es":  "Desactiva el servicio de directivas de diagnóstico y sus anfitriones. Dejan de funcionar los solucionadores de problemas y el uso de red por app del Administrador de tareas.",
-                    "en":  "Turns off the Diagnostic Policy Service and its hosts. Troubleshooters and per-app network usage in Task Manager stop working."
+                    "es":  "Los solucionadores de problemas dejan de funcionar.",
+                    "en":  "Troubleshooters stop working."
                 },
     "risk":  "advanced",
     "presets":  [
@@ -42,5 +42,9 @@
                         "startup":  "Disabled",
                         "default":  "Manual"
                     }
-                ]
+                ],
+    "details":  {
+                    "es":  "Desactiva el servicio de directivas de diagnóstico y sus anfitriones. Dejan de funcionar los solucionadores de problemas y el uso de red por app del Administrador de tareas.",
+                    "en":  "Turns off the Diagnostic Policy Service and its hosts. Troubleshooters and per-app network usage in Task Manager stop working."
+                }
 }

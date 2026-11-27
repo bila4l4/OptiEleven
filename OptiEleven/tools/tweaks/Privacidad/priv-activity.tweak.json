@@ -4,12 +4,12 @@
     "category":  "Privacidad",
     "order":  40,
     "name":  {
-                 "es":  "Historial de actividad",
-                 "en":  "Activity history"
+                 "es":  "Sin historial de actividad",
+                 "en":  "Activity history off"
              },
     "summary":  {
-                    "es":  "Windows deja de registrar y subir lo que abres, y el portapapeles no se sincroniza con la nube.",
-                    "en":  "Windows stops recording and uploading what you open, and the clipboard no longer syncs to the cloud."
+                    "es":  "Windows no registra lo que abres.",
+                    "en":  "Windows stops logging what you open."
                 },
     "risk":  "safe",
     "presets":  [
@@ -58,5 +58,9 @@
                         "value":  0,
                         "default":  null
                     }
-                ]
+                ],
+    "details":  {
+                    "es":  "Windows deja de registrar y subir lo que abres, y el portapapeles no se sincroniza con la nube.",
+                    "en":  "Windows stops recording and uploading what you open, and the clipboard no longer syncs to the cloud."
+                }
 }

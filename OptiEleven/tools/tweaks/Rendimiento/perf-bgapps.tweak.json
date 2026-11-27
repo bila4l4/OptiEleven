@@ -4,12 +4,12 @@
     "category":  "Rendimiento",
     "order":  180,
     "name":  {
-                 "es":  "Apps de la Store en segundo plano",
-                 "en":  "Store apps in the background"
+                 "es":  "Apps de la Store en pausa",
+                 "en":  "Store apps paused"
              },
     "summary":  {
-                    "es":  "Las apps de la Store no se ejecutan en segundo plano. Sus notificaciones (WhatsApp de la Store, Correo...) pueden no llegar.",
-                    "en":  "Store apps don\u0027t run in the background. Their notifications (Store WhatsApp, Mail...) may not arrive."
+                    "es":  "No se ejecutan en segundo plano.",
+                    "en":  "They don\u0027t run in the background."
                 },
     "risk":  "moderate",
     "presets":  [
@@ -30,5 +30,9 @@
                         "value":  2,
                         "default":  null
                     }
-                ]
+                ],
+    "details":  {
+                    "es":  "Las apps de la Store no se ejecutan en segundo plano. Sus notificaciones (WhatsApp de la Store, Correo...) pueden no llegar.",
+                    "en":  "Store apps don\u0027t run in the background. Their notifications (Store WhatsApp, Mail...) may not arrive."
+                }
 }

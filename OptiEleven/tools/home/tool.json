@@ -8,12 +8,12 @@
                  "en":  "Home"
              },
     "title":  {
-                  "es":  "Bienvenido a OptiEleven",
-                  "en":  "Welcome to OptiEleven"
+                  "es":  "Inicio",
+                  "en":  "Home"
               },
     "summary":  {
-                    "es":  "Optimiza Windows 11 para jugar, sin perder la posibilidad de volver atrás.",
-                    "en":  "Optimize Windows 11 for gaming, without losing the way back."
+                    "es":  "Estado del equipo.",
+                    "en":  "Your PC at a glance."
                 },
     "icon":  "house-line",
     "color":  "Accent",
@@ -27,5 +27,11 @@
                               "es":  "No cambia nada del sistema.",
                               "en":  "Doesn\u0027t change anything on your PC."
                           }
-             }
+             },
+    "keywords":  [
+                     "inicio",
+                     "estado",
+                     "home"
+                 ],
+    "onShow":  "Update-HomeView"
 }

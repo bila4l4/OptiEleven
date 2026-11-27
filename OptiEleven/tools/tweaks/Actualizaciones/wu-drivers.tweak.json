@@ -4,12 +4,12 @@
     "category":  "Actualizaciones",
     "order":  300,
     "name":  {
-                 "es":  "No instalar drivers desde Windows Update",
-                 "en":  "Don\u0027t install drivers from Windows Update"
+                 "es":  "Drivers fuera de Windows Update",
+                 "en":  "No drivers from Windows Update"
              },
     "summary":  {
-                    "es":  "Evita que Windows sustituya el driver de AMD/NVIDIA que instalaste. Los drivers de chipset, Wi-Fi y audio tendrás que ponerlos tú.",
-                    "en":  "Stops Windows from replacing the AMD/NVIDIA driver you installed. You\u0027ll have to install chipset, Wi-Fi and audio drivers yourself."
+                    "es":  "Windows no cambia el driver de tu gráfica.",
+                    "en":  "Windows won\u0027t replace your graphics driver."
                 },
     "risk":  "moderate",
     "presets":  [
@@ -29,5 +29,9 @@
                         "value":  1,
                         "default":  null
                     }
-                ]
+                ],
+    "details":  {
+                    "es":  "Evita que Windows sustituya el driver de AMD/NVIDIA que instalaste. Los drivers de chipset, Wi-Fi y audio tendrás que ponerlos tú.",
+                    "en":  "Stops Windows from replacing the AMD/NVIDIA driver you installed. You\u0027ll have to install chipset, Wi-Fi and audio drivers yourself."
+                }
 }

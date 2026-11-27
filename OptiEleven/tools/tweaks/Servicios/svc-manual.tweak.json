@@ -8,8 +8,8 @@
                  "en":  "On-demand services"
              },
     "summary":  {
-                    "es":  "Pasan a manual: arrancan solo cuando algo los necesita, como hace WinUtil. Seguimiento de accesos directos, Asistente de compatibilidad, uso de datos, dispositivos conectados, salud de Windows, escáneres y los actualizadores de Edge y Google.",
-                    "en":  "Set to manual: they only start when something needs them, like WinUtil does. Shortcut tracking, Compatibility Assistant, data usage, connected devices, Windows health, scanners and the Edge and Google updaters."
+                    "es":  "Arrancan solo cuando algo los necesita.",
+                    "en":  "They start only when something needs them."
                 },
     "risk":  "safe",
     "presets":  [
@@ -73,5 +73,9 @@
                         "startup":  "Manual",
                         "default":  "Manual"
                     }
-                ]
+                ],
+    "details":  {
+                    "es":  "Pasan a manual: arrancan solo cuando algo los necesita, como hace WinUtil. Seguimiento de accesos directos, Asistente de compatibilidad, uso de datos, dispositivos conectados, salud de Windows, escáneres y los actualizadores de Edge y Google.",
+                    "en":  "Set to manual: they only start when something needs them, like WinUtil does. Shortcut tracking, Compatibility Assistant, data usage, connected devices, Windows health, scanners and the Edge and Google updaters."
+                }
 }

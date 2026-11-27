@@ -4,12 +4,12 @@
     "category":  "Actualizaciones",
     "order":  310,
     "name":  {
-                 "es":  "Retrasar las versiones nuevas de Windows un año",
-                 "en":  "Delay new Windows versions by a year"
+                 "es":  "Versiones nuevas un año después",
+                 "en":  "Feature updates a year later"
              },
     "summary":  {
-                    "es":  "Sigues recibiendo los parches de seguridad, pero las actualizaciones grandes (25H2, 26H2...) llegan 365 días después, ya pulidas.",
-                    "en":  "You still get security patches, but the big updates (25H2, 26H2...) arrive 365 days later, already polished."
+                    "es":  "Sigues recibiendo los parches de seguridad.",
+                    "en":  "You still get security patches."
                 },
     "risk":  "moderate",
     "presets":  [
@@ -36,5 +36,9 @@
                         "value":  365,
                         "default":  null
                     }
-                ]
+                ],
+    "details":  {
+                    "es":  "Sigues recibiendo los parches de seguridad, pero las actualizaciones grandes (25H2, 26H2...) llegan 365 días después, ya pulidas.",
+                    "en":  "You still get security patches, but the big updates (25H2, 26H2...) arrive 365 days later, already polished."
+                }
 }

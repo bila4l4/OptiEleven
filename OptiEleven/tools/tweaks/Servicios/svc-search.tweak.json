@@ -4,12 +4,12 @@
     "category":  "Servicios",
     "order":  100,
     "name":  {
-                 "es":  "Indexación de búsqueda",
-                 "en":  "Search indexing"
+                 "es":  "Sin indexación de búsqueda",
+                 "en":  "Search indexing off"
              },
     "summary":  {
-                    "es":  "Quita el indexador. Las apps siguen saliendo en Inicio, pero buscar archivos y correos será más lento.",
-                    "en":  "Removes the indexer. Apps still show up in Start, but searching files and mail will be slower."
+                    "es":  "Buscar archivos será más lento.",
+                    "en":  "Searching files gets slower."
                 },
     "risk":  "moderate",
     "presets":  [
@@ -27,5 +27,9 @@
                         "startup":  "Disabled",
                         "default":  "Delayed"
                     }
-                ]
+                ],
+    "details":  {
+                    "es":  "Quita el indexador. Las apps siguen saliendo en Inicio, pero buscar archivos y correos será más lento.",
+                    "en":  "Removes the indexer. Apps still show up in Start, but searching files and mail will be slower."
+                }
 }

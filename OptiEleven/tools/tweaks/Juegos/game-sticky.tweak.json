@@ -5,11 +5,11 @@
     "order":  260,
     "name":  {
                  "es":  "Sin atajo de Teclas especiales",
-                 "en":  "No Sticky Keys shortcut"
+                 "en":  "Sticky Keys shortcut off"
              },
     "summary":  {
-                    "es":  "Pulsar Mayús cinco veces ya no saca el aviso de Teclas especiales en mitad de la partida.",
-                    "en":  "Pressing Shift five times no longer pops up Sticky Keys in the middle of a match."
+                    "es":  "Pulsar Mayús cinco veces ya no abre el aviso.",
+                    "en":  "Pressing Shift five times no longer pops up the prompt."
                 },
     "risk":  "safe",
     "presets":  [
@@ -44,5 +44,9 @@
                         "value":  "58",
                         "default":  "62"
                     }
-                ]
+                ],
+    "details":  {
+                    "es":  "Pulsar Mayús cinco veces ya no saca el aviso de Teclas especiales en mitad de la partida.",
+                    "en":  "Pressing Shift five times no longer pops up Sticky Keys in the middle of a match."
+                }
 }

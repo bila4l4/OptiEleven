@@ -4,12 +4,12 @@
     "category":  "Juegos",
     "order":  220,
     "name":  {
-                 "es":  "Modo juego activado",
-                 "en":  "Game Mode on"
+                 "es":  "Modo juego",
+                 "en":  "Game Mode"
              },
     "summary":  {
-                    "es":  "Windows prioriza el juego en primer plano y pausa Windows Update mientras juegas.",
-                    "en":  "Windows prioritizes the game in the foreground and pauses Windows Update while you play."
+                    "es":  "Windows prioriza el juego y pausa las actualizaciones.",
+                    "en":  "Windows prioritizes the game and pauses updates."
                 },
     "risk":  "safe",
     "presets":  [
@@ -37,5 +37,9 @@
                         "value":  1,
                         "default":  null
                     }
-                ]
+                ],
+    "details":  {
+                    "es":  "Windows prioriza el juego en primer plano y pausa Windows Update mientras juegas.",
+                    "en":  "Windows prioritizes the game in the foreground and pauses Windows Update while you play."
+                }
 }

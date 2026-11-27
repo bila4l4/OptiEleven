@@ -1,7 +1,7 @@
 {
     "id":  "install",
     "kind":  "tool",
-    "category":  "tools",
+    "category":  "install",
     "order":  10,
     "name":  {
                  "es":  "Instalar apps",
@@ -12,8 +12,8 @@
                   "en":  "Install apps"
               },
     "summary":  {
-                    "es":  "Launchers, Discord, monitorización y librerías para juegos, con winget.",
-                    "en":  "Launchers, Discord, monitoring and game runtimes, with winget."
+                    "es":  "Más de 100 apps con winget.",
+                    "en":  "Over 100 apps with winget."
                 },
     "icon":  "download-simple",
     "color":  "Cat-Actualizaciones",
@@ -27,5 +27,13 @@
                               "es":  "Las apps se desinstalan desde Configuración \u003e Aplicaciones.",
                               "en":  "Uninstall apps from Settings \u003e Apps."
                           }
-             }
+             },
+    "keywords":  [
+                     "winget",
+                     "ninite",
+                     "programas",
+                     "descargar",
+                     "apps",
+                     "install"
+                 ]
 }

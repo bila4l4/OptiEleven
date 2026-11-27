@@ -4,12 +4,12 @@
     "category":  "Actualizaciones",
     "order":  280,
     "name":  {
-                 "es":  "Sin reinicios automáticos con la sesión abierta",
-                 "en":  "No automatic restarts while signed in"
+                 "es":  "Sin reinicios automáticos",
+                 "en":  "No automatic restarts"
              },
     "summary":  {
-                    "es":  "Windows Update no reinicia el equipo mientras estás conectado; te avisa y reinicias tú.",
-                    "en":  "Windows Update won\u0027t restart the PC while you\u0027re signed in; it tells you and you restart."
+                    "es":  "Windows Update avisa y reinicias tú.",
+                    "en":  "Windows Update asks and you restart."
                 },
     "risk":  "safe",
     "presets":  [
@@ -30,5 +30,9 @@
                         "value":  1,
                         "default":  null
                     }
-                ]
+                ],
+    "details":  {
+                    "es":  "Windows Update no reinicia el equipo mientras estás conectado; te avisa y reinicias tú.",
+                    "en":  "Windows Update won\u0027t restart the PC while you\u0027re signed in; it tells you and you restart."
+                }
 }

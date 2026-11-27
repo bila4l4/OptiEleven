@@ -1,8 +1,8 @@
 {
     "id":  "disk",
     "kind":  "tool",
-    "category":  "tools",
-    "order":  40,
+    "category":  "clean",
+    "order":  20,
     "name":  {
                  "es":  "Espacio en disco",
                  "en":  "Disk space"
@@ -12,8 +12,8 @@
                   "en":  "Disk space"
               },
     "summary":  {
-                    "es":  "Qué carpetas y archivos ocupan más en cada disco, como WinDirStat.",
-                    "en":  "Which folders and files take the most space on each drive, like WinDirStat."
+                    "es":  "Qué ocupa más en cada disco.",
+                    "en":  "What takes the most space on each drive."
                 },
     "icon":  "hard-drives",
     "color":  "Cat-Apps",
@@ -27,5 +27,15 @@
                               "es":  "Lo que va a la papelera se recupera desde ahí. Eliminar para siempre no se puede deshacer.",
                               "en":  "What goes to the Recycle Bin can be restored from there. Delete permanently cannot be undone."
                           }
-             }
+             },
+    "keywords":  [
+                     "windirstat",
+                     "treesize",
+                     "carpetas",
+                     "archivos",
+                     "borrar",
+                     "disco",
+                     "disk",
+                     "folders"
+                 ]
 }

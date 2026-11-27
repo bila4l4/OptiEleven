@@ -4,12 +4,12 @@
     "category":  "Latencia",
     "order":  400,
     "name":  {
-                 "es":  "Sin aparcamiento de núcleos",
-                 "en":  "No core parking"
+                 "es":  "Todos los núcleos despiertos",
+                 "en":  "All cores awake"
              },
     "summary":  {
-                    "es":  "Todos los núcleos de la CPU quedan despiertos enchufado. Menos latencia al empezar una carga, más consumo y temperatura.",
-                    "en":  "All CPU cores stay awake while plugged in. Lower latency when a load starts, more power use and heat."
+                    "es":  "Sin aparcamiento de núcleos con el cargador.",
+                    "en":  "No core parking while plugged in."
                 },
     "risk":  "advanced",
     "presets":  [
@@ -24,5 +24,9 @@
     "actions":  [
 
                 ],
-    "script":  "lat-cores.tweak.ps1"
+    "script":  "lat-cores.tweak.ps1",
+    "details":  {
+                    "es":  "Todos los núcleos de la CPU quedan despiertos enchufado. Menos latencia al empezar una carga, más consumo y temperatura.",
+                    "en":  "All CPU cores stay awake while plugged in. Lower latency when a load starts, more power use and heat."
+                }
 }

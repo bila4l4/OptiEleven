@@ -1,19 +1,19 @@
 {
     "id":  "network",
     "kind":  "tool",
-    "category":  "tools",
-    "order":  50,
+    "category":  "network",
+    "order":  10,
     "name":  {
-                 "es":  "Red",
-                 "en":  "Network"
+                 "es":  "Red y DNS",
+                 "en":  "Network and DNS"
              },
     "title":  {
                   "es":  "Red y DNS",
                   "en":  "Network and DNS"
               },
     "summary":  {
-                    "es":  "Tu conexión, la latencia al router y a los DNS públicos, y con cuál quedarte.",
-                    "en":  "Your connection, latency to the router and to public DNS, and which one to keep."
+                    "es":  "DNS, latencia y test de velocidad.",
+                    "en":  "DNS, latency and speed test."
                 },
     "icon":  "wifi-high",
     "color":  "Cat-Privacidad",
@@ -27,5 +27,13 @@
                               "es":  "Elige Automático para volver a los DNS de tu router.",
                               "en":  "Pick Automatic to go back to your router\u0027s DNS."
                           }
-             }
+             },
+    "keywords":  [
+                     "dns",
+                     "ping",
+                     "velocidad",
+                     "speed test",
+                     "cloudflare",
+                     "wifi"
+                 ]
 }

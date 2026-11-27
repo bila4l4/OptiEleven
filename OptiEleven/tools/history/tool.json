@@ -1,17 +1,38 @@
 {
-    "id": "history",
-    "kind": "tool",
-    "category": "start",
-    "order": 10,
-    "name": { "es": "Historial", "en": "History" },
-    "title": { "es": "Historial", "en": "History" },
-    "summary": { "es": "Lo que ha cambiado el panel y cuándo. Cada ajuste se puede deshacer desde aquí.", "en": "What the panel changed and when. Each tweak can be undone from here." },
-    "icon": "clock-counter-clockwise",
-    "color": "Cat-Actualizaciones",
-    "view": "New-HistoryPage",
-    "onShow": "Update-HistoryView",
-    "risk": "safe",
-    "requiresAdmin": false,
-    "reversible": true,
-    "undo": { "type": "none", "note": { "es": "Solo muestra lo que ha pasado; deshacer un ajuste lo revierte con su copia.", "en": "It only shows what happened; undoing a tweak reverts it from its backup." } }
+    "id":  "history",
+    "kind":  "tool",
+    "category":  "start",
+    "order":  10,
+    "name":  {
+                 "es":  "Historial",
+                 "en":  "History"
+             },
+    "title":  {
+                  "es":  "Historial",
+                  "en":  "History"
+              },
+    "summary":  {
+                    "es":  "Lo que ha cambiado y cuándo.",
+                    "en":  "What changed and when."
+                },
+    "icon":  "clock-counter-clockwise",
+    "color":  "Cat-Actualizaciones",
+    "view":  "New-HistoryPage",
+    "onShow":  "Update-HistoryView",
+    "risk":  "safe",
+    "requiresAdmin":  false,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "none",
+                 "note":  {
+                              "es":  "Solo muestra lo que ha pasado; deshacer un ajuste lo revierte con su copia.",
+                              "en":  "It only shows what happened; undoing a tweak reverts it from its backup."
+                          }
+             },
+    "keywords":  [
+                     "historial",
+                     "deshacer",
+                     "undo",
+                     "history"
+                 ]
 }

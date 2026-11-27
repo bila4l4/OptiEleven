@@ -4,12 +4,12 @@
     "category":  "Privacidad",
     "order":  20,
     "name":  {
-                 "es":  "Publicidad, sugerencias e instalaciones silenciosas",
-                 "en":  "Ads, suggestions and silent installs"
+                 "es":  "Sin anuncios ni sugerencias",
+                 "en":  "No ads or suggestions"
              },
     "summary":  {
-                    "es":  "Quita el ID de publicidad, las apps que Windows instala solo, los consejos, los anuncios de Configuración y del menú Inicio y el \"terminemos de configurar tu PC\".",
-                    "en":  "Removes the advertising ID, the apps Windows installs on its own, tips, the ads in Settings and Start, and the \"let\u0027s finish setting up your PC\" prompt."
+                    "es":  "Ni anuncios ni apps instaladas sin pedirlas.",
+                    "en":  "No ads and no apps installed without asking."
                 },
     "risk":  "safe",
     "presets":  [
@@ -184,5 +184,9 @@
                         "value":  0,
                         "default":  null
                     }
-                ]
+                ],
+    "details":  {
+                    "es":  "Quita el ID de publicidad, las apps que Windows instala solo, los consejos, los anuncios de Configuración y del menú Inicio y el \"terminemos de configurar tu PC\".",
+                    "en":  "Removes the advertising ID, the apps Windows installs on its own, tips, the ads in Settings and Start, and the \"let\u0027s finish setting up your PC\" prompt."
+                }
 }

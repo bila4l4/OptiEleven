@@ -4,12 +4,12 @@
     "category":  "Interfaz",
     "order":  340,
     "name":  {
-                 "es":  "\"Finalizar tarea\" en la barra de tareas",
-                 "en":  "\"End task\" in the taskbar"
+                 "es":  "Finalizar tarea en la barra",
+                 "en":  "End task in the taskbar"
              },
     "summary":  {
-                    "es":  "Clic derecho en un icono de la barra de tareas para cerrar a la fuerza un juego colgado, sin abrir el Administrador de tareas.",
-                    "en":  "Right-click a taskbar icon to force-close a frozen game without opening Task Manager."
+                    "es":  "Clic derecho para cerrar un juego colgado.",
+                    "en":  "Right-click to close a frozen game."
                 },
     "risk":  "safe",
     "presets":  [
@@ -30,5 +30,9 @@
                         "value":  1,
                         "default":  null
                     }
-                ]
+                ],
+    "details":  {
+                    "es":  "Clic derecho en un icono de la barra de tareas para cerrar a la fuerza un juego colgado, sin abrir el Administrador de tareas.",
+                    "en":  "Right-click a taskbar icon to force-close a frozen game without opening Task Manager."
+                }
 }

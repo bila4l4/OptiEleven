@@ -1,19 +1,19 @@
 {
     "id":  "startup",
     "kind":  "tool",
-    "category":  "tools",
-    "order":  20,
+    "category":  "optimize",
+    "order":  60,
     "name":  {
                  "es":  "Arranque",
-                 "en":  "Startup"
+                 "en":  "Startup apps"
              },
     "title":  {
-                  "es":  "Programas de inicio",
-                  "en":  "Startup programs"
+                  "es":  "Arranque",
+                  "en":  "Startup apps"
               },
     "summary":  {
-                    "es":  "Lo que arranca con Windows y se queda en segundo plano mientras juegas.",
-                    "en":  "What starts with Windows and stays in the background while you play."
+                    "es":  "Lo que se abre al iniciar Windows.",
+                    "en":  "What opens when Windows starts."
                 },
     "icon":  "sign-in",
     "color":  "Cat-Servicios",
@@ -27,5 +27,11 @@
                               "es":  "Vuelve a activarla en la misma lista.",
                               "en":  "Turn it back on in the same list."
                           }
-             }
+             },
+    "keywords":  [
+                     "inicio",
+                     "startup",
+                     "autorun",
+                     "arranque"
+                 ]
 }

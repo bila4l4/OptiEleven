@@ -4,12 +4,12 @@
     "category":  "Latencia",
     "order":  380,
     "name":  {
-                 "es":  "Sin suspensión selectiva de USB",
-                 "en":  "No USB selective suspend"
+                 "es":  "USB siempre despierto",
+                 "en":  "USB always awake"
              },
     "summary":  {
-                    "es":  "Windows deja de dormir los puertos USB para ahorrar energía: ratón, teclado y mando sin microcortes. Solo enchufado.",
-                    "en":  "Windows stops putting USB ports to sleep to save power: mouse, keyboard and controller without micro-dropouts. Plugged in only."
+                    "es":  "Sin suspensión selectiva: ratón y mando sin cortes.",
+                    "en":  "No selective suspend: mouse and controller without dropouts."
                 },
     "risk":  "moderate",
     "presets":  [
@@ -24,5 +24,9 @@
     "actions":  [
 
                 ],
-    "script":  "lat-usb.tweak.ps1"
+    "script":  "lat-usb.tweak.ps1",
+    "details":  {
+                    "es":  "Windows deja de dormir los puertos USB para ahorrar energía: ratón, teclado y mando sin microcortes. Solo enchufado.",
+                    "en":  "Windows stops putting USB ports to sleep to save power: mouse, keyboard and controller without micro-dropouts. Plugged in only."
+                }
 }

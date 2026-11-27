@@ -4,12 +4,12 @@
     "category":  "Rendimiento",
     "order":  170,
     "name":  {
-                 "es":  "Sin limitación de red multimedia",
-                 "en":  "No multimedia network throttling"
+                 "es":  "Red sin límite multimedia",
+                 "en":  "No multimedia network cap"
              },
     "summary":  {
-                    "es":  "Quita el límite que Windows pone a la red mientras suena audio o vídeo. Útil si juegas online con Discord o música abiertos.",
-                    "en":  "Removes the limit Windows puts on the network while audio or video plays. Useful if you play online with Discord or music open."
+                    "es":  "Windows no frena la red mientras suena audio o vídeo.",
+                    "en":  "Windows stops capping the network while audio or video plays."
                 },
     "risk":  "moderate",
     "presets":  [
@@ -29,5 +29,9 @@
                         "value":  "-1",
                         "default":  null
                     }
-                ]
+                ],
+    "details":  {
+                    "es":  "Quita el límite que Windows pone a la red mientras suena audio o vídeo. Útil si juegas online con Discord o música abiertos.",
+                    "en":  "Removes the limit Windows puts on the network while audio or video plays. Useful if you play online with Discord or music open."
+                }
 }

@@ -4,12 +4,12 @@
     "category":  "Privacidad",
     "order":  30,
     "name":  {
-                 "es":  "Copilot, Recall y la IA de Windows",
-                 "en":  "Copilot, Recall and Windows AI"
+                 "es":  "Sin Copilot ni Recall",
+                 "en":  "No Copilot or Recall"
              },
     "summary":  {
-                    "es":  "Desactiva Copilot, Recall, Click to Do, la IA de Paint y del Bloc de notas, y el servicio de IA que arranca con Windows (WSAIFabricSvc).",
-                    "en":  "Turns off Copilot, Recall, Click to Do, the AI in Paint and Notepad, and the AI service that starts with Windows (WSAIFabricSvc)."
+                    "es":  "Desactiva la IA integrada en Windows.",
+                    "en":  "Turns off the AI built into Windows."
                 },
     "risk":  "safe",
     "presets":  [
@@ -91,5 +91,9 @@
                         "startup":  "Manual",
                         "default":  "Auto"
                     }
-                ]
+                ],
+    "details":  {
+                    "es":  "Desactiva Copilot, Recall, Click to Do, la IA de Paint y del Bloc de notas, y el servicio de IA que arranca con Windows (WSAIFabricSvc).",
+                    "en":  "Turns off Copilot, Recall, Click to Do, the AI in Paint and Notepad, and the AI service that starts with Windows (WSAIFabricSvc)."
+                }
 }

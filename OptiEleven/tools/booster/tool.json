@@ -1,19 +1,19 @@
 {
     "id":  "booster",
     "kind":  "tool",
-    "category":  "gaming",
-    "order":  10,
+    "category":  "optimize",
+    "order":  40,
     "name":  {
-                 "es":  "Game Booster",
-                 "en":  "Game Booster"
+                 "es":  "Sesión de juego",
+                 "en":  "Game session"
              },
     "title":  {
-                  "es":  "Game Booster",
-                  "en":  "Game Booster"
+                  "es":  "Sesión de juego",
+                  "en":  "Game session"
               },
     "summary":  {
-                    "es":  "Antes de jugar, cierra lo que sobra y pausa servicios. Al terminar, todo vuelve a como estaba.",
-                    "en":  "Before you play, close what you don\u0027t need and pause services. When you\u0027re done, everything goes back to how it was."
+                    "es":  "Cierra lo que sobra mientras juegas y lo devuelve al terminar.",
+                    "en":  "Closes what you don\u0027t need while you play, and brings it back after."
                 },
     "icon":  "rocket-launch",
     "color":  "Cat-Rendimiento",
@@ -27,5 +27,13 @@
                               "es":  "Al terminar la sesión vuelven las apps, los servicios y el plan de energía.",
                               "en":  "When the session ends, apps, services and the power plan come back."
                           }
-             }
+             },
+    "keywords":  [
+                     "booster",
+                     "fps",
+                     "boost",
+                     "jugar",
+                     "game booster",
+                     "ram"
+                 ]
 }

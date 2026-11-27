@@ -4,12 +4,12 @@
     "category":  "Servicios",
     "order":  130,
     "name":  {
-                 "es":  "Servicios de Xbox",
-                 "en":  "Xbox services"
+                 "es":  "Sin servicios de Xbox",
+                 "en":  "Xbox services off"
              },
     "summary":  {
-                    "es":  "NO lo actives si usas Game Pass, la app Xbox o juegos de la Microsoft Store. Steam/Epic/Riot no se ven afectados.",
-                    "en":  "DON\u0027T turn this on if you use Game Pass, the Xbox app or Microsoft Store games. Steam/Epic/Riot aren\u0027t affected."
+                    "es":  "No lo hagas si usas Game Pass o la app Xbox.",
+                    "en":  "Don\u0027t, if you use Game Pass or the Xbox app."
                 },
     "risk":  "advanced",
     "presets":  [
@@ -37,5 +37,9 @@
                         "startup":  "Disabled",
                         "default":  "Manual"
                     }
-                ]
+                ],
+    "details":  {
+                    "es":  "NO lo actives si usas Game Pass, la app Xbox o juegos de la Microsoft Store. Steam/Epic/Riot no se ven afectados.",
+                    "en":  "DON\u0027T turn this on if you use Game Pass, the Xbox app or Microsoft Store games. Steam/Epic/Riot aren\u0027t affected."
+                }
 }

@@ -4,12 +4,12 @@
     "category":  "Rendimiento",
     "order":  160,
     "name":  {
-                 "es":  "Prioridad multimedia para juegos (MMCSS)",
-                 "en":  "Multimedia priority for games (MMCSS)"
+                 "es":  "Prioridad para juegos",
+                 "en":  "Game priority"
              },
     "summary":  {
-                    "es":  "Reserva menos CPU para tareas de fondo y da prioridad alta a los hilos de juego registrados.",
-                    "en":  "Reserves less CPU for background tasks and gives registered game threads high priority."
+                    "es":  "Más CPU para el juego y menos para tareas de fondo.",
+                    "en":  "More CPU for the game, less for background tasks."
                 },
     "risk":  "safe",
     "presets":  [
@@ -58,5 +58,9 @@
                         "value":  "High",
                         "default":  null
                     }
-                ]
+                ],
+    "details":  {
+                    "es":  "Reserva menos CPU para tareas de fondo y da prioridad alta a los hilos de juego registrados.",
+                    "en":  "Reserves less CPU for background tasks and gives registered game threads high priority."
+                }
 }
