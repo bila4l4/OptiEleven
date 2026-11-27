@@ -389,6 +389,13 @@ function Get-Backup([string]$Id) { $p = $script:Store.PSObject.Properties[$Id]; 
 function Save-Backup([string]$Id, $Bk) { $script:Store | Add-Member -NotePropertyName $Id -NotePropertyValue $Bk -Force; Write-Store }
 function Remove-Backup([string]$Id) { $script:Store.PSObject.Properties.Remove($Id); Write-Store }
 
+# vuelve a abrir el panel: con OptiEleven.exe si está al lado (la release), si no con powershell.exe (copia de git)
+function Start-Panel([string]$Page, [switch]$Admin) {
+    $exe = Join-Path $PSScriptRoot 'OptiEleven.exe'
+    $verb = @{}; if ($Admin) { $verb.Verb = 'RunAs' }
+    if (Test-Path -LiteralPath $exe) { Start-Process -FilePath $exe -ArgumentList @('-Page', $Page) @verb -ErrorAction Stop }
+    else { Start-Process powershell.exe -ArgumentList @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-WindowStyle', 'Hidden', '-File', "`"$PSCommandPath`"", '-Page', $Page) @verb -ErrorAction Stop }
+}
 function Get-ToolText($Value) {
     # textos del manifiesto: { "es": "...", "en": "..." } (o un texto suelto); si falta el idioma, el español
     if ($null -eq $Value -or $Value -is [string]) { return [string]$Value }
@@ -1792,7 +1799,7 @@ try {
     function Restart-AsAdmin {
         if (@(Get-Pending).Count -and [Windows.MessageBox]::Show($window, (T 'Los cambios sin aplicar se pierden al volver a abrir el panel.'), 'OptiEleven', 'OKCancel', 'Question') -ne 'OK') { return }
         $page = if ($script:CurrentPage) { $script:CurrentPage } else { 'home' }
-        try { Start-Process powershell.exe -Verb RunAs -ArgumentList @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-WindowStyle', 'Hidden', '-File', "`"$PSCommandPath`"", '-Page', $page) -ErrorAction Stop }
+        try { Start-Panel $page -Admin }
         catch { Write-Log 'No se abrió como administrador (cancelado).' 'WARN'; return }   # si el usuario dice que no, el panel sigue abierto
         $window.Close()
     }
@@ -2404,7 +2411,7 @@ try {
     [void]$window.ShowDialog()
     $script:Telemetry.Stop = $true
     # cambio de idioma: se abre de nuevo en el mismo apartado (si el cierre se canceló, la ventana sigue abierta y no se llega aquí)
-    if ($script:Relaunch) { Start-Process powershell.exe -ArgumentList @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-WindowStyle', 'Hidden', '-File', "`"$PSCommandPath`"", '-Page', $script:Relaunch) }
+    if ($script:Relaunch) { Start-Panel $script:Relaunch }
 }
 catch {
     $script:LogBox = $null
