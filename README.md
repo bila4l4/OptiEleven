@@ -92,6 +92,15 @@ OptiEleven changes system settings, so read what each one does before you apply 
 
 If something goes wrong, open an [issue](../../issues) with the **Activity** log (turn on *Show technical details*).
 
+### Code signing policy
+
+Releases are built from this repository by [GitHub Actions](.github/workflows/release.yml), and the zip's SHA256 is published with each release. We have applied to [SignPath Foundation](https://signpath.org) for free code signing. Until it's approved, releases are **unsigned**, so Windows SmartScreen may warn the first time. Once approved, the exe, the native DLL and the scripts are signed with: *Free code signing provided by SignPath.io, certificate by SignPath Foundation.*
+
+- Committers and reviewers: [bila4l4](https://github.com/bila4l4)
+- Approvers: [bila4l4](https://github.com/bila4l4)
+
+Privacy: OptiEleven doesn't send any information anywhere unless you ask it to. The only network connections are the ones you start: downloading or updating OptiEleven, installing apps with winget and running the network speed test.
+
 ## Clean Windows install (optional)
 
 Want to start from a clean ISO? There's a step-by-step [NTLite guide](docs/ntlite-guide.es.md) (Spanish) for building a lean Windows 11 Pro image that still gets updates, with OptiEleven doing the reversible part afterwards.

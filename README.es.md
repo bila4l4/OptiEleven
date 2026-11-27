@@ -92,6 +92,15 @@ OptiEleven cambia ajustes del sistema, así que lee qué hace cada uno antes de 
 
 Si algo sale mal, abre una [incidencia](../../issues) con el registro de **Actividad** (activa *Mostrar detalles técnicos*).
 
+### Política de firma de código
+
+Las versiones se compilan desde este repositorio con [GitHub Actions](.github/workflows/release.yml), y cada release publica el SHA256 del zip. Hemos solicitado la firma de código gratuita de [SignPath Foundation](https://signpath.org). Hasta que la aprueben, las versiones van **sin firmar**, así que Windows SmartScreen puede avisar la primera vez. Cuando esté aprobada, el exe, la DLL nativa y los scripts irán firmados: *Free code signing provided by SignPath.io, certificate by SignPath Foundation.*
+
+- Committers y revisores: [bila4l4](https://github.com/bila4l4)
+- Aprobadores: [bila4l4](https://github.com/bila4l4)
+
+Privacidad: OptiEleven no envía información a ningún sitio salvo que tú se lo pidas. Las únicas conexiones de red son las que inicias tú: descargar o actualizar OptiEleven, instalar apps con winget y el test de velocidad de la red.
+
 ## Instalación limpia de Windows (opcional)
 
 ¿Quieres empezar desde una ISO limpia? Hay una [guía de NTLite](docs/ntlite-guide.es.md) paso a paso para crear una imagen ligera de Windows 11 Pro que sigue recibiendo actualizaciones, y OptiEleven hace después la parte reversible.

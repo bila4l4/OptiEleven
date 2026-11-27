@@ -71,6 +71,8 @@ Signing is optional. With no secrets the build prints `signing skipped (no certi
 
 Optional: `SIGN_TIMESTAMP_URL`. Once releases are signed, the one-line launcher refuses scripts whose signature isn't valid.
 
+- **SignPath Foundation** (the one this project uses): free signing for open source, done by SignPath's service, not by `Sign.ps1`. On tags `v*` the workflow uploads the unsigned zip, sends a signing request and waits, then replaces the zip with the signed one, checks every signature and rewrites `SHA256SUMS.txt`. Set the secret `SIGNPATH_API_TOKEN` and the repository variable `SIGNPATH_ORGANIZATION_ID`. Optional variables: `SIGNPATH_PROJECT_SLUG` (default `OptiEleven`), `SIGNPATH_SIGNING_POLICY` (default `release-signing`) and `SIGNPATH_ARTIFACT_CONFIGURATION` (default `initial`). The artifact configuration to paste into SignPath is in [.signpath/artifact-configuration.xml](.signpath/artifact-configuration.xml).
+
 ## Style
 
 - PowerShell 5.1 compatible (no `??`, `?:` or `&&`).

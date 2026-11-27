@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SignPath artifact configuration for OptiEleven. Paste it into the SignPath project as the "initial" artifact configuration.
+     The GitHub artifact is a zip that holds OptiEleven.zip; inside it, the OptiEleven folder.
+     Signed: the launcher exe, the native DLL and every PowerShell script. Not signed: native\OptiEleven-Apps.exe,
+     because the panel appends each user's app list to it, which would break a signature. -->
+<artifact-configuration xmlns="http://signpath.io/artifact-configuration/v1">
+  <zip-file>
+    <zip-file path="OptiEleven.zip">
+      <directory path="OptiEleven">
+        <pe-file path="OptiEleven.exe">
+          <authenticode-sign/>
+        </pe-file>
+        <pe-file path="native/OptiEleven.Native.dll">
+          <authenticode-sign/>
+        </pe-file>
+        <powershell-file-set>
+          <include path="**/*.ps1"/>
+          <for-each>
+            <authenticode-sign/>
+          </for-each>
+        </powershell-file-set>
+      </directory>
+    </zip-file>
+  </zip-file>
+</artifact-configuration>

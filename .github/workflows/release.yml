@@ -6,7 +6,7 @@ name: Build and release
 on:
   push:
     tags: ['v*']
-    branches: [v2]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -24,6 +24,7 @@ jobs:
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+      SIGNPATH_API_TOKEN: ${{ secrets.SIGNPATH_API_TOKEN }}
     steps:
       - uses: actions/checkout@v4
 
@@ -38,6 +39,46 @@ jobs:
       - name: Build (runs the tests first)
         shell: powershell
         run: ./build/Build.ps1
+
+      # ---- SignPath Foundation (free signing for open source). Only on tags v*, and only once the
+      # SIGNPATH_API_TOKEN secret and the SIGNPATH_ORGANIZATION_ID variable exist. SignPath signs the
+      # .exe, the native .dll and every .ps1 inside the zip, as .signpath/artifact-configuration.xml says.
+      - name: Upload the unsigned zip for SignPath
+        id: unsigned
+        if: env.SIGNPATH_API_TOKEN != '' && startsWith(github.ref, 'refs/tags/v')
+        uses: actions/upload-artifact@v4
+        with:
+          name: unsigned-${{ github.run_id }}
+          path: dist/OptiEleven.zip
+          if-no-files-found: error
+
+      - name: Sign with SignPath
+        if: env.SIGNPATH_API_TOKEN != '' && startsWith(github.ref, 'refs/tags/v')
+        uses: signpath/github-action-submit-signing-request@v1
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG || 'OptiEleven' }}
+          signing-policy-slug: ${{ vars.SIGNPATH_SIGNING_POLICY || 'release-signing' }}
+          artifact-configuration-slug: ${{ vars.SIGNPATH_ARTIFACT_CONFIGURATION || 'initial' }}
+          github-artifact-id: ${{ steps.unsigned.outputs.artifact-id }}
+          wait-for-completion: true
+          output-artifact-directory: signed
+
+      - name: Use the signed zip and refresh SHA256SUMS.txt
+        if: env.SIGNPATH_API_TOKEN != '' && startsWith(github.ref, 'refs/tags/v')
+        shell: powershell
+        run: |
+          $signed = Get-ChildItem signed -Recurse -Filter OptiEleven.zip | Select-Object -First 1
+          if (-not $signed) { throw 'SignPath returned no OptiEleven.zip' }
+          Copy-Item -LiteralPath $signed.FullName -Destination dist/OptiEleven.zip -Force
+          # every .exe/.dll/.ps1 must carry a valid signature, except the app-installer stub (the panel appends data to it)
+          $x = Join-Path $env:RUNNER_TEMP 'check'; Expand-Archive dist/OptiEleven.zip -DestinationPath $x -Force
+          $bad = Get-ChildItem $x -Recurse -File | Where-Object { $_.Extension -in '.exe', '.dll', '.ps1' -and $_.Name -ne 'OptiEleven-Apps.exe' } |
+                 Where-Object { (Get-AuthenticodeSignature -LiteralPath $_.FullName).Status -ne 'Valid' }
+          if ($bad) { $bad | ForEach-Object { "not signed: $($_.FullName)" }; exit 1 }
+          $h = (Get-FileHash dist/OptiEleven.zip -Algorithm SHA256).Hash.ToLowerInvariant()
+          [IO.File]::WriteAllText((Resolve-Path dist/SHA256SUMS.txt), "$h  OptiEleven.zip`n")
 
       - uses: actions/upload-artifact@v4
         with:
