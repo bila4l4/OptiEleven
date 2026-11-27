@@ -90,12 +90,42 @@
             $rs = $rq.GetResponse(); $loc = $rs.Headers['Location']; $rs.Close()
             if ($loc -match '/releases/tag/([^/?#]+)$') {
                 $tag = [Uri]::UnescapeDataString($Matches[1])
-                return [pscustomobject]@{ Tag = $tag; Url = "https://github.com/$repo/releases/download/$tag/OptiEleven.zip" }
+                $base = "https://github.com/$repo/releases/download/$tag"
+                return [pscustomobject]@{ Tag = $tag; Url = "$base/OptiEleven.zip"; Sums = "$base/SHA256SUMS.txt" }
             }
             Write-Step "Couldn't read the latest version from GitHub."
         }
         catch { Write-Step "Couldn't reach GitHub: $($_.Exception.Message)" }
         $null
+    }
+
+    # Releases since 2.0 carry SHA256SUMS.txt: the zip must match it, or nothing is installed. Older releases
+    # (1.9 and before) have no such file and install as they always did.
+    function Test-Release($Latest, [string]$Zip, [string]$Tmp) {
+        $sums = Join-Path $Tmp 'SHA256SUMS.txt'
+        try { Invoke-WebRequest $Latest.Sums -OutFile $sums -UseBasicParsing -TimeoutSec 60 }
+        catch {
+            $r = $_.Exception.Response
+            if ($r -and [int]$r.StatusCode -eq 404) { Write-Step 'This release has no SHA256SUMS.txt (older release): hash not checked.'; return }
+            throw "couldn't download SHA256SUMS.txt to check the download: $($_.Exception.Message)"
+        }
+        $want = $null
+        foreach ($line in (Get-Content -LiteralPath $sums)) { if ($line -match '^([0-9a-fA-F]{64}) [ *]?OptiEleven\.zip\s*$') { $want = $Matches[1].ToLowerInvariant() } }
+        if (-not $want) { throw 'SHA256SUMS.txt has no line for OptiEleven.zip. Nothing was installed.' }
+        $got = (Get-FileHash -LiteralPath $Zip -Algorithm SHA256).Hash.ToLowerInvariant()
+        if ($got -ne $want) { throw "OptiEleven.zip does not match SHA256SUMS.txt (expected $want, got $got). The download may be damaged or altered. Nothing was installed." }
+        Write-Step 'Download verified (SHA256).'
+    }
+
+    # Signed scripts must have a valid signature; if any file is signed, all of them must be. Unsigned releases are
+    # still accepted for now.
+    function Test-Signatures([string]$Dir) {
+        $sigs = @(Get-ChildItem -LiteralPath $Dir -Recurse -File | Where-Object { $_.Extension -in '.ps1', '.psm1' } | Get-AuthenticodeSignature)
+        $signed = @($sigs | Where-Object { $_.SignerCertificate })
+        if (-not $signed) { Write-Step 'Note: this release is not code-signed yet.'; return }
+        $bad = @($sigs | Where-Object { $_.Status -ne 'Valid' })
+        if ($bad) { throw "$($bad.Count) script(s) without a valid signature, e.g. $($bad[0].Path) ($($bad[0].Status)). Nothing was installed." }
+        Write-Step "Signature valid: $($signed[0].SignerCertificate.Subject)"
     }
 
     # downloads a release into $Dest (replacing it) and returns $true if it worked
@@ -105,9 +135,11 @@
         try {
             $zip = Join-Path $tmp 'OptiEleven.zip'
             Invoke-WebRequest $Latest.Url -OutFile $zip -UseBasicParsing -TimeoutSec 120
+            Test-Release $Latest $zip $tmp
             Expand-Archive -LiteralPath $zip -DestinationPath $tmp -Force
             $src = Join-Path $tmp 'OptiEleven'
             if (-not (Test-Path (Join-Path $src 'OptiEleven.ps1'))) { throw 'the download does not look like an OptiEleven release' }
+            Test-Signatures $src
             Get-ChildItem -LiteralPath $src -Recurse -File | Unblock-File
             Set-Content -LiteralPath (Join-Path $src 'version.txt') -Value $Latest.Tag
             New-Item -ItemType Directory -Path $home_ -Force | Out-Null
@@ -121,9 +153,10 @@
 
     function Open-Panel {
         $a = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-WindowStyle', 'Hidden', '-File', "`"$entry`"")
+        $exe = Join-Path $app 'OptiEleven.exe'   # 2.0 and later; it asks for administrator itself
         try {
             Write-Step 'Opening the panel (accept the administrator prompt)...'
-            Start-Process powershell.exe -ArgumentList $a -Verb RunAs
+            if (Test-Path $exe) { Start-Process $exe } else { Start-Process powershell.exe -ArgumentList $a -Verb RunAs }
         }
         catch {
             # administrator prompt declined: the panel still opens, in read-only mode

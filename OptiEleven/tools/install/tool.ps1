@@ -247,7 +247,31 @@ function Save-AppInstallerExe([object[]]$Apps, [string]$Path) {
         '__FAIL__' = T 'Error (código {0})'; '__WAIT__' = T 'En espera'; '__SUMMARY__' = T '{0} instaladas, {1} ya estaban y {2} con error.'; '__READY__' = T 'Listo'
         '__CLOSE__' = T 'Cerrar'; '__NOWINGET__' = T 'winget no está disponible. Instala "Instalador de aplicación" desde Microsoft Store.'
     }
-    $src = [IO.File]::ReadAllText((Join-Path $assets 'installer.cs')).Replace('__APPS__', $rows)
+    $cs = Join-Path $assets 'installer.cs'
+    # versión publicada: native\OptiEleven-Apps.exe ya viene compilado (build\Build.ps1) y aquí solo se le añade al final
+    # la lista y los textos, sin compilar nada en este PC. Su "Comments" lleva el hash de installer.cs: si no coincide
+    # (installer.cs cambiado a mano), se compila como antes.
+    $stub = Join-Path $script:AppDir 'native\OptiEleven-Apps.exe'
+    if (Test-Path -LiteralPath $stub) {
+        $sha = [Security.Cryptography.SHA256]::Create()
+        $hash = -join ($sha.ComputeHash([IO.File]::ReadAllBytes($cs))[0..5] | ForEach-Object { $_.ToString('x2') })
+        if ([Diagnostics.FileVersionInfo]::GetVersionInfo($stub).Comments -eq $hash) {
+            $clean = { param($x) ([string]$x) -replace "[`t`r`n]", ' ' }
+            $lines = @("T`t" + (@($m.Values | ForEach-Object { & $clean $_ }) -join "`t"))
+            $lines += @($Apps | ForEach-Object { "A`t$(& $clean $_.Id)`t$(& $clean (T $_.Name))`t$(& $clean $_.Args)" })
+            $data = [Text.Encoding]::UTF8.GetBytes($lines -join "`n")
+            $fs = [IO.File]::Create($Path)
+            try {
+                $exe = [IO.File]::ReadAllBytes($stub); $fs.Write($exe, 0, $exe.Length)
+                $fs.Write($data, 0, $data.Length)
+                $fs.Write([BitConverter]::GetBytes([int]$data.Length), 0, 4)
+                $magic = [Text.Encoding]::ASCII.GetBytes('OPTIELEVEN-APPS1'); $fs.Write($magic, 0, $magic.Length)
+            }
+            finally { $fs.Dispose() }
+            return
+        }
+    }
+    $src = [IO.File]::ReadAllText($cs).Replace('__APPS__', $rows)
     foreach ($k in $m.Keys) { $src = $src.Replace($k, (ConvertTo-CsString $m[$k])) }
     $tmp = Join-Path $env:TEMP ('optieleven-exe-' + [guid]::NewGuid().ToString('N')); [void](New-Item -ItemType Directory -Path $tmp)
     try {

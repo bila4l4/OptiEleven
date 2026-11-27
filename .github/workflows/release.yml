@@ -1,0 +1,62 @@
+# Builds OptiEleven with build/Build.ps1 (tests, launcher, native DLL, optional signing, zip + SHA256SUMS.txt).
+# Every run uploads dist/* as a workflow artifact; a pushed tag v* also creates a DRAFT release to review and publish.
+# Signing is optional: without the secrets below the build is unsigned and still succeeds (see CONTRIBUTING.md).
+name: Build and release
+
+on:
+  push:
+    tags: ['v*']
+    branches: [v2]
+  workflow_dispatch:
+
+permissions:
+  contents: write   # gh release create
+
+jobs:
+  build:
+    runs-on: windows-latest
+    env:
+      SIGN_PFX_BASE64: ${{ secrets.SIGN_PFX_BASE64 }}
+      SIGN_PFX_PASSWORD: ${{ secrets.SIGN_PFX_PASSWORD }}
+      AZURE_SIGNING_ENDPOINT: ${{ secrets.AZURE_SIGNING_ENDPOINT }}
+      AZURE_SIGNING_ACCOUNT: ${{ secrets.AZURE_SIGNING_ACCOUNT }}
+      AZURE_SIGNING_PROFILE: ${{ secrets.AZURE_SIGNING_PROFILE }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install the Artifact Signing client (only with Azure secrets)
+        if: env.AZURE_SIGNING_ENDPOINT != ''
+        shell: powershell
+        run: |
+          nuget install Microsoft.Trusted.Signing.Client -OutputDirectory "$env:RUNNER_TEMP\tsc" -ExcludeVersion -NonInteractive
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          "SIGN_DLIB=$env:RUNNER_TEMP\tsc\Microsoft.Trusted.Signing.Client\bin\x64\Azure.CodeSigning.Dlib.dll" | Add-Content -LiteralPath $env:GITHUB_ENV -Encoding ascii
+
+      - name: Build (runs the tests first)
+        shell: powershell
+        run: ./build/Build.ps1
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: OptiEleven-${{ github.ref_name }}
+          path: |
+            dist/OptiEleven.zip
+            dist/SHA256SUMS.txt
+          if-no-files-found: error
+
+      - name: Draft release
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: powershell
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          $fence = '```'
+          $sums = (Get-Content dist/SHA256SUMS.txt -Raw).Trim()
+          $notes = "SHA256 checksums (the one-line launcher checks them before installing):`n`n$fence`n$sums`n$fence`n"
+          [IO.File]::WriteAllText("$env:RUNNER_TEMP\notes.md", $notes)
+          gh release create $env:TAG --draft --verify-tag --title $env:TAG --notes-file "$env:RUNNER_TEMP\notes.md" dist/OptiEleven.zip dist/SHA256SUMS.txt
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

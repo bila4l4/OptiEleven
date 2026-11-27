@@ -18,7 +18,7 @@ Quita telemetría y basura, libera RAM antes de jugar y deshaz cualquier cambio 
 irm bila4l4.github.io/OptiEleven | iex
 ```
 
-o [⬇ descarga OptiEleven.zip](https://github.com/bila4l4/OptiEleven/releases/latest/download/OptiEleven.zip), descomprímelo y haz doble clic en `OptiEleven.cmd`. No hay nada que compilar ni instalar.
+o [⬇ descarga OptiEleven.zip](https://github.com/bila4l4/OptiEleven/releases/latest/download/OptiEleven.zip), descomprímelo y haz doble clic en `OptiEleven.exe`. No hay nada que compilar ni instalar.
 
 [English](README.md) · Español
 
@@ -63,7 +63,7 @@ La mayoría de scripts de "debloat" son un montón de cambios en el registro que
 
    Descarga la última versión en `%LOCALAPPDATA%\OptiEleven`, y si lo vuelves a ejecutar la actualiza. Puedes [leer el script](run.ps1) antes; es corto.
 
-   ¿Prefieres un archivo? **[Descarga OptiEleven.zip](https://github.com/bila4l4/OptiEleven/releases/latest/download/OptiEleven.zip)**, descomprímelo donde quieras y haz doble clic en **`OptiEleven.cmd`**.
+   ¿Prefieres un archivo? **[Descarga OptiEleven.zip](https://github.com/bila4l4/OptiEleven/releases/latest/download/OptiEleven.zip)**, descomprímelo donde quieras y haz doble clic en **`OptiEleven.exe`**. Es un pequeño lanzador que ejecuta `OptiEleven.ps1` de la misma carpeta; los scripts quedan en texto plano a su lado. Cada versión trae el SHA256 del zip en `SHA256SUMS.txt`, y el comando de una línea lo comprueba antes de instalar. Si el exe está bloqueado, `OptiEleven.cmd` en la misma carpeta hace lo mismo.
 2. El panel se abre como administrador.
 3. Lee el aviso del inicio, ve a **Sistema → Punto de restauración**, elige el preset **Recomendado**, revisa la hoja de cambios y pulsa **Aplicar cambios**.
 4. Reinicia si el panel te lo pide.

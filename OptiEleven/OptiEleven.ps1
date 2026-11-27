@@ -205,9 +205,15 @@ namespace GP {
 '@
 if (-not ('GP.PowerOverlay' -as [type])) {
     $loaded = $false
-    try {
-        $sha = [Security.Cryptography.SHA256]::Create()
-        $hash = -join ($sha.ComputeHash([Text.Encoding]::UTF8.GetBytes($GpSource))[0..5] | ForEach-Object { $_.ToString('x2') })
+    $sha = [Security.Cryptography.SHA256]::Create()
+    $hash = -join ($sha.ComputeHash([Text.Encoding]::UTF8.GetBytes($GpSource))[0..5] | ForEach-Object { $_.ToString('x2') })
+    # versión publicada: la DLL ya viene compilada (build\Build.ps1) junto a los scripts, en una carpeta con los mismos
+    # permisos que ellos. Su "Comments" lleva el hash de $GpSource; si no coincide (código cambiado a mano), se compila.
+    $shipped = Join-Path $PSScriptRoot 'native\OptiEleven.Native.dll'
+    if ((Test-Path -LiteralPath $shipped) -and [Diagnostics.FileVersionInfo]::GetVersionInfo($shipped).Comments -eq $hash) {
+        try { Add-Type -LiteralPath $shipped; $loaded = $true } catch {}
+    }
+    if (-not $loaded) { try {
         $cacheDir = if ($script:IsAdmin) { $script:Secure } else { Join-Path $env:LOCALAPPDATA 'OptiEleven\cache' }
         $dll = Join-Path $cacheDir "native-$hash.dll"
         if (-not (Test-Path -LiteralPath $dll)) {
@@ -216,7 +222,7 @@ if (-not ('GP.PowerOverlay' -as [type])) {
         }
         Add-Type -LiteralPath $dll; $loaded = $true
     }
-    catch {}
+    catch {} }
     if (-not $loaded -and -not ('GP.PowerOverlay' -as [type])) { Add-Type -TypeDefinition $GpSource }
 }
 
