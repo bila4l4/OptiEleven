@@ -1,6 +1,9 @@
 {
   "name": "English",
   "strings": {
+    "Buenos días": "Good morning",
+    "Buenas tardes": "Good afternoon",
+    "Buenas noches": "Good evening",
     "Clic para desplegar, doble clic para abrir y clic derecho para borrar.": "Click to expand, double-click to open, right-click to delete.",
     "Antes de jugar": "Before you play",
     "Apps al iniciar": "Startup apps",

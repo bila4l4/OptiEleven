@@ -61,7 +61,11 @@ function Update-HomeView {
     # una línea con Windows y los permisos
     $cv = Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -ErrorAction SilentlyContinue
     $os = if ($cv) { ([string]$cv.ProductName -replace 'Windows 10', $(if ([int]$cv.CurrentBuild -ge 22000) { 'Windows 11' } else { 'Windows 10' })) + " $($cv.DisplayVersion)" } else { 'Windows 11' }
-    $ui.PageDesc.Text = "$os  ·  " + (T $(if ($script:IsAdmin) { 'Administrador' } else { 'Sin permisos de administrador' }))
+    # saludo según la hora, con tu usuario de Windows y el nombre del equipo
+    $hour = (Get-Date).Hour
+    $hi = if ($hour -lt 12) { T 'Buenos días' } elseif ($hour -lt 20) { T 'Buenas tardes' } else { T 'Buenas noches' }
+    $ui.PageTitle.Text = "$hi, $env:USERNAME"
+    $ui.PageDesc.Text = "$env:COMPUTERNAME  ·  $os  ·  " + (T $(if ($script:IsAdmin) { 'Administrador' } else { 'Sin permisos de administrador' }))
     $ui.PageDesc.Visibility = 'Visible'
     Update-HomeStats
     try { $c = [IO.DriveInfo]::new($env:SystemDrive.TrimEnd(':')); $script:HomeCells.Disk.Text = Format-Size $c.AvailableFreeSpace } catch { $script:HomeCells.Disk.Text = '--' }
