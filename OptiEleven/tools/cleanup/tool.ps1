@@ -1,4 +1,4 @@
-﻿# Módulo "Limpieza": analiza y borra cachés y temporales (como el limpiador de Optimizer)
+﻿# "Cleanup" module: scans and deletes caches and temp files (like Optimizer's cleaner)
 
 $CleanItems = @(
     @{ Id = 'temp-user'; Icon = 'folder-user'; On = $true; Name = 'Temporales de tu usuario'
@@ -45,7 +45,7 @@ $CleanItems = @(
 )
 
 function Get-PathBytes([string]$Path) {
-    try {   # carpetas de sistema pueden negar el acceso: cuentan como 0
+    try {   # system folders may deny access: they count as 0
         if (-not (Test-Path -LiteralPath $Path -ErrorAction Stop)) { return 0 }
         $it = Get-Item -LiteralPath $Path -Force -ErrorAction Stop
         if (-not $it.PSIsContainer) { return [double]$it.Length }
@@ -63,11 +63,11 @@ function Get-CleanBytes($Item) {
     $total
 }
 
-# Borra en segundo plano, archivo a archivo, para poder contar lo liberado y enseñar el progreso sin bloquear la ventana.
-# $OnTick recibe la tabla de progreso (Current, Index, Count, Files, Bytes); $Done se llama al terminar con la misma tabla.
+# Deletes in the background, file by file, so it can count what was freed and show progress without blocking the window.
+# $OnTick gets the progress table (Current, Index, Count, Files, Bytes); $Done is called at the end with the same table.
 function Start-CleanJob([object[]]$Items, [scriptblock]$OnTick, [scriptblock]$Done) {
     $quick = [double]0
-    foreach ($it in @($Items | Where-Object { $_.Clean })) {   # papelera y caché de distribución: su propio comando, al momento
+    foreach ($it in @($Items | Where-Object { $_.Clean })) {   # recycle bin and delivery cache: their own command, right away
         $b = Get-CleanBytes $it; try { & $it.Clean } catch {}; $quick += [math]::Max([double]0, [double]($b - (Get-CleanBytes $it)))
     }
     $jobs = @(foreach ($it in @($Items | Where-Object { -not $_.Clean })) {
@@ -89,10 +89,10 @@ function Start-CleanJob([object[]]$Items, [scriptblock]$OnTick, [scriptblock]$Do
                     foreach ($file in $files) {
                         $len = [double]$file.Length
                         try { [IO.File]::Delete($file.FullName) }
-                        catch { try { [IO.File]::SetAttributes($file.FullName, 'Normal'); [IO.File]::Delete($file.FullName) } catch { continue } }   # en uso: se queda
+                        catch { try { [IO.File]::SetAttributes($file.FullName, 'Normal'); [IO.File]::Delete($file.FullName) } catch { continue } }   # in use: stays
                         $P.Bytes += $len; $P.Files++
                     }
-                    if ($item.PSIsContainer) {   # carpetas que han quedado vacías, de la más honda a la menos
+                    if ($item.PSIsContainer) {   # folders left empty, deepest first
                         Get-ChildItem -LiteralPath $path -Recurse -Force -Directory -ErrorAction SilentlyContinue | Sort-Object { $_.FullName.Length } -Descending |
                             ForEach-Object { try { [IO.Directory]::Delete($_.FullName) } catch {} }
                     }
@@ -113,7 +113,7 @@ function Update-CleanTotal {
     $script:CleanCount.Text = T $(if ($script:CleanScanning) { "Analizando... $n de $($script:CleanRows.Count) marcados" } else { "$n de $($script:CleanRows.Count) marcados" })
     $script:CleanBtn.Content.Children[1].Text = T $(if ($t -gt 0) { "Limpiar $(Format-Size $t)" } else { 'Limpiar ahora' })
     $script:CleanBtn.IsEnabled = ($n -gt 0) -and -not $script:Busy
-    # barra de cada fila: su tamaño frente al más grande
+    # bar for each row: its size relative to the largest
     foreach ($r in $script:CleanRows.Values) {
         $f = if ($null -ne $r.Bytes -and $r.Bytes -gt 0) { [math]::Max(0.01, $r.Bytes / $max) } else { 0 }
         $r.BarCols[0].Width = [Windows.GridLength]::new($f, 'Star'); $r.BarCols[1].Width = [Windows.GridLength]::new(1 - $f, 'Star')
@@ -121,7 +121,7 @@ function Update-CleanTotal {
     }
 }
 function Invoke-CleanScan {
-    # medir carpetas de varios GB bloqueaba la ventana: el recuento va en segundo plano y cada tamaño aparece al llegar
+    # measuring multi-GB folders blocked the window: the count runs in the background and each size shows up as it arrives
     if ($script:CleanScanning) { return }
     $script:CleanScanning = $true
     $jobs = @()
@@ -162,7 +162,7 @@ function New-CleanerPage {
     $script:CleanRows = [ordered]@{}
     $BgP = [Windows.Controls.Border]::BackgroundProperty; $BrP = [Windows.Controls.Border]::BorderBrushProperty
 
-    # cabecera grande, como Boost FPS: cuánto se libera y los botones
+    # big header, like Boost FPS: how much gets freed and the buttons
     $hero = [Windows.Controls.Border]::new(); $hero.CornerRadius = 8; $hero.Padding = '20,18'; $hero.Margin = '0,0,0,14'; $hero.BorderThickness = 1
     $hero.SetResourceReference($BgP, 'Glass'); $hero.SetResourceReference($BrP, 'GlassEdge')
     $hg = New-Cols @('Auto', '*', 'Auto')
@@ -202,7 +202,7 @@ function New-CleanerPage {
         [void]$sp.Children.Add((New-Text $it.Name 14.5 'Ink' 'SemiBold'))
         $ds = New-Text $it.Desc 13 'Muted'; $ds.Margin = '0,2,0,0'; $ds.MaxWidth = 680; $ds.HorizontalAlignment = 'Left'
         [void]$sp.Children.Add($ds)
-        # barra del tamaño relativo
+        # relative size bar
         $track = [Windows.Controls.Border]::new(); $track.Height = 4; $track.CornerRadius = 2; $track.Margin = '0,8,0,0'; $track.HorizontalAlignment = 'Stretch'; $track.SetResourceReference($BgP, 'Paper3')
         $tg = [Windows.Controls.Grid]::new(); $c0 = [Windows.Controls.ColumnDefinition]::new(); $c1 = [Windows.Controls.ColumnDefinition]::new()
         $c0.Width = [Windows.GridLength]::new(0, 'Star'); $c1.Width = [Windows.GridLength]::new(1, 'Star'); $tg.ColumnDefinitions.Add($c0); $tg.ColumnDefinitions.Add($c1)
@@ -257,7 +257,7 @@ function New-CleanerPage {
             Add-History 'cleanup' 'clean' "Limpieza terminada: $(Format-Size $P.Bytes) liberados (lo que estaba en uso se queda)."
             $script:CleanResult.Text = (T "Liberados $(Format-Size $P.Bytes) en $('{0:N0}' -f $P.Files) archivos. Lo que estaba en uso se queda y se borrará otro día.")
             $script:CleanResult.Visibility = 'Visible'
-            Invoke-CleanScan   # vuelve a medir lo que queda
+            Invoke-CleanScan   # measures what is left again
         }
     })
     Update-CleanTotal
@@ -265,7 +265,7 @@ function New-CleanerPage {
     $root
 }
 
-# al abrir Limpieza por primera vez se analiza; el análisis bloquea unos segundos, así que si el panel aún está arrancando se hace al terminar de comprobar los ajustes
+# the first time Cleanup opens it scans; the scan blocks for a few seconds, so if the panel is still starting up it runs once the tweak check finishes
 function Invoke-CleanerOnShow {
     if (-not $script:CleanFirstScan) { return }
     $script:CleanFirstScan = $false

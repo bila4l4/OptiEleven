@@ -1,4 +1,4 @@
-﻿# Módulo "Reparar": las reparaciones de siempre (las de WinUtil, Optimizer y los foros), cada una en su propia consola
+﻿# "Repair" module: the usual repairs (from WinUtil, Optimizer and the forums), each in its own console
 
 $RepairDefs = @(
     @{ Icon = 'first-aid-kit'; Name = 'Reparar archivos de Windows'; Admin = $true; Time = '15 a 30 min'
@@ -26,15 +26,15 @@ $RepairDefs = @(
        Run = @('wsreset.exe') }
     @{ Icon = 'image'; Name = 'Reconstruir la caché de iconos'; Admin = $false; Time = 'segundos'
        Desc = 'Para iconos en blanco o equivocados en el escritorio y la barra de tareas. El Explorador se reinicia.'
-       # Windows vuelve a abrir el Explorador solo (AutoRestartShell). No se arranca a mano desde esta consola,
-       # que puede ir como administrador: sería un escritorio entero con permisos de administrador.
+       # Windows restarts Explorer on its own (AutoRestartShell). It isn't started by hand from this console,
+       # which may be running as administrator: that would be a whole desktop with administrator rights.
        Run = @('Stop-Process -Name explorer -Force',
                "Remove-Item `"$env:LOCALAPPDATA\IconCache.db`", `"$env:LOCALAPPDATA\Microsoft\Windows\Explorer\iconcache_*.db`" -Force -ErrorAction SilentlyContinue",
                'for ($i = 0; $i -lt 40 -and -not (Get-Process explorer -ErrorAction SilentlyContinue); $i++) { Start-Sleep -Milliseconds 250 }',
                'if (-not (Get-Process explorer -ErrorAction SilentlyContinue)) { runas /trustlevel:0x20000 explorer.exe }') }
     @{ Icon = 'battery-warning'; Name = 'Informe de la batería'; Admin = $false; Time = 'segundos'
        Desc = 'Capacidad original frente a la actual y el historial de uso. Para saber si la batería del portátil está gastada.'
-       # se abre a través del Explorador para que el navegador no herede los permisos de administrador
+       # opened through Explorer so the browser doesn't inherit administrator rights
        Run = @("powercfg /batteryreport /output `"$env:TEMP\bateria.html`"", "explorer.exe `"$env:TEMP\bateria.html`"") }
 )
 
@@ -43,7 +43,7 @@ function Start-ConsoleTask([string]$Title, [string[]]$Commands) {
     $lines = @("`$Host.UI.RawUI.WindowTitle = 'OptiEleven - $Title'", "Write-Host '$Title' -ForegroundColor Cyan", "Write-Host ''") +
              ($Commands | ForEach-Object { "Write-Host '> $($_ -replace "'", "''")' -ForegroundColor DarkGray"; $_ }) +
              @("Write-Host ''", "Write-Host 'Terminado. Pulsa Intro para cerrar.' -ForegroundColor Green", 'Read-Host | Out-Null')
-    # los comandos van codificados en la propia llamada: no hay un .ps1 en disco que otro programa pueda cambiar
+    # the commands are encoded in the call itself: there is no .ps1 on disk that another program could change
     $enc = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes(($lines -join "`n")))
     Start-Process powershell -ArgumentList "-NoProfile -ExecutionPolicy Bypass -EncodedCommand $enc"
 }

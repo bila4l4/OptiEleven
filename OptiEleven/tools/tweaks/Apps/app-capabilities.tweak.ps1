@@ -1,6 +1,6 @@
-﻿# app-capabilities: lo que no cabe en el .json. Devuelve Backup / Test / Apply / Revert / Diff; las funciones que usa están en OptiEleven.ps1.
+﻿# app-capabilities: what doesn't fit in the .json. Returns Backup / Test / Apply / Revert / Diff; the functions it uses are in OptiEleven.ps1.
 @{
-           # los archivos pueden seguir ahí hasta reiniciar: la marca evita que se vuelva a lanzar DISM para nada
+           # the files may stay there until a restart: the marker avoids running DISM again for nothing
            Test   = { param($bk) (Test-Path (Join-Path $script:Secure 'capabilities.done')) -or -not ($OldCapabilities | Where-Object { Test-Path $_.File }) }
            Apply  = { param($bk)
                $caps = @(Get-WindowsCapability -Online -ErrorAction Stop | Where-Object State -eq 'Installed')

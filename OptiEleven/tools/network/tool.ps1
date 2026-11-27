@@ -1,4 +1,4 @@
-﻿# Módulo "Red": DNS, latencia y caché DNS (como el cambiador de DNS y el ping de Optimizer)
+﻿# "Network" module: DNS, latency and DNS cache (like Optimizer's DNS changer and ping)
 
 $DnsPresets = @(
     @{ Id = 'auto'; Icon = 'house-line';       Name = 'Automático';  Note = 'Los del router o tu operador';       Servers = @() }
@@ -34,7 +34,7 @@ function Measure-Latency([string]$Target, [int]$Count = 4) {
 }
 
 function Update-NetInfo {
-    # Get-NetAdapter y compañía cargan módulos de CIM (un par de segundos): en segundo plano
+    # Get-NetAdapter and friends load CIM modules (a couple of seconds): in the background
     $script:NetInfo.Children.Clear()
     [void]$script:NetInfo.Children.Add((New-Loader (T 'Leyendo la conexión...')))
     $work = [scriptblock]::Create("function Get-ActiveAdapters {`n${function:Get-ActiveAdapters}`n}`n@(Get-ActiveAdapters)")
@@ -69,7 +69,7 @@ function Show-NetInfo {
     }
 }
 function Invoke-NetLatency {
-    # los pings (hasta 1 s cada uno) van en segundo plano; cada resultado aparece en cuanto llega
+    # the pings (up to 1 s each) run in the background; each result shows up as soon as it arrives
     if ($script:NetPinging) { return }
     $gw = ($script:NetAdapters | Where-Object Gateway | Select-Object -First 1).Gateway
     $targets = @(, @('gw', $gw)) + @($DnsPresets | Where-Object { $_.Servers } | ForEach-Object { , @($_.Id, $_.Servers[0]) })
@@ -100,13 +100,13 @@ function Set-DnsPreset($Preset) {
         $v4 = @($Preset.Servers | Where-Object { $_ -notlike '*:*' })
         $v6 = @($Preset.Servers | Where-Object { $_ -like '*:*' })
         $ok = @(); $bad = @()
-        # adaptador a adaptador: si uno falla, los demás se cambian igual y el registro dice cuál no
+        # adapter by adapter: if one fails, the rest are still changed and the log says which one didn't
         foreach ($a in $script:NetAdapters) {
             try {
                 if ($Preset.Servers.Count -eq 0) { Set-DnsClientServerAddress -InterfaceIndex $a.Index -ResetServerAddresses -ErrorAction Stop }
                 else {
                     $hasV6 = [bool](Get-NetAdapterBinding -Name $a.Name -ComponentID ms_tcpip6 -ErrorAction SilentlyContinue | Where-Object Enabled)
-                    $list = if ($hasV6) { $v4 + $v6 } else { $v4 }   # IPv6 solo donde IPv6 está activo
+                    $list = if ($hasV6) { $v4 + $v6 } else { $v4 }   # IPv6 only where IPv6 is enabled
                     Set-DnsClientServerAddress -InterfaceIndex $a.Index -ServerAddresses $list -ErrorAction Stop
                 }
                 $ok += $a.Name
@@ -121,7 +121,7 @@ function Set-DnsPreset($Preset) {
     finally { Set-Busy $false; Update-NetInfo }
 }
 
-# ---------- test de velocidad, con speed.cloudflare.com como motor (el de su web)
+# ---------- speed test, with speed.cloudflare.com as the engine (the one behind its website)
 $SpeedWork = {
     param($P)
     [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
@@ -130,7 +130,7 @@ $SpeedWork = {
     $base = 'https://speed.cloudflare.com'
     try { $tr = [Net.WebClient]::new().DownloadString("$base/cdn-cgi/trace"); if ($tr -match 'colo=(\w+)') { $P.Colo = $Matches[1] } } catch { $P.Error = $_.Exception.Message; return }
 
-    # latencia: ping al mismo servidor de Cloudflare que hace el test; si la red bloquea el ping, tiempo de respuesta HTTP
+    # latency: ping to the same Cloudflare server that runs the test; if the network blocks ping, HTTP response time
     $P.Phase = 'ping'; $times = @()
     $icmp = [System.Net.NetworkInformation.Ping]::new()
     for ($i = 0; $i -lt 12; $i++) {
@@ -149,7 +149,7 @@ $SpeedWork = {
         $P.Jitter = [math]::Round(($d | Measure-Object -Average).Average, 1)
     }
 
-    # descarga y subida: varias conexiones a la vez durante unos segundos, como hace la web
+    # download and upload: several connections at once for a few seconds, like the website does
     function Invoke-Phase([string]$Kind, [int]$Streams, [double]$Seconds, [double]$From, [double]$To) {
         $S = [hashtable]::Synchronized(@{ Stop = $false })
         $pool = [runspacefactory]::CreateRunspacePool(1, $Streams); $pool.Open()

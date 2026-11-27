@@ -1,6 +1,6 @@
-﻿# Genera docs/index.html (la página de GitHub Pages) a partir de run.ps1.
-# La página es a la vez HTML y PowerShell, así que "irm <dominio> | iex" ejecuta run.ps1
-# y un navegador ve una página normal. Ejecútalo cada vez que cambies run.ps1.
+﻿# Builds docs/index.html (the GitHub Pages page) from run.ps1.
+# The page is both HTML and PowerShell, so "irm <domain> | iex" runs run.ps1
+# and a browser sees a normal page. Run it every time you change run.ps1.
 param([string]$Command = 'irm optieleven.app | iex')
 
 $root = Split-Path $PSScriptRoot -Parent

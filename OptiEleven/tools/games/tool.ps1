@@ -1,5 +1,5 @@
-﻿# Módulo "Mis juegos": detecta juegos de Steam, Epic y GOG (y los que añadas a mano) y aplica ajustes de Windows por juego.
-# Todos son reversibles: se quitan igual que se ponen.
+﻿# "My games" module: finds Steam, Epic and GOG games (and the ones you add by hand) and applies Windows settings per game.
+# All of them are reversible: they come off the same way they go on.
 
 $script:GamesFile = Join-Path $script:Root 'games.json'
 $GpuPrefKey = 'HKCU:\Software\Microsoft\DirectX\UserGpuPreferences'
@@ -51,7 +51,7 @@ function Get-InstalledGames {
         $exe = if ($p.exe) { $p.exe } elseif ($p.path -and $p.exeFile) { Join-Path $p.path $p.exeFile } else { $null }
         $games += [pscustomobject]@{ Name = $p.gameName; Store = 'GOG'; Exe = $exe; Dir = $p.path; Manual = $false }
     }
-    # añadidos a mano
+    # added by hand
     if (Test-Path $script:GamesFile) {
         try { foreach ($m in @(Get-Content $script:GamesFile -Raw -Encoding UTF8 | ConvertFrom-Json)) {
             $games += [pscustomobject]@{ Name = $m.Name; Store = 'Manual'; Exe = $m.Exe; Dir = (Split-Path $m.Exe); Manual = $true } } } catch {}
@@ -59,7 +59,7 @@ function Get-InstalledGames {
     $games | Where-Object { $_.Exe -and (Test-Path -LiteralPath $_.Exe) } | Sort-Object Name -Unique
 }
 
-# --- los tres ajustes por juego
+# --- the three per-game settings
 function Get-RegString([string]$Key, [string]$Name) { try { [string](Get-Item -LiteralPath $Key -ErrorAction Stop).GetValue($Name) } catch { '' } }
 
 function Test-GameGpu([string]$Exe) { (Get-RegString $GpuPrefKey $Exe) -match 'GpuPreference=2;' }
@@ -83,7 +83,7 @@ function Set-GamePrio([string]$Exe, [bool]$On) {
     $k = "$IfeoKey\$(Split-Path $Exe -Leaf)"
     if ($On) { Set-RegValue "$k\PerfOptions" 'CpuPriorityClass' 3 'DWord'; return }
     Remove-RegValue "$k\PerfOptions" 'CpuPriorityClass'
-    foreach ($kk in "$k\PerfOptions", $k) {   # limpia solo lo que haya quedado vacío
+    foreach ($kk in "$k\PerfOptions", $k) {   # cleans up only what was left empty
         $it = Get-Item -LiteralPath $kk -ErrorAction SilentlyContinue
         if ($it -and $it.ValueCount -eq 0 -and $it.SubKeyCount -eq 0) { Remove-Item -LiteralPath $kk -ErrorAction SilentlyContinue }
     }

@@ -1,6 +1,6 @@
-﻿# Módulo "Instalar apps": instala y actualiza programas con winget (como el apartado Apps de Optimizer / Install de WinUtil)
+﻿# "Install apps" module: installs and updates programs with winget (like Optimizer's Apps section / WinUtil's Install)
 
-# Como Ninite: una versión de cada cosa (la actual), sin variantes por arquitectura ni versiones antiguas.
+# Like Ninite: one version of each app (the current one), no per-architecture variants or old versions.
 $AppCatalog = [ordered]@{
     'Juegos' = @(
         @{ Id = 'Valve.Steam'; Icon = 'brand-steam'; Name = 'Steam' }
@@ -185,7 +185,7 @@ function Start-AppScan {
 function Start-WingetConsole([string]$Title, [string[]]$Commands) {
     $lines = @("`$Host.UI.RawUI.WindowTitle = '$Title'") + $Commands +
              @("Write-Host ''", "Write-Host 'Terminado. Pulsa Intro para cerrar.' -ForegroundColor Green", 'Read-Host | Out-Null')
-    # los comandos van codificados en la propia llamada: no hay un .ps1 en disco que otro programa pueda cambiar
+    # the commands are encoded in the call itself: there is no .ps1 on disk that another program could change
     $enc = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes(($lines -join "`n")))
     $script:AppProc = Start-Process powershell -ArgumentList "-NoProfile -ExecutionPolicy Bypass -EncodedCommand $enc" -PassThru
     $script:AppRunning = $true; Update-AppBar
@@ -193,9 +193,9 @@ function Start-WingetConsole([string]$Title, [string[]]$Commands) {
     $script:AppProcTimer.Start()
 }
 
-# ---------- instalador único (como Ninite): un solo archivo que instala todo lo elegido, en cualquier PC
+# ---------- single installer (like Ninite): one file that installs everything selected, on any PC
 function Remove-Accents([string]$Text) {
-    # el .cmd se guarda en ASCII: cmd.exe no lleva bien la marca UTF-8 al principio del archivo
+    # the .cmd is saved as ASCII: cmd.exe doesn't handle the UTF-8 BOM at the start of the file
     $n = $Text.Normalize([Text.NormalizationForm]::FormD)
     (-join ($n.ToCharArray() | Where-Object { [Globalization.CharUnicodeInfo]::GetUnicodeCategory($_) -ne 'NonSpacingMark' })) -replace '[^\x20-\x7E\r\n\t]', ''
 }
@@ -235,8 +235,8 @@ Write-Host ''
 Read-Host ($($m.Close)) | Out-Null
 "@
 }
-# ---------- instalador .exe, como el de Ninite: una ventana con la lista y el progreso, se eleva una sola vez
-# Se compila aquí mismo (assets\installer.cs) con el compilador de C# que trae Windows, sin descargar nada.
+# ---------- .exe installer, like Ninite's: a window with the list and the progress, elevates only once
+# It is compiled right here (assets\installer.cs) with the C# compiler that ships with Windows, without downloading anything.
 function ConvertTo-CsString([string]$x) { $x.Replace('\', '\\').Replace('"', '\"') }
 function Save-AppInstallerExe([object[]]$Apps, [string]$Path) {
     $assets = Join-Path $script:AppDir 'assets'
@@ -248,9 +248,9 @@ function Save-AppInstallerExe([object[]]$Apps, [string]$Path) {
         '__CLOSE__' = T 'Cerrar'; '__NOWINGET__' = T 'winget no está disponible. Instala "Instalador de aplicación" desde Microsoft Store.'
     }
     $cs = Join-Path $assets 'installer.cs'
-    # versión publicada: native\OptiEleven-Apps.exe ya viene compilado (build\Build.ps1) y aquí solo se le añade al final
-    # la lista y los textos, sin compilar nada en este PC. Su "Comments" lleva el hash de installer.cs: si no coincide
-    # (installer.cs cambiado a mano), se compila como antes.
+    # release build: native\OptiEleven-Apps.exe comes precompiled (build\Build.ps1) and here the list and texts are only
+    # appended to its end, with nothing compiled on this PC. Its "Comments" holds the hash of installer.cs: if it doesn't match
+    # (installer.cs edited by hand), it is compiled as before.
     $stub = Join-Path $script:AppDir 'native\OptiEleven-Apps.exe'
     if (Test-Path -LiteralPath $stub) {
         $sha = [Security.Cryptography.SHA256]::Create()
@@ -276,7 +276,7 @@ function Save-AppInstallerExe([object[]]$Apps, [string]$Path) {
     $tmp = Join-Path $env:TEMP ('optieleven-exe-' + [guid]::NewGuid().ToString('N')); [void](New-Item -ItemType Directory -Path $tmp)
     try {
         [IO.File]::WriteAllText((Join-Path $tmp 'installer.cs'), $src, (New-Object Text.UTF8Encoding $true))
-        # pide administrador al abrirse (una sola vez para todas las apps) y se ve nítido con escalado de pantalla
+        # asks for administrator when it opens (once for all apps) and looks sharp with display scaling
         $manifest = '<?xml version="1.0" encoding="utf-8"?><assembly manifestVersion="1.0" xmlns="urn:schemas-microsoft-com:asm.v1"><assemblyIdentity version="1.0.0.0" name="OptiEleven.AppInstaller"/>' +
             '<trustInfo xmlns="urn:schemas-microsoft-com:asm.v2"><security><requestedPrivileges xmlns="urn:schemas-microsoft-com:asm.v3"><requestedExecutionLevel level="requireAdministrator" uiAccess="false"/></requestedPrivileges></security></trustInfo>' +
             '<application xmlns="urn:schemas-microsoft-com:asm.v3"><windowsSettings><dpiAware xmlns="http://schemas.microsoft.com/SMI/2005/WindowsSettings">true/pm</dpiAware></windowsSettings></application></assembly>'
@@ -293,7 +293,7 @@ function Save-AppInstallerExe([object[]]$Apps, [string]$Path) {
 }
 function Get-SelectedApps { @(foreach ($grp in $AppCatalog.Values) { foreach ($a in $grp) { if ($script:AppSel.Contains($a.Id)) { $a } } }) }
 
-# logo real de la app (assets\apps\<id>.png, de la base de iconos de UniGetUI y de Dashboard Icons); si no hay, el icono vectorial
+# the app's real logo (assets\apps\<id>.png, from the UniGetUI icon database and Dashboard Icons); if there is none, the vector icon
 function New-AppLogo($App, [double]$Box = 40) {
     $file = Join-Path $script:AppDir "assets\apps\$(($App.Id.ToLower() -replace '[^a-z0-9.-]', '_')).png"
     if (-not (Test-Path -LiteralPath $file)) { return (New-IconWell $App.Icon $Box) }
@@ -312,7 +312,7 @@ function New-AppsPage {
     $script:AppInstalled = $null
     $script:AppRunning = $false
 
-    # cabecera como la de Ninite: eliges, y sale un instalador con todo
+    # header like Ninite's: you pick, and you get an installer with everything
     $hero = [Windows.Controls.Border]::new(); $hero.CornerRadius = 8; $hero.Padding = '20,18'; $hero.Margin = '0,0,0,6'; $hero.BorderThickness = 1
     $hero.SetResourceReference([Windows.Controls.Border]::BackgroundProperty, 'Glass'); $hero.SetResourceReference([Windows.Controls.Border]::BorderBrushProperty, 'GlassEdge')
     $hg = New-Cols @('Auto', '*', 'Auto')
@@ -336,7 +336,7 @@ function New-AppsPage {
     $hero.Child = $hg
     [void]$root.Children.Add($hero)
 
-    # buscador: filtra las tarjetas mientras escribes
+    # search box: filters the cards as you type
     $sb = [Windows.Controls.Border]::new(); $sb.CornerRadius = 10; $sb.Padding = '12,0'; $sb.Margin = '0,12,0,0'; $sb.BorderThickness = 1; $sb.MinHeight = 42
     $sb.SetResourceReference([Windows.Controls.Border]::BackgroundProperty, 'Paper2'); $sb.SetResourceReference([Windows.Controls.Border]::BorderBrushProperty, 'Rule')
     $sg = New-Cols @('Auto', '*')

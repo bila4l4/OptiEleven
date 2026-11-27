@@ -1,14 +1,14 @@
 ﻿#Requires -Version 5.1
 <#
-  OptiEleven - optimizaciones reversibles para Windows 11
-  - Cada ajuste guarda el estado original la primera vez que se aplica
-    (%ProgramData%\OptiEleven\secure\backup.json) y "Revertir" lo restaura.
-  - Uso:
-      .\OptiEleven.ps1                          -> abre el panel
-      .\OptiEleven.ps1 -Page cleanup            -> abre directamente un apartado (el id de su tool.json: install, startup, cleanup, network, hardware, tools...)
-      .\OptiEleven.ps1 -Status                  -> muestra el estado de cada ajuste (sin cambiar nada)
-      .\OptiEleven.ps1 -Preset Recomendado -NoGui  -> aplica un preset sin interfaz (requiere admin)
-      .\OptiEleven.ps1 -Config perfil.json -NoGui  -> aplica un perfil exportado desde el panel (requiere admin)
+  OptiEleven - reversible optimizations for Windows 11
+  - Each tweak saves the original state the first time it is applied
+    (%ProgramData%\OptiEleven\secure\backup.json) and "Revert" restores it.
+  - Usage:
+      .\OptiEleven.ps1                          -> opens the panel
+      .\OptiEleven.ps1 -Page cleanup            -> opens a section directly (the id in its tool.json: install, startup, cleanup, network, hardware, tools...)
+      .\OptiEleven.ps1 -Status                  -> shows the state of each tweak (changes nothing)
+      .\OptiEleven.ps1 -Preset Recomendado -NoGui  -> applies a preset without the UI (needs admin)
+      .\OptiEleven.ps1 -Config profile.json -NoGui -> applies a profile exported from the panel (needs admin)
 #>
 param(
     [ValidateSet('Recomendado', 'Avanzado', 'Competitivo')] [string]$Preset,
@@ -20,9 +20,9 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $script:Root       = Join-Path $env:ProgramData 'OptiEleven'
-# Lo que el panel elevado lee y usa para tocar el sistema (copias, estado del booster) va en una carpeta que
-# solo pueden escribir Administradores y SYSTEM; si no, un programa sin permisos podría editarla y conseguir
-# que el panel escriba en el registro lo que él quiera al "revertir".
+# What the elevated panel reads and uses to change the system (backups, booster state) goes in a folder that
+# only Administrators and SYSTEM can write; otherwise an unprivileged program could edit it and get
+# the panel to write whatever it wants to the registry on "revert".
 $script:Secure     = Join-Path $script:Root 'secure'
 $script:BackupFile = Join-Path $script:Secure 'backup.json'
 $script:LogFile    = Join-Path $script:Root 'panel.log'
@@ -32,7 +32,7 @@ try { if (-not (Test-Path $script:Root)) { New-Item -ItemType Directory -Path $s
 function Protect-Folder([string]$Path) {
     if (-not (Test-Path $Path)) { New-Item -ItemType Directory -Path $Path -Force | Out-Null }
     $acl = New-Object System.Security.AccessControl.DirectorySecurity
-    $acl.SetAccessRuleProtection($true, $false)   # sin permisos heredados de ProgramData
+    $acl.SetAccessRuleProtection($true, $false)   # no permissions inherited from ProgramData
     $inh = [System.Security.AccessControl.InheritanceFlags]'ContainerInherit, ObjectInherit'
     $none = [System.Security.AccessControl.PropagationFlags]::None
     foreach ($r in @(@('S-1-5-32-544', 'FullControl'), @('S-1-5-18', 'FullControl'), @('S-1-5-32-545', 'ReadAndExecute'))) {
@@ -42,7 +42,7 @@ function Protect-Folder([string]$Path) {
     $acl.SetOwner((New-Object System.Security.Principal.SecurityIdentifier 'S-1-5-32-544'))
     Set-Acl -LiteralPath $Path -AclObject $acl
 }
-# datos de cuando el panel se llamaba Gaming Panel: tema, juegos añadidos y (con admin) las copias de seguridad
+# data from when the panel was called Gaming Panel: theme, added games and (with admin) the backups
 $oldRoot = Join-Path $env:ProgramData 'GamingPanel'
 if (Test-Path $oldRoot) {
     foreach ($n in 'theme.txt', 'games.json') { $src = Join-Path $oldRoot $n; $dst = Join-Path $script:Root $n; if ((Test-Path $src) -and -not (Test-Path $dst)) { try { Copy-Item $src $dst } catch {} } }
@@ -54,17 +54,17 @@ if ($script:IsAdmin) {
             $src = Join-Path (Join-Path $oldRoot 'secure') $n; $dst = Join-Path $script:Secure $n
             if ((Test-Path $src) -and -not (Test-Path $dst)) { Copy-Item $src $dst }
         }
-        # copias de versiones anteriores del panel, que estaban en la carpeta abierta
+        # backups from older versions of the panel, which were in the open folder
         $oldBk = Join-Path $script:Root 'backup.json'
         if ((Test-Path $oldBk) -and -not (Test-Path $script:BackupFile)) { Move-Item -LiteralPath $oldBk -Destination $script:BackupFile }
     }
     catch {}
 }
 
-# Llamadas nativas (energía, barra de título oscura, memoria). Compilar C# con Add-Type cuesta ~300 ms cada vez,
-# así que se compila una sola vez a una DLL y las siguientes veces solo se carga. Con permisos de administrador la
-# DLL vive en la carpeta segura (si estuviera en una carpeta del usuario, otro programa podría cambiarla y el panel
-# elevado la cargaría); sin ellos, en la del usuario, que no da más permisos de los que ya tiene.
+# Native calls (power, dark title bar, memory). Compiling C# with Add-Type costs ~300 ms every time,
+# so it is compiled once to a DLL and later runs only load it. With administrator rights the
+# DLL lives in the secure folder (in a user folder, another program could change it and the elevated panel
+# would load it); without them, in the user's folder, which grants no more rights than the user already has.
 $GpSource = @'
 using System;
 using System.Runtime.InteropServices;
@@ -77,12 +77,12 @@ namespace GP {
         [DllImport("dwmapi.dll")] public static extern int DwmSetWindowAttribute(IntPtr h, int attr, ref int val, int size);
     }
     public static class Shell {
-        // identidad propia en la barra de tareas: sin ella, Windows agrupa la ventana con PowerShell y muestra su icono
+        // own taskbar identity: without it, Windows groups the window with PowerShell and shows its icon
         [DllImport("shell32.dll", CharSet = CharSet.Unicode)] public static extern int SetCurrentProcessExplicitAppUserModelID(string appId);
     }
-    // Espacio en disco (como WinDirStat): árbol completo de carpetas con su tamaño, los archivos grandes de cada una y un
-    // resumen por extensión. FindFirstFileEx con "large fetch" (lo mismo que usa WinDirStat) y una carpeta de primer
-    // nivel por núcleo en paralelo. Los contadores se leen en vivo desde la ventana.
+    // Disk space (like WinDirStat): full folder tree with sizes, the large files in each folder and a
+    // summary by extension. FindFirstFileEx with "large fetch" (the same as WinDirStat) and one top-level
+    // folder per core in parallel. The window reads the counters live.
     public class DNode {
         public string Name; public string Path; public long Size; public long Files; public long LastWrite;
         public bool IsFile; public bool IsRest; public DNode Parent;
@@ -91,7 +91,7 @@ namespace GP {
     public class DExt { public string Ext; public long Size; public long Count; }
     public static class DiskScan {
         public static long Files, Bytes; public static string Current = ""; public static volatile bool Cancel;
-        const int KeepFiles = 40;   // archivos que se guardan por carpeta; el resto se suma en una sola fila
+        const int KeepFiles = 40;   // files kept per folder; the rest are added up in a single row
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode, Pack = 4)]
         struct FindData {
@@ -118,7 +118,7 @@ namespace GP {
                     do {
                         if (fd.Name == "." || fd.Name == "..") continue;
                         if ((fd.Attr & 0x10) != 0) {
-                            if ((fd.Attr & 0x400) != 0) continue;   // uniones y enlaces: no contar dos veces
+                            if ((fd.Attr & 0x400) != 0) continue;   // junctions and links: don't count twice
                             var sub = new DNode { Name = fd.Name, Path = dir.Path.TrimEnd('\\') + "\\" + fd.Name, LastWrite = fd.Written, Parent = dir, Kids = new System.Collections.Generic.List<DNode>() };
                             dir.Kids.Add(sub);
                         } else {
@@ -133,7 +133,7 @@ namespace GP {
             }
             System.Threading.Interlocked.Add(ref Files, dirFiles); System.Threading.Interlocked.Add(ref Bytes, dirBytes);
             foreach (var sub in dir.Kids) { if (Cancel) return; Walk(sub, ctx); dirBytes += sub.Size; dirFiles += sub.Files; }
-            // solo los archivos grandes de cada carpeta como filas; los demás, sumados en una ("y 1.234 archivos más")
+            // only the large files of each folder get rows; the rest are added up in one ("and 1,234 more files")
             files.Sort((a, b) => b.Size.CompareTo(a.Size));
             if (files.Count > KeepFiles) {
                 long rs = 0; for (int i = KeepFiles; i < files.Count; i++) rs += files[i].Size;
@@ -145,12 +145,12 @@ namespace GP {
             dir.Size = dirBytes; dir.Files = dirFiles;
         }
 
-        // devuelve { DNode raíz, DExt[] extensiones de mayor a menor }
+        // returns { DNode root, DExt[] extensions from largest to smallest }
         public static object[] Scan(string root) {
             Files = 0; Bytes = 0; Cancel = false;
             var top = new DNode { Name = root, Path = root.TrimEnd('\\') + (root.EndsWith(":\\") || root.EndsWith(":") ? "\\" : ""), Kids = new System.Collections.Generic.List<DNode>() };
             if (top.Path.EndsWith(":\\") == false) top.Path = root.TrimEnd('\\');
-            // primer nivel en serie; cada carpeta de primer nivel en su hilo
+            // top level in series; each top-level folder on its own thread
             var main = new Ctx();
             FindData fd; var dirs = new System.Collections.Generic.List<DNode>(); var looseFiles = new System.Collections.Generic.List<DNode>(); long lb = 0, lf = 0;
             IntPtr h = FindFirstFileExW((top.Path.StartsWith(@"\\") ? top.Path : @"\\?\" + top.Path).TrimEnd('\\') + @"\*", 1, out fd, 0, IntPtr.Zero, 2);
@@ -176,7 +176,7 @@ namespace GP {
             long total = lb, count = lf; foreach (var d in dirs) { total += d.Size; count += d.Files; }
             top.Kids.Sort((a, b) => b.Size.CompareTo(a.Size));
             top.Size = total; top.Files = count;
-            // extensiones de todos los hilos juntas
+            // extensions from all threads merged
             foreach (var c in ctxs) foreach (var kv in c.Ext) { long[] e; if (!main.Ext.TryGetValue(kv.Key, out e)) { e = new long[2]; main.Ext[kv.Key] = e; } e[0] += kv.Value[0]; e[1] += kv.Value[1]; }
             var exts = new System.Collections.Generic.List<DExt>();
             foreach (var kv in main.Ext) exts.Add(new DExt { Ext = kv.Key, Size = kv.Value[0], Count = kv.Value[1] });
@@ -207,8 +207,8 @@ if (-not ('GP.PowerOverlay' -as [type])) {
     $loaded = $false
     $sha = [Security.Cryptography.SHA256]::Create()
     $hash = -join ($sha.ComputeHash([Text.Encoding]::UTF8.GetBytes($GpSource))[0..5] | ForEach-Object { $_.ToString('x2') })
-    # versión publicada: la DLL ya viene compilada (build\Build.ps1) junto a los scripts, en una carpeta con los mismos
-    # permisos que ellos. Su "Comments" lleva el hash de $GpSource; si no coincide (código cambiado a mano), se compila.
+    # release build: the DLL comes precompiled (build\Build.ps1) next to the scripts, in a folder with the same
+    # permissions as them. Its "Comments" holds the hash of $GpSource; if it doesn't match (code edited by hand), it is compiled.
     $shipped = Join-Path $PSScriptRoot 'native\OptiEleven.Native.dll'
     if ((Test-Path -LiteralPath $shipped) -and [Diagnostics.FileVersionInfo]::GetVersionInfo($shipped).Comments -eq $hash) {
         try { Add-Type -LiteralPath $shipped; $loaded = $true } catch {}
@@ -226,7 +226,7 @@ if (-not ('GP.PowerOverlay' -as [type])) {
     if (-not $loaded -and -not ('GP.PowerOverlay' -as [type])) { Add-Type -TypeDefinition $GpSource }
 }
 
-# ============================================================ utilidades
+# ============================================================ utilities
 function Update-Ui {
     if (-not $script:LogBox) { return }
     $frame = New-Object System.Windows.Threading.DispatcherFrame
@@ -236,11 +236,11 @@ function Update-Ui {
     [System.Windows.Threading.Dispatcher]::PushFrame($frame)
 }
 
-# ---------- idiomas
-# Los textos del panel están escritos en español; lang\<código>.json da la traducción:
-#   "strings":  texto exacto -> traducción
-#   "patterns": [regex, sustitución]; en la sustitución $1 copia el grupo tal cual y @1 lo traduce también.
-# Para añadir un idioma basta con copiar en.json con otro código (fr.json...) y traducir los valores.
+# ---------- languages
+# The panel's texts are written in Spanish; lang\<code>.json provides the translation:
+#   "strings":  exact text -> translation
+#   "patterns": [regex, replacement]; in the replacement $1 copies the group as is and @1 translates it too.
+# To add a language, copy en.json under another code (fr.json...) and translate the values.
 $script:LangDir  = Join-Path $PSScriptRoot 'lang'
 $script:LangFile = Join-Path $script:Root 'lang.txt'
 $script:LangCode = 'en'
@@ -254,7 +254,7 @@ function Get-Languages {
     }
 }
 function Import-Language([string]$Code) {
-    # JavaScriptSerializer distingue mayúsculas ("Instalada" e "instalada" son entradas distintas), ConvertFrom-Json de PS 5.1 no
+    # JavaScriptSerializer is case-sensitive ("Instalada" and "instalada" are separate entries), PS 5.1's ConvertFrom-Json is not
     $script:LangStrings = $null; $script:LangPatterns = @()
     $l = Get-Languages | Where-Object Code -eq $Code | Select-Object -First 1
     if (-not $l) { return }
@@ -288,9 +288,9 @@ function Write-Log([string]$Msg, [string]$Level = 'INFO') {
     try { Add-Content -LiteralPath $script:LogFile -Value $line -Encoding UTF8 } catch {}
 }
 
-# ---------- registro
+# ---------- registry
 function RegV([string]$Path, [string]$Name, $Value, [string]$Kind = 'DWord', $Default = $null) {
-    # Default: valor de Windows para revertir si no hay copia (si no se indica, se borra el valor)
+    # Default: Windows value to revert to when there is no backup (if not given, the value is deleted)
     @{ Path = $Path; Name = $Name; Value = $Value; Kind = $Kind; Default = $Default }
 }
 function Get-RegState($r) {
@@ -317,7 +317,7 @@ function Test-Reg($r) {
     return [bool]($s.Exists -and ("$($s.Value)" -eq "$($r.Value)"))
 }
 
-# ---------- servicios
+# ---------- services
 function SvcV([string]$Name, [string]$Start, [string]$Default) { @{ Name = $Name; Start = $Start; Default = $Default } }
 function Get-StartCode([string]$s) { switch ($s) { 'Auto' { 2 } 'Delayed' { 2 } 'Manual' { 3 } 'Disabled' { 4 } default { 3 } } }
 function Get-SvcState([string]$Name) {
@@ -333,17 +333,17 @@ function Set-SvcStart([string]$Name, [int]$Start, [bool]$Delayed) {
     if (-not $mode) { return }
     $out = & sc.exe config $Name start= $mode 2>&1
     if ($LASTEXITCODE -ne 0) {
-        # algunos servicios no aceptan sc.exe: probar por registro
+        # some services reject sc.exe: try through the registry
         try { Set-ItemProperty -LiteralPath "HKLM:\SYSTEM\CurrentControlSet\Services\$Name" -Name Start -Value $Start -Type DWord }
         catch { throw "No se pudo cambiar el servicio $Name ($out)" }
     }
     if ($Start -eq 4) { Stop-Service -Name $Name -Force -ErrorAction SilentlyContinue -WarningAction SilentlyContinue }
 }
 
-# ---------- tareas programadas
+# ---------- scheduled tasks
 function Split-TaskPath([string]$Full) { $i = $Full.LastIndexOf('\'); @($Full.Substring(0, $i + 1), $Full.Substring($i + 1)) }
 function Get-TaskState([string]$Full) {
-    # API COM del Programador de tareas: ~1 ms por tarea (Get-ScheduledTask tarda ~650 ms)
+    # Task Scheduler COM API: ~1 ms per task (Get-ScheduledTask takes ~650 ms)
     if (-not $script:TaskSvc) { $script:TaskSvc = New-Object -ComObject Schedule.Service; $script:TaskSvc.Connect() }
     $p, $n = Split-TaskPath $Full
     try { $t = $script:TaskSvc.GetFolder($(if ($p -eq '\') { '\' } else { $p.TrimEnd('\') })).GetTask($n) } catch { return $null }
@@ -356,7 +356,7 @@ function Set-TaskEnabled([string]$Full, [bool]$Enabled) {
     else { Disable-ScheduledTask -TaskPath $p -TaskName $n | Out-Null }
 }
 
-# ---------- energía
+# ---------- power
 function Get-OverlayGuid { $g = [guid]::Empty; [void][GP.PowerOverlay]::PowerGetEffectiveOverlayScheme([ref]$g); $g.ToString() }
 function Set-OverlayGuid([string]$g) {
     $r = [GP.PowerOverlay]::PowerSetActiveOverlayScheme([guid]$g)
@@ -364,21 +364,21 @@ function Set-OverlayGuid([string]$g) {
 }
 function Get-ActiveSchemeGuid { if ((powercfg /getactivescheme) -match '([0-9a-f]{8}-[0-9a-f-]{27})') { $Matches[1] } }
 
-# ---------- copias de seguridad
+# ---------- backups
 function Read-Store {
     if (Test-Path $script:BackupFile) { try { return (Get-Content $script:BackupFile -Raw -Encoding UTF8 | ConvertFrom-Json) } catch {} }
     [pscustomobject]@{}
 }
 $script:Store = Read-Store
 
-# ---------- historial: una línea JSON por cambio (qué, cuándo, antes y después). Lo enseña la herramienta Historial.
-# Va en la carpeta abierta porque solo informa: para deshacer se usa backup.json, que está en la segura.
+# ---------- history: one JSON line per change (what, when, before and after). Shown by the History tool.
+# It goes in the open folder because it is informational only: undo uses backup.json, which is in the secure one.
 $script:HistoryFile = Join-Path $script:Root 'history.jsonl'
 function Add-History([string]$Source, [string]$Action, [string]$Text = '', [string]$Id = '', [bool]$Ok = $true, $Changes = $null, [string]$Err = '', [string]$Time = '') {
     $e = [ordered]@{ time = $(if ($Time) { $Time } else { (Get-Date).ToString('s') }); source = $Source; action = $Action; id = $Id; text = $Text; ok = $Ok }
     if ($Err) { $e.error = $Err }
     if ($Changes) { $e.changes = @($Changes) }
-    try { Add-Content -LiteralPath $script:HistoryFile -Value ($e | ConvertTo-Json -Compress -Depth 5) -Encoding UTF8 } catch {}   # sin permiso de escritura no se apunta, pero no se para nada
+    try { Add-Content -LiteralPath $script:HistoryFile -Value ($e | ConvertTo-Json -Compress -Depth 5) -Encoding UTF8 } catch {}   # without write permission nothing is logged, but nothing stops
 }
 function Get-History {
     if (-not (Test-Path -LiteralPath $script:HistoryFile)) { return @() }
@@ -389,7 +389,7 @@ function Get-Backup([string]$Id) { $p = $script:Store.PSObject.Properties[$Id]; 
 function Save-Backup([string]$Id, $Bk) { $script:Store | Add-Member -NotePropertyName $Id -NotePropertyValue $Bk -Force; Write-Store }
 function Remove-Backup([string]$Id) { $script:Store.PSObject.Properties.Remove($Id); Write-Store }
 
-# vuelve a abrir el panel: con OptiEleven.exe si está al lado (la release), si no con powershell.exe (copia de git)
+# reopens the panel: with OptiEleven.exe if it is next to it (the release), otherwise with powershell.exe (git checkout)
 function Start-Panel([string]$Page, [switch]$Admin) {
     $exe = Join-Path $PSScriptRoot 'OptiEleven.exe'
     $verb = @{}; if ($Admin) { $verb.Verb = 'RunAs' }
@@ -397,16 +397,16 @@ function Start-Panel([string]$Page, [switch]$Admin) {
     else { Start-Process powershell.exe -ArgumentList @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-WindowStyle', 'Hidden', '-File', "`"$PSCommandPath`"", '-Page', $Page) @verb -ErrorAction Stop }
 }
 function Get-ToolText($Value) {
-    # textos del manifiesto: { "es": "...", "en": "..." } (o un texto suelto); si falta el idioma, el español
+    # manifest texts: { "es": "...", "en": "..." } (or a plain string); if the language is missing, Spanish
     if ($null -eq $Value -or $Value -is [string]) { return [string]$Value }
     $x = $Value.$($script:LangCode); if (-not $x) { $x = $Value.es }
     [string]$x
 }
-# ============================================================ catálogo de ajustes
-# Risk: Seguro / Moderado / Avanzado
-# Presets: R = Recomendado (quita casi toda la basura, sin romper nada que se use a diario)
-#          A = Avanzado (Recomendado + lo que conviene saber qué hace). Sin preset: solo a mano.
-# Ideas cruzadas con WinUtil (Chris Titus), Win11Debloat (Raphire), Optimizer (hellzerg) y Atlas OS.
+# ============================================================ tweak catalog
+# Risk: Seguro (safe) / Moderado (moderate) / Avanzado (advanced)
+# Presets: R = Recomendado (removes almost all the junk, without breaking anything used daily)
+#          A = Avanzado (Recomendado + things worth understanding first). No preset: manual only.
+# Ideas cross-checked with WinUtil (Chris Titus), Win11Debloat (Raphire), Optimizer (hellzerg) and Atlas OS.
 $P   = 'HKLM:\SOFTWARE\Policies\Microsoft\Windows'
 $CDM = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager'
 $MM  = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile'
@@ -417,18 +417,18 @@ $DebloatApps = @(
     'Microsoft.PowerAutomateDesktop', 'MSTeams', 'Microsoft.Copilot', 'Microsoft.MicrosoftOfficeHub',
     'Microsoft.OutlookForWindows', 'Microsoft.WindowsMaps', 'Microsoft.549981C3F5F10', 'Microsoft.People',
     'Microsoft.ZuneVideo', 'MicrosoftCorporationII.QuickAssist', 'Microsoft.Windows.DevHome',
-    # más de Microsoft que viene de serie o llega con las actualizaciones
+    # more Microsoft apps that come preinstalled or arrive with updates
     'Microsoft.WindowsCommunicationsApps', 'Microsoft.SkypeApp', 'Microsoft.MixedReality.Portal', 'Microsoft.Microsoft3DViewer',
     'Microsoft.Print3D', 'Microsoft.MSPaint', 'Microsoft.Office.OneNote', 'Microsoft.Wallet', 'Microsoft.Messaging', 'Microsoft.OneConnect',
     'Microsoft.BingFinance', 'Microsoft.BingSports', 'Microsoft.BingTranslator', 'Microsoft.BingFoodAndDrink', 'Microsoft.BingHealthAndFitness',
     'Microsoft.BingTravel', 'Microsoft.News', 'MicrosoftCorporationII.MicrosoftFamily', 'Microsoft.Windows.Ai.Copilot.Provider',
     'MicrosoftWindows.Client.WebExperience', 'Microsoft.StartExperiencesApp', 'Microsoft.Edge.GameAssist',
-    # patrocinadas que Windows instala solo (se aceptan comodines)
+    # sponsored apps Windows installs on its own (wildcards allowed)
     '*CandyCrush*', '*BubbleWitch*', '*FarmHeroes*', '*MarchofEmpires*', '*Facebook*', '*Instagram*', '*TikTok*', '*Twitter*',
     '*LinkedIn*', '*Disney*', '*Duolingo*', '*PicsArt*', '*Royal Revolt*', '*HiddenCity*', '*AdobePhotoshopExpress*', '*EclipseManager*'
 )
 function Get-DebloatPresent([string[]]$List) {
-    # nombres de la lista que siguen instalados (con comodines)
+    # names from the list that are still installed (with wildcards)
     $names = if ($script:AppxNames) { $script:AppxNames } else { @(Get-AppxPackage -ErrorAction SilentlyContinue | ForEach-Object Name) }
     @($List | Where-Object { $pat = $_; $names | Where-Object { $_ -like $pat } | Select-Object -First 1 })
 }
@@ -446,13 +446,13 @@ function Remove-AppList([string[]]$List) {
 
 
 
-# ---------- Latencia avanzada (ideas de Hone, Atlas y los foros de latencia)
-# Ajustes de un valor del plan de energía actual (solo enchufado / AC). Lee el valor con powercfg /query:
-# las dos últimas cifras 0x... de la salida son el índice AC y el DC, en cualquier idioma.
+# ---------- Advanced latency (ideas from Hone, Atlas and the latency forums)
+# Single-value tweaks on the current power plan (plugged in / AC only). Reads the value with powercfg /query:
+# the last two 0x... numbers in the output are the AC and DC index, in any language.
 function Get-PowerAc([string]$Sub, [string]$Setting) {
     $hex = [regex]::Matches((powercfg /query SCHEME_CURRENT $Sub $Setting | Out-String), '0x([0-9a-fA-F]{8})')
     if ($hex.Count -ge 2) { return [Convert]::ToInt32($hex[$hex.Count - 2].Groups[1].Value, 16) }
-    # ajuste oculto: powercfg no lo enseña; se lee del plan activo o, si no se ha tocado, del valor por defecto del plan
+    # hidden setting: powercfg doesn't show it; read it from the active plan or, if untouched, from the plan's default
     $scheme = Get-ActiveSchemeGuid
     $u = "HKLM:\SYSTEM\CurrentControlSet\Control\Power\User\PowerSchemes\$scheme\$Sub\$Setting"
     try { return [int](Get-ItemProperty $u -Name ACSettingIndex -ErrorAction Stop).ACSettingIndex } catch {}
@@ -465,8 +465,8 @@ function Set-PowerAc([string]$Sub, [string]$Setting, [int]$Value, [string]$Schem
     if ($LASTEXITCODE -ne 0) { throw "powercfg no aceptó el valor $Value" }
     powercfg /setactive SCHEME_CURRENT | Out-Null
 }
-# Los ajustes de energía van al plan activo, pero la copia recuerda en qué plan se hicieron: al revertir se
-# restauran en ese plan (si sigue existiendo) y en el activo, aunque entre medias se haya cambiado de plan.
+# Power tweaks go to the active plan, but the backup remembers which plan they were made on: on revert they are
+# restored on that plan (if it still exists) and on the active one, even if the plan changed in between.
 function Restore-PowerAc([string]$Sub, [string]$Setting, [int]$Value, $Bk) {
     if ($Bk -and $Bk.Custom.Scheme -and $Bk.Custom.Scheme -ne (Get-ActiveSchemeGuid)) {
         powercfg /query $Bk.Custom.Scheme $Sub $Setting *> $null
@@ -474,7 +474,7 @@ function Restore-PowerAc([string]$Sub, [string]$Setting, [int]$Value, $Bk) {
     }
     Set-PowerAc $Sub $Setting $Value
 }
-# al cambiar de plan (Ultimate), los ajustes de energía que estaban aplicados se copian al plan nuevo
+# when switching plans (Ultimate), the applied power tweaks are copied to the new plan
 function Sync-PowerTweaks {
     foreach ($tw in $Tweaks) {
         if ($tw.Custom -and $tw.Custom.PowerSub -and (Get-Backup $tw.Id)) {
@@ -492,7 +492,7 @@ function New-PowerCustom([string]$Sub, [string]$Setting, [int]$Value, [int]$Defa
         Diff   = [scriptblock]::Create("param(`$bk, `$rev) `$c = Get-PowerAc '$Sub' '$Setting'; `$a = if (`$rev) { if (`$bk -and `$null -ne `$bk.Custom.Prev) { `$bk.Custom.Prev } else { $Default } } else { $Value }; New-DiffLine 'power' 'powercfg AC $($Sub.Substring(0,8))/$($Setting.Substring(0,8))' `"`$c`" `"`$a`"")
     }
 }
-# Claves de red y de GPU que dependen del equipo
+# Network and GPU keys that depend on the machine
 function Get-NicKeys {
     Get-ChildItem 'HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces' -ErrorAction SilentlyContinue | Where-Object {
         $p = Get-ItemProperty $_.PSPath -ErrorAction SilentlyContinue
@@ -500,15 +500,15 @@ function Get-NicKeys {
     } | ForEach-Object { $_.PSPath -replace '^Microsoft\.PowerShell\.Core\\Registry::HKEY_LOCAL_MACHINE', 'HKLM:' }
 }
 function Get-GpuMsiKeys {
-    # Win32_VideoController en vez de Get-PnpDevice: cargar el módulo PnpDevice tarda más de un segundo
+    # Win32_VideoController instead of Get-PnpDevice: loading the PnpDevice module takes over a second
     if ($null -eq $script:GpuPnpIds) {
         $script:GpuPnpIds = @(Get-CimInstance Win32_VideoController -ErrorAction SilentlyContinue | ForEach-Object PNPDeviceID | Where-Object { $_ -like 'PCI\*' })
     }
     foreach ($id in $script:GpuPnpIds) { "HKLM:\SYSTEM\CurrentControlSet\Enum\$id\Device Parameters\Interrupt Management\MessageSignaledInterruptProperties" }
 }
 function New-DynRegCustom([string]$KeysFn, [string[]]$Names, [int]$Value) {
-    # varios valores DWORD en claves que se descubren en el momento (con $KeysFn); guarda y restaura cada uno.
-    # Los bloques se generan como texto para que vean las funciones del script (un closure no las ve).
+    # several DWORD values in keys found at run time (with $KeysFn); saves and restores each one.
+    # The blocks are built as text so they can see the script's functions (a closure can't).
     $ns = '@(' + (($Names | ForEach-Object { "'$_'" }) -join ',') + ')'
     @{
         Backup = [scriptblock]::Create("`$out = @(); foreach (`$k in @($KeysFn)) { foreach (`$n in $ns) { `$out += Get-RegState @{ Path = `$k; Name = `$n } } }; @{ States = `$out }")
@@ -521,7 +521,7 @@ function New-DynRegCustom([string]$KeysFn, [string[]]$Names, [int]$Value) {
 
 
 
-# ---------- más basura de Windows 11 (lo que quitan los optimizadores conocidos)
+# ---------- more Windows 11 junk (what the well-known optimizers remove)
 function Get-EdgeSetup {
     Get-ChildItem "${env:ProgramFiles(x86)}\Microsoft\Edge\Application\*\Installer\setup.exe", "$env:ProgramFiles\Microsoft\Edge\Application\*\Installer\setup.exe" -ErrorAction SilentlyContinue |
         Sort-Object FullName -Descending | Select-Object -First 1
@@ -529,7 +529,7 @@ function Get-EdgeSetup {
 $EdgePol = 'HKLM:\SOFTWARE\Policies\Microsoft\Edge'
 $XboxApps = @('Microsoft.GamingApp', 'Microsoft.XboxApp', 'Microsoft.XboxGamingOverlay', 'Microsoft.XboxSpeechToTextOverlay', 'Microsoft.Xbox.TCUI', 'Microsoft.XboxGameCallableUI')
 $PhoneApps = @('Microsoft.YourPhone', 'MicrosoftWindows.CrossDevice')
-# componentes opcionales antiguos: nombre de la capacidad y el archivo que delata si sigue instalada
+# old optional components: capability name and the file that shows whether it is still installed
 $OldCapabilities = @(
     @{ Cap = 'App.StepsRecorder*';             File = "$env:SystemRoot\System32\psr.exe" }
     @{ Cap = 'Microsoft.Windows.WordPad*';     File = "$env:ProgramFiles\Windows NT\Accessories\wordpad.exe" }
@@ -537,8 +537,8 @@ $OldCapabilities = @(
     @{ Cap = 'MathRecognizer*';                File = "$env:CommonProgramFiles\Microsoft Shared\Ink\mip.exe" }
 )
 
-# Cada ajuste es tools\tweaks\<categoría>\<id>.tweak.json; si necesita código propio, <id>.tweak.ps1 al lado (lo indica "script").
-# Se convierten a la misma forma que usa el motor (Reg / Svc / Task / Custom), así que aplicar, comprobar y revertir no cambian.
+# Each tweak is tools\tweaks\<category>\<id>.tweak.json; if it needs its own code, <id>.tweak.ps1 next to it (set by "script").
+# They are converted to the shape the engine uses (Reg / Svc / Task / Custom), so apply, test and revert don't change.
 $TweakRisk = @{ safe = 'Seguro'; moderate = 'Moderado'; advanced = 'Avanzado' }
 $TweakPresets = @{ recommended = 'R'; advanced = 'A'; competitive = 'C' }
 function Import-Tweaks([string]$Dir) {
@@ -553,7 +553,7 @@ function Import-Tweaks([string]$Dir) {
             $seen[$j.id] = $true
             $tw = @{ Id = $j.id; Cat = $j.category; Risk = $TweakRisk[[string]$j.risk]; Name = (Get-ToolText $j.name); Desc = (Get-ToolText $j.summary)
                      Presets = @($j.presets | ForEach-Object { $TweakPresets[[string]$_] }) }
-            if ($j.details) { $tw.Detail = (Get-ToolText $j.details) }   # lo largo, para "Más info"
+            if ($j.details) { $tw.Detail = (Get-ToolText $j.details) }   # the long text, for "More info"
             if ($j.reboot) { $tw.Reboot = $true }
             if (-not $j.reversible) { $tw.Irreversible = $true }
             $reg = @($j.actions | Where-Object { $_.registry } | ForEach-Object { RegV $_.registry $_.name $_.value $_.type $_.default })
@@ -564,14 +564,14 @@ function Import-Tweaks([string]$Dir) {
             if ($task.Count) { $tw.Task = $task }
             if ($j.script) { $tw.Custom = . (Join-Path $f.DirectoryName $j.script) }
             [pscustomobject]@{ Order = [int]$j.order; Tweak = $tw }
-        } catch { Write-Log "Ajuste no cargado ($($f.Name)): $($_.Exception.Message)" 'WARN' }   # uno roto no tumba los demás
+        } catch { Write-Log "Ajuste no cargado ($($f.Name)): $($_.Exception.Message)" 'WARN' }   # one broken tweak doesn't take down the rest
     }
     @($list | Sort-Object Order | ForEach-Object { $_.Tweak })
 }
 $Tweaks = Import-Tweaks (Join-Path $PSScriptRoot 'tools\tweaks')
 
-# lo aplicado con la v1 ya está en backup.json (mismo archivo y formato), así que se puede deshacer igual;
-# la primera vez se apunta también en el historial, con la fecha en que se aplicó
+# what was applied with v1 is already in backup.json (same file and format), so it can be undone the same way;
+# the first time it is also added to the history, with the date it was applied
 if ($script:Store -and -not (Test-Path -LiteralPath $script:HistoryFile)) {
     $known = @($Tweaks | ForEach-Object { $_.Id })
     foreach ($p in @($script:Store.PSObject.Properties | Where-Object { $known -contains $_.Name } | Sort-Object { [string]$_.Value.Time })) {
@@ -579,7 +579,7 @@ if ($script:Store -and -not (Test-Path -LiteralPath $script:HistoryFile)) {
     }
 }
 
-# icono de cada ajuste (nombres de assets\icons.json)
+# icon for each tweak (names from assets\icons.json)
 $TweakIcons = @{
     'priv-telemetry' = 'broadcast'; 'priv-ads' = 'megaphone'; 'priv-ai' = 'eye-slash'; 'priv-activity' = 'clock-counter-clockwise'; 'priv-bing' = 'magnifying-glass'; 'priv-widgets' = 'newspaper'
     'svc-telemetry' = 'bug'; 'svc-misc' = 'gear-six'; 'svc-sysmain' = 'hard-drives'; 'svc-search' = 'files'; 'svc-print' = 'printer'; 'svc-geo' = 'map-pin'; 'svc-xbox' = 'headset'
@@ -596,7 +596,7 @@ $TweakIcons = @{
     'lat-priosep' = 'ranking'; 'lat-usb' = 'usb'; 'lat-pcie' = 'plugs-connected'; 'lat-cores' = 'cpu'; 'lat-nagle' = 'network'; 'lat-msi' = 'lightning'; 'lat-memcomp' = 'arrows-in'
 }
 
-# ---------- perfiles (exportar / importar la selección)
+# ---------- profiles (export / import the selection)
 function Export-Profile([string]$Path, [string[]]$Ids) {
     [pscustomobject]@{ app = 'OptiEleven'; version = 1; creado = (Get-Date).ToString('s'); ajustes = @($Ids) } |
         ConvertTo-Json -Depth 3 | Set-Content -LiteralPath $Path -Encoding UTF8
@@ -608,7 +608,7 @@ function Import-Profile([string]$Path) {
     @($j.ajustes | Where-Object { $known -contains $_ })
 }
 
-# ============================================================ motor
+# ============================================================ engine
 function Test-Tweak($t) {
     $bk = Get-Backup $t.Id
     $checks = New-Object System.Collections.Generic.List[bool]
@@ -637,7 +637,7 @@ function Invoke-ApplyTweak($t) {
     foreach ($x in @($t.Task)) { if ($x) { Set-TaskEnabled $x $false } }
     if ($t.Custom -and $t.Custom.Apply) {
         & $t.Custom.Apply $bk
-        if (-not $t.Irreversible) { Save-Backup $t.Id $bk }   # el Apply puede haber guardado datos (p. ej. el GUID creado)
+        if (-not $t.Irreversible) { Save-Backup $t.Id $bk }   # Apply may have saved data (e.g. the GUID it created)
     }
 }
 
@@ -651,7 +651,7 @@ function Invoke-RevertTweak($t) {
         Remove-Backup $t.Id
     }
     else {
-        # sin copia (aplicado fuera del panel): volver a los valores por defecto de Windows
+        # no backup (applied outside the panel): go back to the Windows defaults
         foreach ($r in @($t.Reg))  { if ($r) { if ($null -ne $r.Default) { Set-RegValue $r.Path $r.Name $r.Default $r.Kind } else { Remove-RegValue $r.Path $r.Name } } }
         foreach ($s in @($t.Svc))  { if ($s) { Set-SvcStart $s.Name (Get-StartCode $s.Default) ($s.Default -eq 'Delayed') } }
         foreach ($x in @($t.Task)) { if ($x) { Set-TaskEnabled $x $true } }
@@ -699,7 +699,7 @@ function Invoke-Tweaks($List, [string]$Mode) {
     return $reboot
 }
 
-# ============================================================ diff: qué toca exactamente cada ajuste
+# ============================================================ diff: exactly what each tweak touches
 $StartNames = @{ 2 = 'auto'; 3 = 'manual'; 4 = 'disabled' }
 function Format-RegState($s) { if (-not $s -or -not $s.Exists) { '(no existe)' } else { "$($s.Value) ($($s.Kind))" } }
 function Format-SvcState($s) { if (-not $s) { '(no existe)' } elseif ($s.Start -eq 2 -and $s.Delayed) { 'auto (retrasado)' } else { $StartNames[[int]$s.Start] } }
@@ -708,14 +708,14 @@ function Get-ShortKey([string]$p) {
        -replace '^HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\', 'HKLM\...\CurrentVersion\' -replace '^HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\', 'HKCU\...\CurrentVersion\' `
        -replace '^HKLM:\\SYSTEM\\CurrentControlSet\\', 'HKLM\SYSTEM\CCS\' -replace '^HKLM:', 'HKLM' -replace '^HKCU:', 'HKCU'
 }
-# lo que va a cambiar de verdad, para el historial (solo las líneas que cambian)
+# what will actually change, for the history (only the lines that change)
 function Get-ChangeList($t, [bool]$Revert) {
     try { @(Get-TweakDiff $t $Revert | Where-Object { -not $_.Same } | ForEach-Object { [ordered]@{ what = $_.Target; before = $_.Before; after = $_.After } }) } catch { $null }
 }
 function New-DiffLine([string]$Kind, [string]$Target, [string]$Before, [string]$After) {
     [pscustomobject]@{ Kind = $Kind; Target = $Target; Before = $Before; After = $After; Same = ($Before -eq $After) }
 }
-# $Revert: $true = enseñar lo que pasará al revertir (desde la copia o los valores de Windows)
+# $Revert: $true = show what will happen on revert (from the backup or the Windows defaults)
 function Get-TweakDiff($t, [bool]$Revert) {
     $bk = Get-Backup $t.Id
     $out = New-Object System.Collections.Generic.List[object]
@@ -732,7 +732,7 @@ function Get-TweakDiff($t, [bool]$Revert) {
     foreach ($s in @($t.Svc)) {
         if (-not $s) { continue }
         $cur = Get-SvcState $s.Name
-        if (-not $cur) { continue }   # el servicio no existe en esta versión de Windows
+        if (-not $cur) { continue }   # the service doesn't exist in this Windows version
         $now = Format-SvcState $cur
         if ($Revert) {
             $orig = if ($bk) { @($bk.Svc) | Where-Object { $_.Name -eq $s.Name } | Select-Object -First 1 }
@@ -755,11 +755,11 @@ function Get-TweakDiff($t, [bool]$Revert) {
         if ($fn) { foreach ($l in @(& $fn $bk $Revert)) { if ($l) { $out.Add($l) } } }
         else { $out.Add((New-DiffLine 'custom' 'acción a medida' '' 'ver la descripción')) }
     }
-    $arr = New-Object object[] $out.Count   # array normal: @() sobre List[object] falla en PowerShell 5.1
+    $arr = New-Object object[] $out.Count   # plain array: @() over List[object] fails in PowerShell 5.1
     for ($i = 0; $i -lt $out.Count; $i++) { $arr[$i] = $out[$i] }
     , $arr
 }
-# diffs de los ajustes a medida
+# diffs of the custom tweaks
 $OverlayNames = @{ 'ded574b5-45a0-4f42-8737-46345c09c238' = 'máximo rendimiento'; '00000000-0000-0000-0000-000000000000' = 'equilibrado'; '961cc777-2547-4f9d-8174-7d86181b8a7a' = 'máxima eficiencia' }
 function Get-AppDiff([string[]]$List, [bool]$Revert) {
     $present = Get-DebloatPresent $List
@@ -789,7 +789,7 @@ $CustomDiff = @{
                          New-DiffLine 'power' 'powercfg /hibernate (HibernateEnabled)' "$v" $(if ($rev) { '1' } else { '0' }) }
 }
 
-# ============================================================ modos sin interfaz
+# ============================================================ no-UI modes
 if ($Status) {
     $Tweaks | ForEach-Object {
         $s = try { Test-Tweak $_ } catch { 'error' }
@@ -808,7 +808,7 @@ if ($NoGui) {
         Write-Log "Perfil ${Config}: $($list.Count) ajustes."
     }
     elseif ($Preset) {
-        $code = if ($Preset -eq 'Recomendado') { 'R' } else { 'A' }   # 'Competitivo' se acepta como el antiguo nombre de Avanzado
+        $code = if ($Preset -eq 'Recomendado') { 'R' } else { 'A' }   # 'Competitivo' is accepted as the old name of Avanzado
         $list = @($Tweaks | Where-Object { $_.Presets -contains $code })
     }
     else { Write-Log 'Indica -Preset Recomendado|Avanzado o -Config perfil.json.' 'ERROR'; exit 1 }
@@ -818,16 +818,16 @@ if ($NoGui) {
     exit 0
 }
 
-# ============================================================ interfaz
-# Diseño Fluent (Windows 11): Mica, Segoe UI Variable, Segoe Fluent Icons y un solo acento verde azulado usado con moderación.
-# El estado de cada cosa se ve en su control (interruptor, chip, número); el detalle técnico va en "Más info".
+# ============================================================ UI
+# Fluent design (Windows 11): Mica, Segoe UI Variable, Segoe Fluent Icons and a single teal accent, used sparingly.
+# Each item's state shows in its control (toggle, chip, number); technical detail goes in "More info".
 Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase, System.Drawing
 if (-not ('GP.Dwm' -as [type])) {
     Add-Type -Namespace GP -Name Dwm -MemberDefinition '[DllImport("dwmapi.dll")] public static extern int DwmSetWindowAttribute(IntPtr h, int attr, ref int val, int size);'
 }
 
-# Fluent (Windows 11): grises neutros, un solo acento verde azulado y nada de degradados ni brillos.
-# Cada tema tiene sus colores sólidos y, encima, los de Mica (fondos translúcidos) que se usan si la ventana tiene Mica.
+# Fluent (Windows 11): neutral grays, a single teal accent and no gradients or glows.
+# Each theme has its solid colors plus the Mica ones (translucent backgrounds), used when the window has Mica.
 $Themes = @{
     Light = @{ Dark = $false; Paper = '#f3f3f3'; Side = '#f3f3f3'; Layer = '#f9f9f9'; LayerEdge = '#e5e5e5'; Paper2 = '#ffffff'; Paper3 = '#f0f0f0'
                Card = '#ffffff'; CardEdge = '#e5e5e5'; CardHover = '#f6f6f6'; Control = '#fbfbfb'; ControlEdge = '#d6d6d6'; ControlHover = '#f3f3f3'
@@ -851,7 +851,7 @@ $Themes = @{
                'Cat-Privacidad' = '#6ca6e8'; 'Cat-Servicios' = '#4cc3b6'; 'Cat-Rendimiento' = '#e8925a'; 'Cat-Latencia' = '#e5c04a'
                'Cat-Juegos' = '#6ccb7a'; 'Cat-Actualizaciones' = '#8fa7e8'; 'Cat-Interfaz' = '#e58ab8'; 'Cat-Apps' = '#c9a46a'; 'Cat-Tools' = '#a0a0a0'
                Mica = @{ Paper = '#00000000'; Side = '#00000000'; Layer = '#4c3a3a3a'; LayerEdge = '#19000000'; Card = '#0dffffff'; CardEdge = '#19000000'; CardHover = '#15ffffff'; Glass = '#0dffffff'; GlassEdge = '#19000000'; GlassHi = '#15ffffff' } }
-}# color real de cada marca (Simple Icons); en el tema oscuro, las marcas negras pasan a la tinta clara
+}# each brand's real color (Simple Icons); in the dark theme, black brands switch to the light ink
 $BrandColors = @{
     'brand-steam' = '#000000'; 'brand-epicgames' = '#313131'; 'brand-gogdotcom' = '#86328a'; 'brand-ea' = '#000000'; 'brand-ubisoft' = '#000000'
     'brand-battledotnet' = '#148eff'; 'brand-discord' = '#5865f2'; 'brand-obsstudio' = '#302e31'; 'brand-msi' = '#ff0000'; 'brand-7zip' = '#000000'
@@ -880,7 +880,7 @@ $BrandColors = @{
     <FontFamily x:Key="Mono">Cascadia Mono, Consolas</FontFamily>
     <FontFamily x:Key="Icons">Segoe Fluent Icons, Segoe MDL2 Assets</FontFamily>
 
-    <!-- Fluent (Windows 11): radio 4 en controles y 8 en tarjetas, un solo acento, transiciones cortas -->
+    <!-- Fluent (Windows 11): radius 4 on controls and 8 on cards, a single accent, short transitions -->
     <Style TargetType="ContextMenu">
       <Setter Property="OverridesDefaultStyle" Value="True"/>
       <Setter Property="FontFamily" Value="Segoe UI Variable Text, Segoe UI"/>
@@ -914,7 +914,7 @@ $BrandColors = @{
       </ControlTemplate></Setter.Value></Setter>
     </Style>
 
-    <!-- botón estándar: relleno de control, borde fino; al pasar, un poco más claro -->
+    <!-- standard button: control fill, thin border; slightly lighter on hover -->
     <Style x:Key="Btn" TargetType="Button">
       <Setter Property="Background" Value="{DynamicResource Control}"/>
       <Setter Property="Foreground" Value="{DynamicResource Ink}"/>
@@ -946,7 +946,7 @@ $BrandColors = @{
         </Setter.Value>
       </Setter>
     </Style>
-    <!-- botón principal: el acento, liso -->
+    <!-- primary button: the accent, flat -->
     <Style x:Key="BtnPrimary" TargetType="Button" BasedOn="{StaticResource Btn}">
       <Setter Property="Background" Value="{DynamicResource Accent}"/>
       <Setter Property="Foreground" Value="{DynamicResource AccentInk}"/>
@@ -975,7 +975,7 @@ $BrandColors = @{
         </Setter.Value>
       </Setter>
     </Style>
-    <!-- interruptor de Windows 11: 40 x 20, pulgar que crece al pasar -->
+    <!-- Windows 11 toggle switch: 40 x 20, thumb grows on hover -->
     <Style x:Key="Switch" TargetType="ToggleButton">
       <Setter Property="Width" Value="40"/>
       <Setter Property="Height" Value="20"/>
@@ -1012,7 +1012,7 @@ $BrandColors = @{
       </Setter>
     </Style>
 
-    <!-- filtro: pastilla; la elegida con el acento suave -->
+    <!-- filter: pill; the selected one uses the soft accent -->
     <Style x:Key="TabToggle" TargetType="ToggleButton">
       <Setter Property="Foreground" Value="{DynamicResource Ink}"/>
       <Setter Property="FontSize" Value="13"/>
@@ -1040,7 +1040,7 @@ $BrandColors = @{
       </Setter>
     </Style>
 
-    <!-- tarjeta de ajuste o de acción (SettingsCard de Windows): radio 4, filete fino, se aclara al pasar -->
+    <!-- tweak or action card (Windows SettingsCard): radius 4, thin border, lightens on hover -->
     <Style x:Key="RuleRow" TargetType="Border">
       <Setter Property="Background" Value="{DynamicResource Card}"/>
       <Setter Property="BorderBrush" Value="{DynamicResource CardEdge}"/>
@@ -1065,7 +1065,7 @@ $BrandColors = @{
       </Style.Triggers>
     </Style>
 
-    <!-- navegación: relleno sutil y una barrita del acento a la izquierda en la elegida -->
+    <!-- navigation: subtle fill and a small accent bar on the left of the selected item -->
     <Style TargetType="ListBoxItem">
       <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
       <Setter Property="Cursor" Value="Hand"/>
@@ -1112,7 +1112,7 @@ $BrandColors = @{
         </Setter.Value>
       </Setter>
     </Style>
-    <!-- campo de texto (búsqueda): borde inferior del acento al escribir, como en Windows -->
+    <!-- text box (search): accent bottom border while typing, like in Windows -->
     <Style x:Key="Field" TargetType="TextBox">
       <Setter Property="Background" Value="{DynamicResource Control}"/>
       <Setter Property="Foreground" Value="{DynamicResource Ink}"/>
@@ -1145,7 +1145,7 @@ $BrandColors = @{
       <ColumnDefinition Width="Auto"/>
     </Grid.ColumnDefinitions>
 
-    <!-- barra de título propia cuando hay Mica (los botones de cerrar y minimizar los pinta Windows a la derecha) -->
+    <!-- custom title bar when Mica is on (Windows draws the close and minimize buttons on the right) -->
     <StackPanel Grid.ColumnSpan="3" Orientation="Horizontal" Margin="16,0,0,0" VerticalAlignment="Center">
       <Border Width="16" Height="16" CornerRadius="4" Background="{DynamicResource Accent}">
         <ContentControl x:Name="TitleMark" Focusable="False" HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -1153,7 +1153,7 @@ $BrandColors = @{
       <TextBlock Text="OptiEleven" FontSize="12" Margin="12,0,0,0" VerticalAlignment="Center" Foreground="{DynamicResource Ink2}"/>
     </StackPanel>
 
-    <!-- panel de navegación -->
+    <!-- navigation pane -->
     <DockPanel Grid.Row="1" Margin="8,6,8,10">
       <Grid DockPanel.Dock="Top" Margin="8,4,4,12">
         <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
@@ -1208,7 +1208,7 @@ $BrandColors = @{
       <ListBox x:Name="Nav" Background="Transparent" BorderThickness="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled"/>
     </DockPanel>
 
-    <!-- contenido: una capa un poco más clara sobre Mica, con la esquina de arriba redondeada -->
+    <!-- content: a slightly lighter layer over Mica, with the top corner rounded -->
     <Border x:Name="Layer" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Background="{DynamicResource Layer}" BorderBrush="{DynamicResource LayerEdge}" BorderThickness="1,1,0,0" CornerRadius="8,0,0,0"/>
     <Grid Grid.Row="1" Grid.Column="1">
       <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
@@ -1246,7 +1246,7 @@ $BrandColors = @{
       </ScrollViewer>
     </Grid>
 
-    <!-- carril: detalle del ajuste y hoja de cambios -->
+    <!-- side rail: tweak details and change sheet -->
     <Border x:Name="Rail" Grid.Row="1" Grid.Column="2" Width="340" BorderBrush="{DynamicResource Rule}" BorderThickness="1,0,0,0">
       <DockPanel>
         <Border x:Name="Ledger" DockPanel.Dock="Bottom" Margin="16,8,16,16" CornerRadius="8" BorderBrush="{DynamicResource CardEdge}" BorderThickness="1" Background="{DynamicResource Card}">
@@ -1282,7 +1282,7 @@ $BrandColors = @{
       </DockPanel>
     </Border>
 
-    <!-- barra de estado -->
+    <!-- status bar -->
     <Border Grid.Row="2" Grid.ColumnSpan="3" Background="{DynamicResource Layer}" BorderBrush="{DynamicResource Rule}" BorderThickness="0,1,0,0" Padding="20,0">
       <Grid MinHeight="30">
         <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
@@ -1299,7 +1299,7 @@ $BrandColors = @{
 </Window>
 '@
 
-# ---------- herramientas: cada carpeta de tools\ trae su tool.json y su tool.ps1; el núcleo no conoce ninguna por su nombre
+# ---------- tools: each folder in tools\ brings its tool.json and tool.ps1; the core knows none of them by name
 $script:AppDir = $PSScriptRoot
 function Get-Tools([string]$Dir) {
     $seen = @{}
@@ -1310,16 +1310,16 @@ function Get-Tools([string]$Dir) {
             if ($miss.Count) { throw "faltan $($miss -join ', ')" }
             if ($m.risk -notin 'safe', 'moderate', 'advanced') { throw "riesgo desconocido: $($m.risk)" }
             if ($seen.ContainsKey($m.id)) { throw "id repetido: $($m.id)" }
-            # las claves de página no distinguen mayúsculas: "apps" pisaría la pestaña de ajustes "Apps"
+            # page keys are case-insensitive: "apps" would overwrite the "Apps" tweaks tab
             if ($m.id -in (@('all', 'tools', 'log') + @($Tweaks | ForEach-Object { $_.Cat })) -or $m.id -like 'h-*' -or $m.id -like 'c-*') { throw "id reservado: $($m.id)" }
             $seen[$m.id] = $true
             $m | Add-Member -NotePropertyName Dir -NotePropertyValue $f.DirectoryName
             $m
-        } catch { Write-Log "Herramienta no cargada ($($f.Directory.Name)): $($_.Exception.Message)" 'WARN' }   # una rota no tumba las demás
+        } catch { Write-Log "Herramienta no cargada ($($f.Directory.Name)): $($_.Exception.Message)" 'WARN' }   # one broken tool doesn't take down the rest
     }
 }
 $script:Tools = @(Get-Tools (Join-Path $PSScriptRoot 'tools'))
-# PS 5.1: ConvertFrom-Json devuelve la lista como un solo objeto; sacarla por una variable la desenrolla
+# PS 5.1: ConvertFrom-Json returns the list as a single object; going through a variable unrolls it
 $ToolCats = @(try { $j = [IO.File]::ReadAllText((Join-Path $PSScriptRoot 'tools\categories.json'), [Text.Encoding]::UTF8) | ConvertFrom-Json; $j } catch { })
 function ConvertTo-PageDef($m) {
     @{ Label = Get-ToolText $m.name; Icon = $m.icon; Module = $m.view; Color = $m.color; OnShow = $m.onShow; Tool = $m
@@ -1327,8 +1327,8 @@ function ConvertTo-PageDef($m) {
 }
 function Get-CatTools([string]$Cat) { @($script:Tools | Where-Object category -eq $Cat | Sort-Object { [int]$_.order }) }
 
-# Páginas: en la navegación solo van Inicio, Historial y las categorías de tools\categories.json. Cada categoría abre su
-# página (un "hub") con sus herramientas y sus grupos de ajustes; si solo tiene uno, se abre ese directamente.
+# Pages: the navigation only has Home, History and the categories from tools\categories.json. Each category opens its
+# page (a "hub") with its tools and tweak groups; if it has only one, that one opens directly.
 $Pages = [ordered]@{}
 foreach ($c in @($ToolCats | Sort-Object { [int]$_.order })) {
     $items = @()
@@ -1344,7 +1344,7 @@ foreach ($c in @($ToolCats | Sort-Object { [int]$_.order })) {
     $Pages[$hub] = @{ Label = (Get-ToolText $c.name); Title = (Get-ToolText $c.name); Desc = (Get-ToolText $c.summary); Icon = $c.icon; Nav = $true; Hub = [Collections.ArrayList]@($items | ForEach-Object { $_.Key }) }
     foreach ($it in $items) { $it.Def.Parent = $hub; $Pages[$it.Key] = $it.Def }
 }
-# páginas del núcleo: todos los ajustes juntos (con filtros), copias y perfiles, y la actividad (con los detalles técnicos)
+# core pages: all tweaks together (with filters), backups and profiles, and the activity log (with technical details)
 $Pages['all'] = @{ Tab = 'all'; Label = 'Todos los ajustes'; Title = 'Todos los ajustes'; Desc = 'Los 60 ajustes en una lista, con filtros por grupo.' }
 $Pages['tools'] = @{ Label = 'Copias y perfiles'; Icon = 'archive'; Title = 'Copias y perfiles'; Desc = 'Punto de restauración, perfiles para otros equipos y copias de seguridad.'; Parent = 'c-system' }
 $Pages['log'] = @{ Label = 'Actividad'; Icon = 'scroll'; Title = 'Actividad'; Desc = 'Lo que ha hecho el panel en esta sesión.'; Parent = 'c-system'; ProOnly = $true }
@@ -1376,7 +1376,7 @@ $ToolDefs = @(
        Action = {
            Write-Log 'Reiniciando el Explorador...'
            Stop-Process -Name explorer -Force -ErrorAction SilentlyContinue
-           # Windows lo vuelve a abrir solo; arrancarlo desde aquí (elevado) daría un escritorio con permisos de administrador
+           # Windows restarts it on its own; starting it from here (elevated) would give a desktop with administrator rights
            for ($i = 0; $i -lt 40 -and -not (Get-Process explorer -ErrorAction SilentlyContinue); $i++) { Start-Sleep -Milliseconds 250; Update-Ui }
            if (-not (Get-Process explorer -ErrorAction SilentlyContinue)) { runas /trustlevel:0x20000 explorer.exe } } }
     @{ Icon = 'archive'; Name = 'Copias de seguridad'; Desc = 'La carpeta con el estado original de cada ajuste y el registro del panel.'; Button = 'Abrir carpeta'; Admin = $false
@@ -1384,16 +1384,16 @@ $ToolDefs = @(
 )
 
 try {
-    # la ventana sale en la barra de tareas como OptiEleven, con su logo, y no como una ventana más de PowerShell
+    # the window shows in the taskbar as OptiEleven, with its logo, not as just another PowerShell window
     try { [void][GP.Shell]::SetCurrentProcessExplicitAppUserModelID('OptiEleven.Panel') } catch {}
-    # textos fijos de la ventana: se traducen en el XAML antes de cargarlo (los x:Name no se tocan)
+    # fixed window texts: translated in the XAML before loading it (x:Name values are left alone)
     foreach ($node in $xaml.SelectNodes('//*')) {
         foreach ($a in @($node.Attributes)) {
             if ($a.LocalName -in 'Text', 'Content', 'ToolTip', 'Title', 'Header', 'AutomationProperties.Name' -and $a.NamespaceURI -eq '' -and $a.Value -and -not $a.Value.StartsWith('{')) { $a.Value = T $a.Value }
         }
     }
     $window = [Windows.Markup.XamlReader]::Load((New-Object System.Xml.XmlNodeReader $xaml))
-    # Un fallo dentro de un botón no debe cerrar el panel entero: se apunta en el registro, se avisa y la ventana sigue.
+    # An error inside a button must not close the whole panel: it is logged, the user is told and the window stays open.
     $window.Dispatcher.Add_UnhandledException({
         param($src, $e)
         $e.Handled = $true
@@ -1413,7 +1413,7 @@ try {
         $ui[$n] = $window.FindName($n)
     }
     $script:LogBox = $ui.Log
-    # Vista Pro: claves, servicios, tareas y rutas. Sin ella, el panel enseña solo lo que hace falta para decidir.
+    # Pro view: keys, services, tasks and paths. Without it, the panel shows only what you need to decide.
     $script:ProFile = Join-Path $script:Root 'pro.txt'
     $script:Pro = Test-Path -LiteralPath $script:ProFile
     $script:ProOnly = @()
@@ -1421,7 +1421,7 @@ try {
     $BgProp = [Windows.Controls.Border]::BackgroundProperty
     $FillProp = [Windows.Shapes.Shape]::FillProperty
 
-    # ---------- piezas comunes (también las usan los módulos)
+    # ---------- shared building blocks (the modules use them too)
     function New-Text([string]$Text, [double]$Size = 14, [string]$Brush = 'Ink', [string]$Weight = 'Normal') {
         $tb = [Windows.Controls.TextBlock]::new()
         $tb.Text = (T $Text); $tb.FontSize = $Size; $tb.FontWeight = $Weight; $tb.TextWrapping = 'Wrap'
@@ -1431,8 +1431,8 @@ try {
     function New-Mono([string]$Text, [double]$Size = 13, [string]$Brush = 'Ink') {
         $tb = New-Text $Text $Size $Brush; $tb.FontFamily = $window.FindResource('Mono'); $tb.TextWrapping = 'NoWrap'; $tb
     }
-    # Iconos: Segoe Fluent Icons, la fuente de iconos de Windows 11, para todo lo que es función (los nombres de siempre
-    # se traducen a su glifo); Simple Icons (CC0, assets\icons.json) solo para las marcas, que toman su color real.
+    # Icons: Segoe Fluent Icons, the Windows 11 icon font, for everything functional (the usual names
+    # map to their glyph); Simple Icons (CC0, assets\icons.json) only for brands, which get their real color.
     $IconGlyphs = @{
         'app-window' = 0xECAA; 'archive' = 0xE7B8; 'arrow-circle-down' = 0xE896; 'arrow-circle-up' = 0xE898; 'arrow-counter-clockwise' = 0xE7A7
         'arrows-clockwise' = 0xE72C; 'arrows-counter-clockwise' = 0xE777; 'arrows-down-up' = 0xE8CB; 'arrows-in' = 0xE73F; 'battery-warning' = 0xE83F
@@ -1476,7 +1476,7 @@ try {
         $tb
     }
     function New-BtnIcon($Code, [double]$Size = 18) {
-        # icono que toma el color del texto del botón (así se apaga igual que el texto cuando el botón está desactivado)
+        # icon that takes the button's text color (so it dims like the text when the button is disabled)
         $ic = New-Icon $Code $Size 'Ink'
         $bd = [Windows.Data.Binding]::new('Foreground'); $bd.RelativeSource = [Windows.Data.RelativeSource]::new([Windows.Data.RelativeSourceMode]::FindAncestor, [Windows.Controls.Button], 1)
         if ($ic -is [Windows.Controls.Viewbox]) { [void]$ic.Child.Children[0].SetBinding($FillProp, $bd) } else { [void]$ic.SetBinding($FgProp, $bd) }
@@ -1487,8 +1487,8 @@ try {
         else { $Icon.SetResourceReference($FgProp, $Brush) }
     }
     function New-IconWell($Code, [double]$Box = 38, [string]$Brush = 'Ink2') {
-        # como en la Configuración de Windows: el icono solo, en el tono del texto (los colores de categoría ya no tiñen iconos);
-        # las marcas conservan su color
+        # like Windows Settings: just the icon, in the text color (category colors no longer tint icons);
+        # brands keep their color
         $w = [Windows.Controls.Border]::new(); $w.Width = $Box; $w.Height = $Box; $w.VerticalAlignment = 'Center'
         if ($Brush -like 'Cat-*') { $Brush = 'Ink' }
         $isBrand = $Code -is [string] -and $Code -like 'brand-*'
@@ -1536,16 +1536,16 @@ try {
     function New-Timer([double]$Seconds, [scriptblock]$Tick) {
         $t = New-Object System.Windows.Threading.DispatcherTimer; $t.Interval = [TimeSpan]::FromSeconds($Seconds); $t.Add_Tick($Tick); $t
     }
-    # Trabajo lento en segundo plano: $Work corre en otro hilo (no ve las funciones del panel: debe bastarse solo) y
-    # $Done recibe su resultado de vuelta en el hilo de la ventana, que mientras tanto no se congela.
-    # $Progress (opcional) es una tabla compartida que $Work puede ir rellenando y $OnTick leer.
+    # Slow work in the background: $Work runs on another thread (it can't see the panel's functions: it must be self-contained) and
+    # $Done gets its result back on the window thread, which doesn't freeze in the meantime.
+    # $Progress (optional) is a shared table that $Work can fill in and $OnTick can read.
     $script:BgJobs = [Collections.Generic.List[object]]::new()
     $script:BgTimer = $null
     function Start-Bg([scriptblock]$Work, [object[]]$ArgList = @(), [scriptblock]$Done, [hashtable]$Progress, [scriptblock]$OnTick) {
         $ps = [powershell]::Create()
         [void]$ps.AddScript($Work.ToString())
         foreach ($a in $ArgList) { [void]$ps.AddArgument($a) }
-        if ($null -ne $Progress) { [void]$ps.AddParameter('P', $Progress) }   # por nombre: los $Work que la usan la llaman $P
+        if ($null -ne $Progress) { [void]$ps.AddParameter('P', $Progress) }   # by name: the $Work blocks that use it call it $P
         $script:BgJobs.Add(@{ Ps = $ps; Handle = $ps.BeginInvoke(); Done = $Done; Tick = $OnTick; Progress = $Progress })
         if (-not $script:BgTimer) {
             $script:BgTimer = [System.Windows.Threading.DispatcherTimer]::new(); $script:BgTimer.Interval = [TimeSpan]::FromMilliseconds(120)
@@ -1583,13 +1583,13 @@ try {
             if (-not (Test-Path -LiteralPath $exe)) { return $null }
             $ico = [System.Drawing.Icon]::ExtractAssociatedIcon($exe)
             try { $src = [System.Windows.Interop.Imaging]::CreateBitmapSourceFromHIcon($ico.Handle, [Windows.Int32Rect]::Empty, [Windows.Media.Imaging.BitmapSizeOptions]::FromWidthAndHeight($Size, $Size)); $src.Freeze() }
-            finally { $ico.Dispose() }   # libera el HICON: el BitmapSource ya tiene su propia copia
+            finally { $ico.Dispose() }   # frees the HICON: the BitmapSource already has its own copy
             $img = [Windows.Controls.Image]::new(); $img.Source = $src; $img.Width = $Size; $img.Height = $Size
             $img
         }
         catch { $null }
     }
-    # microanimación de entrada: aparece y sube unos píxeles, con un retraso opcional para escalonar listas
+    # entrance micro-animation: fades in and rises a few pixels, with an optional delay to stagger lists
     $script:EaseOut = [Windows.Media.Animation.CubicEase]::new(); $script:EaseOut.EasingMode = 'EaseOut'; $script:EaseOut.Freeze()
     function Start-FadeIn($El, [double]$DelayMs = 0, [double]$Rise = 10) {
         $dur = [Windows.Duration][TimeSpan]::FromMilliseconds(260); $begin = [TimeSpan]::FromMilliseconds($DelayMs)
@@ -1602,7 +1602,7 @@ try {
             $tt.BeginAnimation([Windows.Media.TranslateTransform]::YProperty, $m)
         }
     }
-    # indicador de carga: un arco que gira y un texto, para que nunca parezca que la ventana se ha quedado colgada
+    # loading indicator: a spinning arc and a text, so the window never looks hung
     function New-Spinner([double]$Size = 22) {
         $arc = [Windows.Shapes.Path]::new(); $arc.Data = [Windows.Media.Geometry]::Parse('M 11,2 A 9,9 0 1 1 2,11'); $arc.Width = 22; $arc.Height = 22
         $arc.StrokeThickness = 3; $arc.StrokeStartLineCap = 'Round'; $arc.StrokeEndLineCap = 'Round'; $arc.SetResourceReference([Windows.Shapes.Shape]::StrokeProperty, 'Accent')
@@ -1618,8 +1618,8 @@ try {
         [void]$sp.Children.Add((New-Spinner 22)); [void]$sp.Children.Add($tb)
         $sp
     }
-    # Ventana de trabajo dentro del panel (no otra ventana): oscurece lo de detrás, círculo girando en medio, qué está
-    # haciendo y una barra. Devuelve sus piezas para ir cambiando el texto; Close-Working la quita.
+    # Working overlay inside the panel (not another window): dims what's behind, spinning circle in the middle, what it is
+    # doing and a bar. Returns its parts so the text can be updated; Close-Working removes it.
     function Show-Working([string]$Title, [string]$Detail, [scriptblock]$OnCancel) {
         $ov = [Windows.Controls.Grid]::new()
         [Windows.Controls.Grid]::SetRowSpan($ov, 10); [Windows.Controls.Grid]::SetColumnSpan($ov, 10); [Windows.Controls.Panel]::SetZIndex($ov, 90)
@@ -1656,18 +1656,18 @@ try {
     }
     foreach ($tool in $script:Tools) { $p = Join-Path $tool.Dir 'tool.ps1'; if (Test-Path -LiteralPath $p) { . $p } }
 
-    # ---------- tema
+    # ---------- theme
     function Get-Luma([string]$Hex) { $c = [Windows.Media.ColorConverter]::ConvertFromString($Hex); (0.2126 * $c.R + 0.7152 * $c.G + 0.0722 * $c.B) / 255 }
     function Set-Theme([string]$Name) {
         $th = $Themes[$Name]; $script:ThemeName = $Name
-        # Todos los colores van en un diccionario nuevo que sustituye al anterior de una vez: cambiar los recursos
-        # uno a uno obliga a WPF a recorrer toda la ventana por cada color (con ~100 colores, varios segundos).
+        # All colors go into a new dictionary that replaces the old one in one go: changing the resources
+        # one by one makes WPF walk the whole window for each color (with ~100 colors, several seconds).
         $cols = @{}; foreach ($k in $th.Keys) { if ($k -notin 'Dark', 'Mica') { $cols[$k] = $th[$k] } }
-        if ($script:Mica) { foreach ($k in $th.Mica.Keys) { $cols[$k] = $th.Mica[$k] } }   # con Mica, fondos translúcidos
+        if ($script:Mica) { foreach ($k in $th.Mica.Keys) { $cols[$k] = $th.Mica[$k] } }   # with Mica, translucent backgrounds
         $rd = [Windows.ResourceDictionary]::new()
         foreach ($k in $cols.Keys) {
             $b = [Windows.Media.SolidColorBrush]::new([Windows.Media.Color][Windows.Media.ColorConverter]::ConvertFromString($cols[$k])); $b.Freeze(); $rd[$k] = $b
-            if ($k -like 'Cat-*') {   # fondo suave de cada color (los usan las barras y muestras de datos)
+            if ($k -like 'Cat-*') {   # soft background for each color (used by bars and data swatches)
                 $c = [Windows.Media.Color][Windows.Media.ColorConverter]::ConvertFromString($cols[$k]); $c.A = $(if ($th.Dark) { 0x30 } else { 0x24 })
                 $sb = [Windows.Media.SolidColorBrush]::new($c); $sb.Freeze(); $rd["Soft$k"] = $sb
             }
@@ -1676,9 +1676,9 @@ try {
             $hex = $BrandColors[$bk]; if ($th.Dark -and (Get-Luma $hex) -lt 0.3) { $hex = $th.Ink }
             $b = [Windows.Media.SolidColorBrush]::new([Windows.Media.Color][Windows.Media.ColorConverter]::ConvertFromString($hex)); $b.Freeze(); $rd["Brand-$bk"] = $b
         }
-        # nombres de antes que aún usan algunos apartados: el "degradado" es ahora el acento liso y los resplandores, nada
+        # old names some sections still use: the "gradient" is now the flat accent, and the glows are nothing
         $rd['AccentGrad'] = $rd['Accent']; $rd['PageGlow'] = [Windows.Media.Brushes]::Transparent; $rd['PageGlow2'] = [Windows.Media.Brushes]::Transparent
-        if (-not $script:ThemeDict) { foreach ($k in @($rd.Keys)) { if ($window.Resources.Contains($k)) { $window.Resources.Remove($k) } } }   # los colores por defecto del XAML
+        if (-not $script:ThemeDict) { foreach ($k in @($rd.Keys)) { if ($window.Resources.Contains($k)) { $window.Resources.Remove($k) } } }   # the XAML's default colors
         $oldRd = $script:ThemeDict
         $window.Resources.MergedDictionaries.Add($rd); $script:ThemeDict = $rd
         if ($oldRd) { [void]$window.Resources.MergedDictionaries.Remove($oldRd) }
@@ -1688,8 +1688,8 @@ try {
         $ui.BtnTheme.ToolTip = T $(if ($th.Dark) { 'Tema claro' } else { 'Tema oscuro' })
         try { Set-Content -LiteralPath (Join-Path $script:Root 'theme.txt') -Value $Name } catch {}
     }
-    # Mica (Windows 11 22H2 o posterior): Windows pinta el fondo con el color del escritorio difuminado. WPF tiene que dejar
-    # transparente su fondo y extender el marco a toda la ventana (WindowChrome); los botones de la barra de título los pinta Windows.
+    # Mica (Windows 11 22H2 or later): Windows paints the background with the blurred desktop color. WPF has to make
+    # its background transparent and extend the frame over the whole window (WindowChrome); Windows draws the title bar buttons.
     $script:Mica = [Environment]::OSVersion.Version.Build -ge 22621 -and -not $env:OPTIELEVEN_NO_MICA
     if ($script:Mica) {
         $chrome = [Windows.Shell.WindowChrome]::new()
@@ -1697,7 +1697,7 @@ try {
         $chrome.UseAeroCaptionButtons = $true; $chrome.CornerRadius = [Windows.CornerRadius]::new(0)
         [Windows.Shell.WindowChrome]::SetWindowChrome($window, $chrome)
         $ui.TitleRow.Height = [Windows.GridLength]::new(32)
-        # maximizada, Windows mete el borde de redimensionar fuera de la pantalla: se compensa para no cortar el contenido
+        # when maximized, Windows puts the resize border off screen: compensate so the content isn't cut off
         $window.Add_StateChanged({ $ui.Root.Margin = if ($window.WindowState -eq 'Maximized') { '7' } else { '0' } })
     }
     $window.Add_SourceInitialized({
@@ -1711,10 +1711,10 @@ try {
     $startTheme = 'Dark'
     try {
         $saved = (Get-Content -LiteralPath (Join-Path $script:Root 'theme.txt') -ErrorAction Stop | Select-Object -First 1).Trim()
-        $saved = @{ Furrow = 'Light'; FurrowNoche = 'Dark' }[$saved], $saved | Where-Object { $_ } | Select-Object -First 1   # nombres de la 1.x
+        $saved = @{ Furrow = 'Light'; FurrowNoche = 'Dark' }[$saved], $saved | Where-Object { $_ } | Select-Object -First 1   # names from 1.x
         if ($Themes.ContainsKey($saved)) { $startTheme = $saved }
     } catch {}
-    Set-Theme $startTheme    # ---------- logo: anillo abierto (el "O" de Opti, como un botón de encendido) con el 11 dentro
+    Set-Theme $startTheme    # ---------- logo: open ring (the "O" of Opti, like a power button) with the 11 inside
     function New-Logo([double]$Size) {
         $logo = [Windows.Controls.Canvas]::new(); $logo.Width = 64; $logo.Height = 64
         foreach ($p in @('M 47.56 18.44 A 22 22 0 1 1 16.44 18.44', 'M 23.5 12.5 L 27.5 8.5 L 27.5 31 M 36.5 12.5 L 40.5 8.5 L 40.5 31')) {
@@ -1729,7 +1729,7 @@ try {
     $ui.TitleMark.Content = New-Logo 12
     try { $window.Icon = [Windows.Media.Imaging.BitmapFrame]::Create([Uri](Join-Path $PSScriptRoot 'assets\optieleven.ico')) } catch {}
 
-    # ---------- idioma (arriba del todo, junto al nombre)
+    # ---------- language (at the very top, next to the name)
     $ui.LangIcon.Content = (New-Icon 'globe-simple' 16 'Ink2')
     $ui.LangCode.Text = $script:LangCode.ToUpper()
     $langMenu = [Windows.Controls.ContextMenu]::new()
@@ -1752,7 +1752,7 @@ try {
     $ui.BtnLang.ContextMenu = $langMenu
     $ui.BtnLang.Add_Click({ $ui.BtnLang.ContextMenu.IsOpen = $true })
 
-    # ---------- botones de preset: grandes, con icono, como el de Boost FPS
+    # ---------- preset buttons: large, with an icon, like the Boost FPS one
     foreach ($pb in @(@($ui.BtnRec, 'shield-check', 'Recomendado'), @($ui.BtnComp, 'lightning', 'Avanzado'))) {
         $c = [Windows.Controls.StackPanel]::new(); $c.Orientation = 'Horizontal'
         $i = New-BtnIcon $pb[1] 19; $i.Margin = '0,0,9,0'
@@ -1760,9 +1760,9 @@ try {
         [void]$c.Children.Add($i); [void]$c.Children.Add($l); $pb[0].Content = $c
     }
 
-    # ---------- aviso al abrir
+    # ---------- notice on open
     $script:WarnFile = Join-Path $script:Root 'warning.ok'
-    # InfoBar de Windows: icono, una frase y, si hace falta, un botón; se cierra con la X
+    # Windows InfoBar: icon, one sentence and, if needed, a button; closed with the X
     function New-InfoBar([string]$Icon, [string]$Text, [string]$Tone = 'info', [string]$Button, [scriptblock]$OnButton, [scriptblock]$OnClose) {
         $bar = [Windows.Controls.Border]::new(); $bar.CornerRadius = 4; $bar.Padding = '14,8,8,8'; $bar.Margin = '0,0,0,8'; $bar.BorderThickness = 1
         $bar.SetResourceReference($BgProp, $(switch ($Tone) { 'warn' { 'AmberSoft' } 'ok' { 'GreenSoft' } default { 'AccentSoft' } }))
@@ -1778,16 +1778,16 @@ try {
         $bar.Child = $g
         $bar
     }
-    # la primera vez, una sola línea en lugar del muro de texto de antes
+    # the first time, a single line instead of the old wall of text
     if (-not (Test-Path -LiteralPath $script:WarnFile)) {
         $script:WarnBar = New-InfoBar 'info' 'Casi todo se puede deshacer desde Historial. Crea un punto de restauración antes del primer cambio.' 'info' $(if ($script:IsAdmin) { 'Crear punto' } else { $null }) { Set-Busy $true; try { [void](New-RestorePoint) } finally { Set-Busy $false } } { try { Set-Content -LiteralPath $script:WarnFile -Value (Get-Date -Format s) } catch {} }
         [void]$ui.InfoHost.Children.Add($script:WarnBar)
-    }    # al tener ventana real solo falta la barra de título oscura; los colores ya están puestos
+    }    # once the window is real only the dark title bar is missing; the colors are already set
     $ui.BtnTheme.Add_Click({ if ($script:ThemeName -eq 'Light') { Set-Theme 'Dark' } else { Set-Theme 'Light' } })
 
     if ($script:IsAdmin) { $ui.AdminIcon.Content = (New-Icon 'shield-check' 16 'Green'); $ui.AdminTitle.Text = (T 'Administrador'); $ui.AdminChip.ToolTip = (T 'Puedes aplicar y revertir ajustes.') }
     else {
-        # sin permisos se ve todo pero no se aplica nada: el chip ofrece volver a abrir el panel como administrador
+        # without admin rights everything is visible but nothing applies: the chip offers to reopen the panel as administrator
         $ui.AdminIcon.Content = (New-Icon 'lock-simple' 16 'Ink2')
         $ui.AdminTitle.Inlines.Clear()
         $ui.AdminTitle.Inlines.Add([Windows.Documents.Run]::new((T 'Sin permisos de administrador')))
@@ -1801,11 +1801,11 @@ try {
         if (@(Get-Pending).Count -and [Windows.MessageBox]::Show($window, (T 'Los cambios sin aplicar se pierden al volver a abrir el panel.'), 'OptiEleven', 'OKCancel', 'Question') -ne 'OK') { return }
         $page = if ($script:CurrentPage) { $script:CurrentPage } else { 'home' }
         try { Start-Panel $page -Admin }
-        catch { Write-Log 'No se abrió como administrador (cancelado).' 'WARN'; return }   # si el usuario dice que no, el panel sigue abierto
+        catch { Write-Log 'No se abrió como administrador (cancelado).' 'WARN'; return }   # if the user says no, the panel stays open
         $window.Close()
     }
 
-    # ---------- navegación: Inicio, Historial y las categorías; icono en el tono del texto, la elegida con la barrita del acento
+    # ---------- navigation: Home, History and the categories; icon in the text color, the selected one with the small accent bar
     $script:NavParts = @{}
     foreach ($key in $Pages.Keys) {
         $pg = $Pages[$key]; if (-not $pg.Nav) { continue }
@@ -1825,7 +1825,7 @@ try {
             $np.Label.FontWeight = $(if ($sel) { 'SemiBold' } else { 'Normal' })
         }
     }
-    # página de una categoría: una tarjeta por herramienta o grupo de ajustes, con su estado
+    # category page: one card per tool or tweak group, with its state
     function New-HubView([string]$Key) {
         $sp = [Windows.Controls.StackPanel]::new()
         foreach ($k in $Pages[$Key].Hub) {
@@ -1837,7 +1837,7 @@ try {
             [void]$tx.Children.Add((New-Text $pg.Label 14 'Ink'))
             if ($pg.Desc) { $dl = New-Text $pg.Desc 12 'Ink2'; $dl.TextTrimming = 'CharacterEllipsis'; $dl.TextWrapping = 'NoWrap'; [void]$tx.Children.Add($dl) }
             [void](Add-At $g $tx 1)
-            if ($pg.Tab) {   # grupo de ajustes: cuántos hay aplicados
+            if ($pg.Tab) {   # tweak group: how many are applied
                 $rows = @($script:Rows.Values | Where-Object { $_.Tweak.Cat -eq $k })
                 $on = @($rows | Where-Object { $_.Applied -eq $true }).Count
                 $st = New-Text $(if ($script:StatusReady) { T "$on de $($rows.Count) aplicados" } else { T "$($rows.Count) ajustes" }) 12.5 'Ink2'; $st.VerticalAlignment = 'Center'; $st.Margin = '12,0,12,0'
@@ -1850,7 +1850,7 @@ try {
         }
         $sp
     }    $script:TabParts = [ordered]@{}
-    foreach ($key in @(@('all') + @($Pages.Keys | Where-Object { $_ -ne 'all' }))) {   # "Todos" primero
+    foreach ($key in @(@('all') + @($Pages.Keys | Where-Object { $_ -ne 'all' }))) {   # "Todos" (All) first
         $pg = $Pages[$key]; if (-not $pg.Tab) { continue }
         $tb = [Windows.Controls.Primitives.ToggleButton]::new(); $tb.Style = $window.FindResource('TabToggle'); $tb.Tag = $key
         $n = if ($key -eq 'all') { $Tweaks.Count } else { @($Tweaks | Where-Object Cat -eq $key).Count }
@@ -1865,8 +1865,8 @@ try {
     }
     function Update-Tabs([string]$Key) { foreach ($k in $script:TabParts.Keys) { $script:TabParts[$k].IsChecked = ($k -eq $Key) } }
 
-    # ---------- tarjetas de ajuste (como la Configuración de Windows): icono, nombre, una línea, estado e interruptor;
-    # "Más info" despliega lo técnico (qué toca y cómo está ahora), que se calcula solo al abrirlo
+    # ---------- tweak cards (like Windows Settings): icon, name, one line, state and toggle;
+    # "More info" expands the technical part (what it touches and its current state), computed only when opened
     $script:Rows = [ordered]@{}
     $script:GroupHeads = @{}
     $script:Selected = $null
@@ -1875,7 +1875,7 @@ try {
     function Add-CategoryRows([string]$cat) {
         $list = @($Tweaks | Where-Object Cat -eq $cat)
         if (-not $list) { return }
-        $head = New-Text $Pages[$cat].Title 14 'Ink' 'SemiBold'; $head.Margin = '2,18,0,8'   # solo se ve en "Todos los ajustes"
+        $head = New-Text $Pages[$cat].Title 14 'Ink' 'SemiBold'; $head.Margin = '2,18,0,8'   # only shown in "All tweaks"
         [void]$ui.TweakList.Children.Add($head)
         $script:GroupHeads[$cat] = @($head)
         foreach ($t in $list) {
@@ -1925,7 +1925,7 @@ try {
             $script:Rows[$t.Id] = @{ Tweak = $t; Switch = $sw; Card = $card; Border = $card; State = $state; Mark = $mark; Applied = $null; Desc = $ds; More = $more; Chev = $chev }
         }
     }
-    # "Más info": la descripción entera, si se puede deshacer y lo que toca de verdad en este equipo
+    # "More info": the full description, whether it can be undone and what it really touches on this PC
     function Switch-TweakMore($row) {
         $m = $row.More
         if ($m.Visibility -eq 'Visible') { $m.Visibility = 'Collapsed'; $row.Chev.Text = [string][char]0xE70D; return }
@@ -1952,16 +1952,16 @@ try {
         $m.Child = $sp; $m.Visibility = 'Visible'; $row.Chev.Text = [string][char]0xE70E
         Start-FadeIn $sp 0 4
     }
-    # Solo las dos primeras categorías antes de enseñar la ventana (lo que se ve al abrir); el resto justo después
-    # del primer pintado, para que la ventana aparezca antes. Este evento se registra antes que la comprobación de
-    # estado, así que cuando esa empieza ya están todas las filas.
+    # Only the first two categories before showing the window (what is visible on open); the rest right after
+    # the first render, so the window appears sooner. This event is registered before the state
+    # check, so all rows exist by the time that starts.
     foreach ($cat in @($cats | Select-Object -First 2)) { Add-CategoryRows $cat }
     $window.Add_ContentRendered({
         foreach ($cat in @($cats | Select-Object -Skip 2)) { Add-CategoryRows $cat }
         if ($script:CurrentPage -and $Pages[$script:CurrentPage].Tab) { Show-Page $script:CurrentPage }
     })
 
-    # ---------- detalle: qué cambia exactamente
+    # ---------- details: exactly what changes
     function Select-Row($row) {
         if ($script:Selected -and $script:Selected -ne $row) { $script:Selected.Card.ClearValue([Windows.Controls.Border]::BorderBrushProperty) }
         $script:Selected = $row
@@ -1997,7 +1997,7 @@ try {
         $diff = try { @(Get-TweakDiff $t $revert) } catch { @() }
         $changes = @($diff | Where-Object { -not $_.Same }).Count
         if (-not $script:Pro) {
-            # vista sencilla: sin claves ni valores, solo si cambia algo y cómo verlo
+            # simple view: no keys or values, only whether something changes and how to see it
             $n = $changes
             $box = [Windows.Controls.Border]::new(); $box.CornerRadius = 10; $box.Padding = '14,12'; $box.Margin = '0,16,0,0'
             $box.SetResourceReference($BgProp, 'Subtle')
@@ -2049,7 +2049,7 @@ try {
         Start-FadeIn $d
     }
 
-    # ---------- búsqueda (Ctrl+K): herramientas, grupos de ajustes y cada ajuste, por nombre, descripción, id o palabras clave
+    # ---------- search (Ctrl+K): tools, tweak groups and each tweak, by name, description, id or keywords
     $script:SearchIndex = $null
     function Get-SearchIndex {
         $items = @()
@@ -2120,7 +2120,7 @@ try {
         param($src, $e)
         if ($e.Key -eq 'K' -and ([Windows.Input.Keyboard]::Modifiers -band [Windows.Input.ModifierKeys]::Control)) { [void]$ui.SearchBox.Focus(); $ui.SearchBox.SelectAll(); $e.Handled = $true }
     })
-    # ---------- Sistema
+    # ---------- System
     [void]$ui.ToolGrid.Children.Add((New-Ruled))
     for ($k = 0; $k -lt $ToolDefs.Count; $k++) {
         $td = $ToolDefs[$k]
@@ -2135,7 +2135,7 @@ try {
         [void]$ui.ToolGrid.Children.Add((New-ActionRow $td.Icon $td.Name $td.Desc $btn))
     }
 
-    # ---------- monitor en vivo (en segundo plano para no congelar la ventana)
+    # ---------- live monitor (in the background so the window doesn't freeze)
     $script:Telemetry = [hashtable]::Synchronized(@{ Stop = $false })
     $rs = [runspacefactory]::CreateRunspace(); $rs.Open(); $rs.SessionStateProxy.SetVariable('T', $script:Telemetry)
     $script:TelePs = [powershell]::Create(); $script:TelePs.Runspace = $rs
@@ -2160,10 +2160,10 @@ try {
     })
     [void]$script:TelePs.BeginInvoke()
     $window.Add_Closed({ $script:Telemetry.Stop = $true })
-    # no cerrar con el booster activo sin avisar: los servicios pausados se quedarían así
+    # don't close with the booster on without warning: paused services would stay paused
     $window.Add_Closing({
         param($src, $e)
-        # al cambiar de idioma no se pregunta: el booster sigue activo y la ventana nueva lo lee de boost.json
+        # no prompt when switching language: the booster stays on and the new window reads it from boost.json
         if (-not $script:Relaunch -and $script:BoostFile -and (Test-Path $script:BoostFile) -and $script:IsAdmin) {
             $r = [Windows.MessageBox]::Show($window, (T "El Game Booster sigue activo: hay servicios pausados y apps cerradas.`n`n¿Restaurarlo todo antes de salir?"), 'OptiEleven', 'YesNoCancel', 'Warning')
             if ($r -eq 'Cancel') { $e.Cancel = $true }
@@ -2178,7 +2178,7 @@ try {
         $v = New-Text '--' 12 $StatColors[$s[0]] 'SemiBold'; $v.TextWrapping = 'NoWrap'; $v.Margin = '0,0,20,0'; $v.VerticalAlignment = 'Center'
         [void]$ui.StatList.Children.Add($l); [void]$ui.StatList.Children.Add($v)
         $script:Stats[$s[0]] = $v
-        if ($s[0] -in 'Proc', 'Svc') { $script:ProOnly += $l, $v }   # en la vista sencilla sobran
+        if ($s[0] -in 'Proc', 'Svc') { $script:ProOnly += $l, $v }   # not needed in the simple view
     }
     $script:Stats.Temp.ToolTip = T 'Windows solo da la temperatura con permisos de administrador, y no en todos los equipos.'
     $updateStats = {
@@ -2194,7 +2194,7 @@ try {
     }
     $timer = New-Timer 1.5 $updateStats
 
-    # ---------- estado y hoja de cambios
+    # ---------- state and change sheet
     $script:Busy = $false
     function Get-Pending { @($script:Rows.Values | Where-Object { $null -ne $_.Applied -and ([bool]$_.Switch.IsChecked -ne $_.Applied) }) }
     function Update-Pending {
@@ -2250,13 +2250,13 @@ try {
         $i = 0
         foreach ($row in @($script:Rows.Values)) {
             $row.Applied = try { Test-Tweak $row.Tweak } catch { $null }
-            if ((++$i % 4) -eq 0) { Update-Ui }   # la ventana sigue respondiendo mientras comprueba
+            if ((++$i % 4) -eq 0) { Update-Ui }   # the window stays responsive while checking
             if ($null -eq $row.Applied) { $row.Switch.IsEnabled = $false }
             else { $row.Switch.IsEnabled = -not $script:Busy; $row.Switch.IsChecked = [bool]$row.Applied }
         }
         Update-Pending
         Show-Detail $script:Selected
-        # la página abierta puede depender del estado (p. ej. Historial y sus botones de deshacer): se repinta con su "onShow"
+        # the open page may depend on the state (e.g. History and its undo buttons): it is redrawn with its "onShow"
         $cp = if ($script:CurrentPage) { $Pages[$script:CurrentPage] }
         if ($cp -and $cp.OnShow -and $script:ModuleCache.ContainsKey($script:CurrentPage)) { try { & $cp.OnShow } catch {} }
     }
@@ -2272,11 +2272,11 @@ try {
         Update-Ui
     }
 
-    # ---------- páginas
+    # ---------- pages
     $script:ModuleCache = @{}
     function Select-NavKey([string]$Key) {
         if (-not $Pages.Contains($Key)) { return }
-        # en la navegación se marca la página o su categoría; luego se abre la página pedida
+        # the navigation highlights the page or its category; then the requested page opens
         $navKey = if ($Pages[$Key].Nav) { $Key } else { $Pages[$Key].Parent }
         $item = $null; foreach ($it in $ui.Nav.Items) { if ($it -is [Windows.Controls.Grid] -and $it.Tag -eq $navKey) { $item = $it } }
         $script:NavTarget = $Key
@@ -2284,7 +2284,7 @@ try {
     }
     function Show-Page([string]$Key) {
         $pg = $Pages[$Key]
-        # una categoría con una sola cosa dentro abre esa cosa directamente
+        # a category with only one item opens that item directly
         if ($pg.Hub) { $vis = @($pg.Hub | Where-Object { $Pages[$_] -and -not ($Pages[$_].ProOnly -and -not $script:Pro) }); if ($vis.Count -eq 1) { Show-Page $vis[0]; return } }
         $script:CurrentPage = $Key
         $ui.PageTitle.Text = (T $pg.Title); $ui.PageDesc.Text = (T $pg.Desc)
@@ -2310,7 +2310,7 @@ try {
             foreach ($row in $script:Rows.Values) { $row.Card.Visibility = if ($Key -eq 'all' -or $row.Tweak.Cat -eq $Key) { 'Visible' } else { 'Collapsed' } }
             $ui.TweakPage.ScrollToTop()
             Start-Stagger @($ui.TweakList.Children) 12
-            # no se elige nada solo: el panel derecho explica qué hacer hasta que tocas un ajuste
+            # nothing is selected automatically: the right pane explains what to do until you pick a tweak
             if ($script:Selected -and $script:Selected.Card.Visibility -ne 'Visible') { Select-Row $null }
         }
         if ($pg.Hub) {
@@ -2329,7 +2329,7 @@ try {
             $ui.ModuleHost.Content = $script:ModuleCache[$Key]
             $ui.ModulePage.ScrollToTop()
             if ($ui.ModuleHost.Content -is [Windows.Controls.Panel]) { Start-Stagger @($ui.ModuleHost.Content.Children) 10 } else { Start-FadeIn $ui.ModuleHost }
-            if ($pg.OnShow) { try { & $pg.OnShow } catch { Write-Log "$($pg.Title): $($_.Exception.Message)" 'ERROR' } }   # "onShow" del tool.json
+            if ($pg.OnShow) { try { & $pg.OnShow } catch { Write-Log "$($pg.Title): $($_.Exception.Message)" 'ERROR' } }   # "onShow" from tool.json
         }
     }
     $ui.Nav.Add_SelectionChanged({ Update-NavColors; if ($ui.Nav.SelectedItem) { Show-Page $(if ($script:NavTarget) { $script:NavTarget } else { [string]$ui.Nav.SelectedItem.Tag }) } })
@@ -2369,8 +2369,8 @@ try {
         if ($reboot) { [void][Windows.MessageBox]::Show($window, (T 'Algunos cambios necesitan reiniciar el equipo.'), 'OptiEleven', 'OK', 'Information') }
     })
 
-    # ---------- Vista Pro
-    function Update-ProNav { if ($script:CurrentPage -and $Pages[$script:CurrentPage].Hub) { Show-Page $script:CurrentPage } }   # la Actividad sale en Sistema solo con los detalles técnicos
+    # ---------- Pro view
+    function Update-ProNav { if ($script:CurrentPage -and $Pages[$script:CurrentPage].Hub) { Show-Page $script:CurrentPage } }   # Activity shows under System only with technical details on
     function Set-ProView([bool]$On) {
         $script:Pro = $On; $script:SearchIndex = $null
         try { if ($On) { Set-Content -LiteralPath $script:ProFile -Value 'on' } else { Remove-Item -LiteralPath $script:ProFile -ErrorAction SilentlyContinue } } catch {}
@@ -2380,7 +2380,7 @@ try {
         Update-ProNav
         Set-IconBrush $ui.ProIcon.Content $(if ($On) { 'Accent' } else { 'Ink2' })
         if ($ui.ProSwitch.IsChecked -ne $On) { $ui.ProSwitch.IsChecked = $On }
-        # los apartados se vuelven a montar con o sin detalles
+        # the sections are rebuilt with or without details
         $script:ModuleCache = @{}
         if (-not $On -and $script:CurrentPage -eq 'log') { Select-NavKey 'c-system'; return }
         if ($script:CurrentPage) { Show-Page $script:CurrentPage }
@@ -2395,7 +2395,7 @@ try {
     $ui.LedgerStats.Visibility = $vis0
     if ($script:Pro) { Set-IconBrush $ui.ProIcon.Content 'Accent' }
 
-    # ---------- arranque
+    # ---------- startup
     $ui.BtnApply.IsEnabled = $false; $ui.BtnDiscard.IsEnabled = $false
     Update-Pending
     Select-NavKey $Page
@@ -2411,7 +2411,7 @@ try {
     })
     [void]$window.ShowDialog()
     $script:Telemetry.Stop = $true
-    # cambio de idioma: se abre de nuevo en el mismo apartado (si el cierre se canceló, la ventana sigue abierta y no se llega aquí)
+    # language change: reopens on the same section (if closing was cancelled, the window stays open and this is never reached)
     if ($script:Relaunch) { Start-Panel $script:Relaunch }
 }
 catch {
