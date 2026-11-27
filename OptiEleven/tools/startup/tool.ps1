@@ -86,6 +86,7 @@ function Update-StartupList {
             try {
                 Set-StartupApproved $entry.Approved $valueName ([bool]$src.IsChecked)
                 Write-Log ("Inicio: {0} {1}" -f $entry.Name, $(if ($src.IsChecked) { 'activado' } else { 'desactivado' })) 'OK'
+                Add-History 'startup' 'toggle' ("Inicio: {0} {1}" -f $entry.Name, $(if ($src.IsChecked) { 'activado' } else { 'desactivado' }))
             }
             catch { $src.IsChecked = -not $src.IsChecked; Write-Log "Inicio: no se pudo cambiar $($entry.Name): $($_.Exception.Message)" 'ERROR' }
             $all = @($script:StartupList.Children | Where-Object { $_.Child -is [Windows.Controls.Grid] } | ForEach-Object { $_.Child.Children | Where-Object { $_ -is [Windows.Controls.Primitives.ToggleButton] } })

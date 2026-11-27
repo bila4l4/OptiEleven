@@ -254,6 +254,7 @@ function New-CleanerPage {
             Close-Working $script:CleanWork
             Set-Busy $false
             Write-Log "Limpieza terminada: $(Format-Size $P.Bytes) liberados (lo que estaba en uso se queda)." 'OK'
+            Add-History 'cleanup' 'clean' "Limpieza terminada: $(Format-Size $P.Bytes) liberados (lo que estaba en uso se queda)."
             $script:CleanResult.Text = (T "Liberados $(Format-Size $P.Bytes) en $('{0:N0}' -f $P.Files) archivos. Lo que estaba en uso se queda y se borrará otro día.")
             $script:CleanResult.Visibility = 'Visible'
             Invoke-CleanScan   # vuelve a medir lo que queda

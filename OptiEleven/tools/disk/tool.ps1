@@ -174,7 +174,7 @@ function Invoke-DiskAction($Nodes, [string]$Act) {
 
 # borra (o vuelve a medir) en segundo plano; lo que quede en el disco se mide otra vez, así el árbol cuadra aunque falle a medias
 function Start-DiskJob($Nodes, [string]$Act) {
-    $script:DiskJobNodes = @($Nodes)
+    $script:DiskJobNodes = @($Nodes); $script:DiskJobAct = $Act
     $title = @{ recycle = 'Moviendo a la papelera'; delete = 'Eliminando'; rescan = 'Analizando la carpeta' }[$Act]
     $detail = if ($script:DiskJobNodes.Count -eq 1) { Get-DiskPath $script:DiskJobNodes[0] } else { T "$($script:DiskJobNodes.Count) elementos seleccionados" }
     $script:DiskWork = Show-Working (T $title) $detail
@@ -200,16 +200,19 @@ function Start-DiskJob($Nodes, [string]$Act) {
         if (-not $r) { return }
         $open = [Collections.Generic.HashSet[object]]::new()
         foreach ($c in $script:DiskRows.Children) { if ($c.Tag.Open) { [void]$open.Add($c.Tag.Node) } }
-        $sel = @(); $freed = [double]0; $stuck = 0
+        $sel = @(); $freed = [double]0; $stuck = 0; $chg = @()
         for ($i = 0; $i -lt $r.Count; $i++) {
             $res = $r[$i]; $old = $script:DiskJobNodes[$i]
             if ($res.Err) { Write-Log "Espacio en disco: $($res.Err)" 'WARN' }
             if ($res.Left -and $old.IsFile) { $stuck++; $sel += $old; continue }
             $new = $null
             if ($res.Left) { $new = $res.Scan[0]; $new.Name = $old.Name; $new.LastWrite = $old.LastWrite; $sel += $new; if ($open.Contains($old)) { [void]$open.Add($new) } }
+            $after = if ($new) { Format-Size $new.Size } elseif ($script:DiskJobAct -eq 'recycle') { 'en la papelera' } else { 'eliminado' }
+            if ($script:DiskJobAct -ne 'rescan') { $chg += [ordered]@{ what = (Get-DiskPath $old); before = (Format-Size $old.Size); after = $after } }
             $freed += Set-DiskNode $old $new
         }
         if ($freed -gt 0) { Write-Log "Espacio en disco: liberados $(Format-Size $freed)." 'OK' }
+        if ($chg.Count) { Add-History 'disk' $script:DiskJobAct "Espacio en disco: liberados $(Format-Size $freed)." '' $true $chg }
         Update-DiskTree $open $sel
         if ($stuck) { [void][Windows.MessageBox]::Show($window, (T 'Algunos archivos no se han podido borrar. Puede que estén en uso.'), 'OptiEleven', 'OK', 'Warning') }
     }

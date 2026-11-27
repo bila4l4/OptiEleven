@@ -364,6 +364,20 @@ function Read-Store {
     [pscustomobject]@{}
 }
 $script:Store = Read-Store
+
+# ---------- historial: una línea JSON por cambio (qué, cuándo, antes y después). Lo enseña la herramienta Historial.
+# Va en la carpeta abierta porque solo informa: para deshacer se usa backup.json, que está en la segura.
+$script:HistoryFile = Join-Path $script:Root 'history.jsonl'
+function Add-History([string]$Source, [string]$Action, [string]$Text = '', [string]$Id = '', [bool]$Ok = $true, $Changes = $null, [string]$Err = '', [string]$Time = '') {
+    $e = [ordered]@{ time = $(if ($Time) { $Time } else { (Get-Date).ToString('s') }); source = $Source; action = $Action; id = $Id; text = $Text; ok = $Ok }
+    if ($Err) { $e.error = $Err }
+    if ($Changes) { $e.changes = @($Changes) }
+    try { Add-Content -LiteralPath $script:HistoryFile -Value ($e | ConvertTo-Json -Compress -Depth 5) -Encoding UTF8 } catch {}   # sin permiso de escritura no se apunta, pero no se para nada
+}
+function Get-History {
+    if (-not (Test-Path -LiteralPath $script:HistoryFile)) { return @() }
+    @(Get-Content -LiteralPath $script:HistoryFile -Encoding UTF8 | ForEach-Object { try { $_ | ConvertFrom-Json } catch {} })
+}
 function Write-Store { $script:Store | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $script:BackupFile -Encoding UTF8 }
 function Get-Backup([string]$Id) { $p = $script:Store.PSObject.Properties[$Id]; if ($p) { $p.Value } else { $null } }
 function Save-Backup([string]$Id, $Bk) { $script:Store | Add-Member -NotePropertyName $Id -NotePropertyValue $Bk -Force; Write-Store }
@@ -542,6 +556,15 @@ function Import-Tweaks([string]$Dir) {
 }
 $Tweaks = Import-Tweaks (Join-Path $PSScriptRoot 'tools\tweaks')
 
+# lo aplicado con la v1 ya está en backup.json (mismo archivo y formato), así que se puede deshacer igual;
+# la primera vez se apunta también en el historial, con la fecha en que se aplicó
+if ($script:Store -and -not (Test-Path -LiteralPath $script:HistoryFile)) {
+    $known = @($Tweaks | ForEach-Object { $_.Id })
+    foreach ($p in @($script:Store.PSObject.Properties | Where-Object { $known -contains $_.Name } | Sort-Object { [string]$_.Value.Time })) {
+        Add-History 'tweak' 'apply' 'Aplicado con una versión anterior' $p.Name $true $null '' ([string]$p.Value.Time)
+    }
+}
+
 # icono de cada ajuste (nombres de assets\icons.json)
 $TweakIcons = @{
     'priv-telemetry' = 'broadcast'; 'priv-ads' = 'megaphone'; 'priv-ai' = 'eye-slash'; 'priv-activity' = 'clock-counter-clockwise'; 'priv-bing' = 'magnifying-glass'; 'priv-widgets' = 'newspaper'
@@ -640,19 +663,23 @@ function New-RestorePoint {
 function Invoke-Tweaks($List, [string]$Mode) {
     $reboot = $false; $ok = 0; $fail = 0
     foreach ($t in $List) {
+        $chg = $null
         try {
             if ($Mode -eq 'Apply') {
                 if ((Test-Tweak $t) -eq $true) { Write-Log "Ya aplicado: $($t.Name)"; continue }
                 Write-Log "Aplicando: $($t.Name)"
+                $chg = Get-ChangeList $t $false
                 Invoke-ApplyTweak $t
             }
             else {
                 Write-Log "Revirtiendo: $($t.Name)"
+                $chg = Get-ChangeList $t $true
                 Invoke-RevertTweak $t
             }
             $ok++; if ($t.Reboot) { $reboot = $true }
+            Add-History 'tweak' $Mode.ToLower() '' $t.Id $true $chg
         }
-        catch { $fail++; Write-Log "$($t.Name): $($_.Exception.Message)" 'ERROR' }
+        catch { $fail++; Write-Log "$($t.Name): $($_.Exception.Message)" 'ERROR'; Add-History 'tweak' $Mode.ToLower() '' $t.Id $false $chg $_.Exception.Message }
     }
     Write-Log ("Terminado: {0} correctos, {1} con error." -f $ok, $fail) 'OK'
     return $reboot
@@ -666,6 +693,10 @@ function Get-ShortKey([string]$p) {
     $p -replace '^HKLM:\\SOFTWARE\\Policies\\Microsoft\\', 'HKLM\Policies\' -replace '^HKCU:\\Software\\Policies\\Microsoft\\', 'HKCU\Policies\' `
        -replace '^HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\', 'HKLM\...\CurrentVersion\' -replace '^HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\', 'HKCU\...\CurrentVersion\' `
        -replace '^HKLM:\\SYSTEM\\CurrentControlSet\\', 'HKLM\SYSTEM\CCS\' -replace '^HKLM:', 'HKLM' -replace '^HKCU:', 'HKCU'
+}
+# lo que va a cambiar de verdad, para el historial (solo las líneas que cambian)
+function Get-ChangeList($t, [bool]$Revert) {
+    try { @(Get-TweakDiff $t $Revert | Where-Object { -not $_.Same } | ForEach-Object { [ordered]@{ what = $_.Target; before = $_.Before; after = $_.After } }) } catch { $null }
 }
 function New-DiffLine([string]$Kind, [string]$Target, [string]$Before, [string]$After) {
     [pscustomobject]@{ Kind = $Kind; Target = $Target; Before = $Before; After = $After; Same = ($Before -eq $After) }
@@ -2107,6 +2138,9 @@ try {
         }
         Update-Pending
         Show-Detail $script:Selected
+        # la página abierta puede depender del estado (p. ej. Historial y sus botones de deshacer): se repinta con su "onShow"
+        $cp = if ($script:CurrentPage) { $Pages[$script:CurrentPage] }
+        if ($cp -and $cp.OnShow -and $script:ModuleCache.ContainsKey($script:CurrentPage)) { try { & $cp.OnShow } catch {} }
     }
     function Set-Busy([bool]$Busy) {
         $script:Busy = $Busy

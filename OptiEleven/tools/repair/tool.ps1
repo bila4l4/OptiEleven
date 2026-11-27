@@ -39,6 +39,7 @@ $RepairDefs = @(
 )
 
 function Start-ConsoleTask([string]$Title, [string[]]$Commands) {
+    Add-History 'repair' 'run' "Reparación: $Title"
     $lines = @("`$Host.UI.RawUI.WindowTitle = 'OptiEleven - $Title'", "Write-Host '$Title' -ForegroundColor Cyan", "Write-Host ''") +
              ($Commands | ForEach-Object { "Write-Host '> $($_ -replace "'", "''")' -ForegroundColor DarkGray"; $_ }) +
              @("Write-Host ''", "Write-Host 'Terminado. Pulsa Intro para cerrar.' -ForegroundColor Green", 'Read-Host | Out-Null')

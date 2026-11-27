@@ -99,6 +99,7 @@ function New-GameSwitch([string]$Exe, [string]$Kind, [bool]$Checked, [bool]$Enab
             switch ($t.Kind) { 'gpu' { Set-GameGpu $t.Exe $on } 'fso' { Set-GameFso $t.Exe $on } 'prio' { Set-GamePrio $t.Exe $on } }
             $what = @{ gpu = 'GPU de alto rendimiento'; fso = 'sin optimizaciones de pantalla completa'; prio = 'prioridad alta' }[$t.Kind]
             Write-Log ("{0}: {1} {2}" -f (Split-Path $t.Exe -Leaf), $what, $(if ($on) { 'activado' } else { 'quitado' })) 'OK'
+            Add-History 'games' 'toggle' ("{0}: {1} {2}" -f (Split-Path $t.Exe -Leaf), $what, $(if ($on) { 'activado' } else { 'quitado' }))
         }
         catch { $src.IsChecked = -not $on; Write-Log "No se pudo cambiar $($t.Exe): $($_.Exception.Message)" 'ERROR' }
     })

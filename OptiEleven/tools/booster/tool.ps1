@@ -94,6 +94,7 @@ function Invoke-BoostFps {
             param($P)
             Close-Working $script:FpsWork
             Write-Log "Boost FPS listo: $(Format-Size $script:FpsRam) de RAM liberada y $(Format-Size $P.Bytes) de disco limpiados." 'OK'
+            Add-History 'booster' 'boost-fps' "Boost FPS listo: $(Format-Size $script:FpsRam) de RAM liberada y $(Format-Size $P.Bytes) de disco limpiados."
             $script:FpsSteps.Clean.Text = Format-Size $P.Bytes
             foreach ($k in $script:FpsSteps.Keys) { $script:FpsSteps[$k].SetResourceReference($FgProp, 'Accent') }
             Set-Busy $false; $script:BoostPurge.IsChecked = $true; Update-BoostView
@@ -211,6 +212,7 @@ function Start-Boost {
         [pscustomobject]@{ Inicio = (Get-Date).ToString('s'); Apps = $closed; Servicios = $paused; Overlay = $overlay } |
             ConvertTo-Json -Depth 4 | Set-Content -LiteralPath $script:BoostFile -Encoding UTF8
         Write-Log 'Booster activado. Pulsa "Terminar y restaurar" al acabar de jugar.' 'OK'
+        Add-History 'booster' 'start' 'Booster activado. Pulsa "Terminar y restaurar" al acabar de jugar.'
     }
     finally { Set-Busy $false; Update-BoostView }
 }
@@ -230,6 +232,7 @@ function Stop-Boost {
         if ($st.Overlay) { try { Set-OverlayGuid $st.Overlay } catch {} }
         Remove-Item -LiteralPath $script:BoostFile -Force -ErrorAction SilentlyContinue
         Write-Log 'Booster terminado: todo vuelve a como estaba.' 'OK'
+        Add-History 'booster' 'stop' 'Booster terminado: todo vuelve a como estaba.'
     }
     finally { Set-Busy $false; Update-BoostView }
 }

@@ -1,6 +1,19 @@
 {
   "name": "English",
   "strings": {
+    "1 cambio": "1 change",
+    "Historial": "History",
+    "Revertido": "Reverted",
+    "Hoy": "Today",
+    "Ayer": "Yesterday",
+    "Deshacer": "Undo",
+    "Todavía no hay cambios. Lo que apliques, limpies o borres desde el panel aparecerá aquí, con su fecha.": "No changes yet. What you apply, clean or delete from the panel shows up here, with its date.",
+    "Aplicado con una versión anterior": "Applied with an earlier version",
+    "en la papelera": "in the Recycle Bin",
+    "eliminado": "deleted",
+    "¿Deshacer este ajuste?": "Undo this tweak?",
+    "Vuelven los valores que había antes de aplicarlo.": "The values from before it was applied come back.",
+    "Abre el panel como administrador para deshacer.": "Open the panel as administrator to undo.",
     "OptiEleven": "OptiEleven",
     "Ajustes": "Tweaks",
     "Todos": "All",
@@ -640,6 +653,9 @@
     "Edge se reinstala desde microsoft.com/edge o con \"winget install Microsoft.Edge\".": "Edge is reinstalled from microsoft.com/edge or with \"winget install Microsoft.Edge\"."
   },
   "patterns": [
+    ["^Espacio en disco: liberados (.+)\\.$", "Disk space: $1 freed."],
+    ["^Reparación: (.+)$", "Repair: @1"],
+    ["^(\\d+) cambios$", "$1 changes"],
     ["^y ([\\d.,]+) archivos más$", "and $1 more files"],
     ["^y ([\\d.,]+) elementos más pequeños$", "and $1 smaller items"],
     ["^(\\d+) elementos seleccionados$", "$1 items selected"],

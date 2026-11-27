@@ -115,6 +115,7 @@ function Set-DnsPreset($Preset) {
         }
         Clear-DnsClientCache -ErrorAction SilentlyContinue
         if ($ok) { Write-Log "DNS cambiado a $($Preset.Name) en: $($ok -join ', ')." 'OK' }
+        if ($ok) { Add-History 'network' 'dns' "DNS cambiado a $($Preset.Name) en: $($ok -join ', ')." }
         if ($bad) { Write-Log "No se pudo cambiar el DNS en: $($bad -join '; ')" 'ERROR' }
     }
     finally { Set-Busy $false; Update-NetInfo }
