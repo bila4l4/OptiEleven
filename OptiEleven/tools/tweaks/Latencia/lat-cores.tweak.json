@@ -1,0 +1,32 @@
+{
+    "id":  "lat-cores",
+    "kind":  "tweak",
+    "category":  "Latencia",
+    "order":  400,
+    "name":  {
+                 "es":  "Todos los núcleos despiertos",
+                 "en":  "All cores awake"
+             },
+    "summary":  {
+                    "es":  "Sin aparcamiento de núcleos con el cargador.",
+                    "en":  "No core parking while plugged in."
+                },
+    "risk":  "advanced",
+    "presets":  [
+
+                ],
+    "requiresAdmin":  true,
+    "reboot":  false,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "script"
+             },
+    "actions":  [
+
+                ],
+    "script":  "lat-cores.tweak.ps1",
+    "details":  {
+                    "es":  "Todos los núcleos de la CPU quedan despiertos enchufado. Menos latencia al empezar una carga, más consumo y temperatura.",
+                    "en":  "All CPU cores stay awake while plugged in. Lower latency when a load starts, more power use and heat."
+                }
+}

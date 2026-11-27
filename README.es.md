@@ -4,95 +4,109 @@
 
 # OptiEleven
 
-**Optimizador reversible de Windows 11 para jugar.**
-Quita telemetría y basura, libera RAM antes de jugar y deshaz cualquier cambio con un clic.
+**Tu Windows 11, en un solo sitio.**
+Limpia, libera memoria, ajusta la privacidad y el rendimiento, instala apps y repara Windows. Todo se puede deshacer.
 
-[![Licencia: MIT](https://img.shields.io/badge/licencia-MIT-fc6b33)](LICENSE)
-![Windows 11](https://img.shields.io/badge/Windows-11-14110f)
-![PowerShell 5.1](https://img.shields.io/badge/PowerShell-5.1-14110f)
-![Sin instalación](https://img.shields.io/badge/instalaci%C3%B3n-ninguna-14110f)
+[![Licencia: MIT](https://img.shields.io/badge/licencia-MIT-0d7a72)](LICENSE)
+![Windows 11](https://img.shields.io/badge/Windows-11-1a1c1c)
+![PowerShell 5.1](https://img.shields.io/badge/PowerShell-5.1-1a1c1c)
 
 **Ábrelo con un comando.** Pega esto en PowerShell:
 
 ```powershell
-irm bila4l4.github.io/OptiEleven | iex
+irm optieleven.app | iex
 ```
 
-o [⬇ descarga OptiEleven.zip](https://github.com/bila4l4/OptiEleven/releases/latest/download/OptiEleven.zip), descomprímelo y haz doble clic en `OptiEleven.cmd`. No hay nada que compilar ni instalar.
+o [descarga OptiEleven.zip](https://github.com/bila4l4/OptiEleven/releases/latest/download/OptiEleven.zip), descomprímelo y haz doble clic en `OptiEleven.exe`. Web: **[optieleven.app](https://optieleven.app)**
 
 [English](README.md) · Español
 
-<img src="docs/screenshots/settings-dark.png" alt="Página de ajustes de OptiEleven con la vista previa de cambios y la hoja de cambios">
+<img src="docs/screenshots/home-dark.png" alt="Inicio de OptiEleven: un anillo con la salud del PC (privacidad, rendimiento, espacio y arranque) y el botón Liberar memoria">
 
 </div>
 
 ## Por qué OptiEleven
 
-La mayoría de scripts de "debloat" son un montón de cambios en el registro que ejecutas una vez y cruzas los dedos. OptiEleven funciona al revés:
+- **Ves antes de aplicar.** Cada ajuste enseña en *Más info* los valores del registro, servicios y tareas que cambia, con el valor de ahora y el de después.
+- **Todo se puede deshacer.** La primera vez que aplicas un ajuste se guarda cómo estaba. **Historial** lista cada cambio con su fecha y deja deshacer cada uno, aunque hayan pasado meses.
+- **Las tareas del PC en un solo sitio.** Liberar memoria, limpiar el disco, instalar apps, arreglar la red y reparar Windows sin buscar por Configuración.
+- **Sin instalación y sin telemetría propia.** Es PowerShell + WPF. Los scripts están en texto plano junto al exe: léelos, ejecútalos y borra la carpeta.
 
-- **Ves antes de aplicar.** Cada ajuste muestra qué valores del registro, servicios y tareas programadas toca, con el valor actual y el que quedará.
-- **Todo se puede revertir.** La primera vez que se aplica un ajuste se guarda el estado original. *Revertir* lo devuelve, aunque sea meses después.
-- **No pasa nada hasta que pulsas Aplicar.** Los interruptores se apuntan en una hoja de cambios; la revisas, puedes crear un punto de restauración y se aplican juntos.
-- **Sin instalación ni telemetría propia.** Es PowerShell + WPF. Lee el código, ejecútalo y borra la carpeta cuando quieras.
-
-## Funciones
+## Qué hace
 
 | | |
 |---|---|
-| **60 ajustes en 8 categorías** | Privacidad, Servicios, Rendimiento, Latencia, Juegos, Windows Update, Interfaz y Apps. Dos presets: *Recomendado* (seguro, quita casi todo lo que no sirve) y *Avanzado* (más agresivo, lee las notas). |
-| **Boost FPS** | Un clic antes de jugar: cierra apps en segundo plano, pausa servicios, pone la energía al máximo, libera RAM y hace la limpieza completa. *Terminar y restaurar* lo devuelve todo. |
-| **Game Booster** | Elige qué apps se cierran y qué servicios se pausan mientras juegas. |
-| **Mis juegos** | Encuentra tus juegos de Steam, Epic y GOG y les pone GPU de alto rendimiento, prioridad alta o quita las optimizaciones de pantalla completa. |
-| **Instalar apps** | Launchers, Discord, OBS, monitorización y librerías para juegos con winget, y actualizar todo. |
-| **Inicio** | Lo que arranca con Windows, y apagarlo. |
-| **Limpieza** | Temporales, restos de actualizaciones, volcados, caché de sombreadores, miniaturas y papelera. Primero ves cuánto ocupa cada cosa. |
-| **Red** | Latencia al router y a Cloudflare, Google y Quad9, y cambiar de DNS con un clic. |
-| **Reparar** | DISM + SFC, comprobar disco, restablecer red, Windows Update y la Store, caché de iconos e informe de batería. |
-| **Equipo** | CPU, GPU, velocidad de la RAM, discos, arranque seguro, TPM, VBS y HAGS, con un informe para copiar. |
-| **Perfiles** | Exporta tus ajustes a un `.json` e impórtalos en otro PC, o aplícalos por línea de comandos. |
-| **Idiomas** | Inglés y español. Añadir otro idioma es un archivo JSON ([cómo](CONTRIBUTING.md#translations)). |
-| **Temas** | Oscuro (por defecto) y claro. |
+| **Inicio** | Una nota de 0 a 100 para tu PC, repartida en privacidad, rendimiento, espacio y arranque. Pasa el ratón para ver el detalle y pulsa para arreglarlo. **Liberar memoria** libera RAM y temporales con un clic, sin cambiar ningún ajuste. |
+| **Optimizar** | Ajustes de rendimiento, latencia y juegos, **Sesión de juego** (cierra lo que sobra mientras juegas y lo devuelve al terminar), ajustes por juego y apps de inicio. |
+| **Privacidad** | Telemetría, anuncios y sugerencias, Copilot y Recall, historial de actividad, Bing en Inicio y servicios de diagnóstico. |
+| **Limpiar** | Temporales, restos de actualizaciones, cachés y volcados, con lo que ocupa cada cosa; un árbol de **espacio en disco** como WinDirStat; y quitar apps preinstaladas. |
+| **Instalar** | Más de 100 apps con winget, con sus logos y actualizar todo, o un instalador de un solo archivo para otro PC. |
+| **Red** | DNS con un clic (Cloudflare, Google, Quad9), latencia y test de velocidad. |
+| **Reparar** | DISM + SFC, comprobar disco, restablecer la red, Windows Update y la Store, caché de iconos e informe de batería. |
+| **Sistema** | El hardware de tu PC, ajustes de Windows Update, interfaz y servicios, copias y perfiles. |
+| **Historial** | Cada cambio con su fecha, qué cambió antes y después, y deshacer. |
+| **Búsqueda** | **Ctrl+K** encuentra cualquier herramienta o ajuste por su nombre. |
+
+60 ajustes con su nivel de riesgo y dos presets: *Recomendado* (seguro para casi cualquier PC) y *Avanzado*. En español e inglés, claro y oscuro.
+
+<table>
+<tr>
+<td><img src="docs/screenshots/privacy.png" alt="Página de privacidad con un ajuste abierto que enseña lo que cambia"></td>
+<td><img src="docs/screenshots/cleanup.png" alt="Página de limpieza con el espacio que se puede liberar"></td>
+</tr>
+</table>
 
 ## Empezar
 
-1. Clic derecho en el botón Inicio → **Terminal**, pega este comando y pulsa Intro. Acepta el permiso de administrador.
+1. Clic derecho en el botón Inicio → **Terminal**, pega el comando y pulsa Enter. Acepta el aviso de administrador.
 
    ```powershell
-   irm bila4l4.github.io/OptiEleven | iex
+   irm optieleven.app | iex
    ```
 
-   Descarga la última versión en `%LOCALAPPDATA%\OptiEleven`, y si lo vuelves a ejecutar la actualiza. Puedes [leer el script](run.ps1) antes; es corto.
+   Descarga la última versión en `%LOCALAPPDATA%\OptiEleven`, la comprueba con el `SHA256SUMS.txt` de la release y la abre. Si lo vuelves a ejecutar, la actualiza. Si quieres, [lee el script](run.ps1) antes; es corto.
 
-   ¿Prefieres un archivo? **[Descarga OptiEleven.zip](https://github.com/bila4l4/OptiEleven/releases/latest/download/OptiEleven.zip)**, descomprímelo donde quieras y haz doble clic en **`OptiEleven.cmd`**.
-2. El panel se abre como administrador.
-3. Lee el aviso del inicio, ve a **Sistema → Punto de restauración**, elige el preset **Recomendado**, revisa la hoja de cambios y pulsa **Aplicar cambios**.
-4. Reinicia si el panel te lo pide.
+   ¿Prefieres un archivo? **[Descarga OptiEleven.zip](https://github.com/bila4l4/OptiEleven/releases/latest/download/OptiEleven.zip)**, descomprímelo donde quieras y haz doble clic en **`OptiEleven.exe`**. Es un lanzador pequeño que ejecuta `OptiEleven.ps1` de la misma carpeta. Si el exe está bloqueado, `OptiEleven.cmd` hace lo mismo.
+2. Empieza por **Inicio**: pulsa **Liberar memoria** o el trozo del anillo que quieras mejorar.
+3. Para aplicar ajustes, actívalos, revisa la hoja de cambios y pulsa **Aplicar cambios**. El panel te ofrece antes un punto de restauración. Reinicia si te lo pide.
 
-Sin permisos de administrador el panel se abre en modo solo lectura, para que puedas mirarlo todo antes.
+Requisitos: Windows 11 22H2 o posterior. PowerShell 5.1 y .NET ya vienen con Windows. Sin permisos de administrador el panel se abre en solo lectura, así que puedes mirar sin riesgo.
 
-El idioma se cambia con el botón **EN / ES** de arriba a la izquierda.
+### Línea de comandos
+
+```powershell
+.\OptiEleven.ps1 -Status                         # estado de cada ajuste, no cambia nada
+.\OptiEleven.ps1 -Preset Recomendado -NoGui      # aplica un preset sin interfaz (admin)
+.\OptiEleven.ps1 -Config perfil.json -NoGui      # aplica un perfil exportado (admin)
+.\OptiEleven.ps1 -Page cleanup                   # abre directamente una página (el id de su tool.json)
+```
 
 ## ¿Es seguro?
 
-OptiEleven cambia ajustes del sistema, así que lee lo que hace cada uno antes de aplicarlo. Está pensado para que no te metas en líos:
+OptiEleven cambia ajustes del sistema, así que lee qué hace cada uno antes de aplicarlo. El diseño intenta que no te metas en líos:
 
-- Las copias del estado original están en `%ProgramData%\OptiEleven\secure`, una carpeta que solo pueden escribir los administradores.
-- Antes de cada aplicación te ofrece crear un punto de restauración.
-- Lo que no se puede deshacer desde el panel (por ejemplo desinstalar Edge u OneDrive) va marcado como **Sin vuelta atrás** y se repite en la confirmación.
-- Los ajustes con riesgo van marcados como *Moderado* o *Avanzado* y dicen qué deja de funcionar.
+- Las copias del estado original están en `%ProgramData%\OptiEleven\secure`, una carpeta en la que solo pueden escribir los administradores.
+- El panel ofrece crear un punto de restauración antes de aplicar.
+- Los ajustes que no se pueden deshacer desde el panel (por ejemplo desinstalar Edge u OneDrive) están marcados y se repiten en la confirmación.
+- Los ajustes con riesgo están marcados como *Moderado* o *Avanzado* y dicen a qué afectan.
 
-Si algo falla, abre un [issue](../../issues) con el registro de **Actividad** (Sistema → Copias de seguridad abre la carpeta con `panel.log`).
+Si algo sale mal, abre una [incidencia](../../issues) con el registro de **Actividad** (activa *Mostrar detalles técnicos*).
 
 ## Instalación limpia de Windows (opcional)
 
-Hay una [guía de NTLite](docs/ntlite-guide.es.md) paso a paso para hacer una ISO de Windows 11 Pro ligera que sigue recibiendo actualizaciones; después OptiEleven hace la parte reversible.
+¿Quieres empezar desde una ISO limpia? Hay una [guía de NTLite](docs/ntlite-guide.es.md) paso a paso para crear una imagen ligera de Windows 11 Pro que sigue recibiendo actualizaciones, y OptiEleven hace después la parte reversible.
 
 ## Contribuir
 
-Se agradecen informes de errores, ajustes nuevos y traducciones. Mira [CONTRIBUTING.md](CONTRIBUTING.md).
+Los avisos de errores, ajustes nuevos, herramientas nuevas y traducciones son bienvenidos. Cada herramienta y cada ajuste es su propio archivo; mira [CONTRIBUTING.md](CONTRIBUTING.md).
 
-Si OptiEleven te ha servido, una ⭐ ayuda a que lo encuentre más gente.
+Si OptiEleven te ha servido, una ⭐ ayuda a que otros lo encuentren.
+
+## Créditos
+
+- Iconos: Segoe Fluent Icons (vienen con Windows), [Phosphor Icons](https://phosphoricons.com) (MIT) y [Simple Icons](https://simpleicons.org) (CC0). Los logos de marcas son de sus dueños. Mira [THIRD-PARTY.md](THIRD-PARTY.md).
+- Ideas de las herramientas de la comunidad que vinieron antes: [Optimizer](https://github.com/hellzerg/optimizer), [WinUtil](https://github.com/ChrisTitusTech/winutil), [ReviOS](https://revi.cc) y otras.
 
 ## Licencia
 
-[MIT](LICENSE). OptiEleven no tiene relación con Microsoft.
+[MIT](LICENSE). OptiEleven no está afiliado a Microsoft.

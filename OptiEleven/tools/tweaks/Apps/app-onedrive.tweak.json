@@ -1,0 +1,36 @@
+{
+    "id":  "app-onedrive",
+    "kind":  "tweak",
+    "category":  "Apps",
+    "order":  360,
+    "name":  {
+                 "es":  "Desinstalar OneDrive",
+                 "en":  "Uninstall OneDrive"
+             },
+    "summary":  {
+                    "es":  "Tus archivos se quedan en el PC.",
+                    "en":  "Your files stay on the PC."
+                },
+    "risk":  "moderate",
+    "presets":  [
+                    "advanced"
+                ],
+    "requiresAdmin":  true,
+    "reboot":  false,
+    "reversible":  false,
+    "undo":  {
+                 "type":  "none",
+                 "note":  {
+                              "es":  "No se puede deshacer desde el panel.",
+                              "en":  "Can\u0027t be undone from the panel."
+                          }
+             },
+    "actions":  [
+
+                ],
+    "script":  "app-onedrive.tweak.ps1",
+    "details":  {
+                    "es":  "Quita OneDrive y su sincronización en segundo plano. Tus archivos de la carpeta OneDrive se quedan en el disco. Se puede reinstalar desde onedrive.com.",
+                    "en":  "Removes OneDrive and its background sync. Your files in the OneDrive folder stay on disk. It can be reinstalled from onedrive.com."
+                }
+}

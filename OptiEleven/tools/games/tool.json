@@ -1,0 +1,39 @@
+{
+    "id":  "games",
+    "kind":  "tool",
+    "category":  "optimize",
+    "order":  50,
+    "name":  {
+                 "es":  "Mis juegos",
+                 "en":  "My games"
+             },
+    "title":  {
+                  "es":  "Mis juegos",
+                  "en":  "My games"
+              },
+    "summary":  {
+                    "es":  "Ajustes de Windows para cada juego.",
+                    "en":  "Windows settings for each game."
+                },
+    "icon":  "joystick",
+    "color":  "Cat-Juegos",
+    "view":  "New-GamesPage",
+    "risk":  "safe",
+    "requiresAdmin":  false,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "toggle",
+                 "note":  {
+                              "es":  "Cada ajuste se quita con el mismo interruptor.",
+                              "en":  "Turn each setting off with the same switch."
+                          }
+             },
+    "keywords":  [
+                     "steam",
+                     "epic",
+                     "gog",
+                     "gpu",
+                     "juegos",
+                     "games"
+                 ]
+}

@@ -1,0 +1,35 @@
+{
+    "id":  "svc-iphelper",
+    "kind":  "tweak",
+    "category":  "Servicios",
+    "order":  530,
+    "name":  {
+                 "es":  "Sin túneles IPv6",
+                 "en":  "IPv6 tunnels off"
+             },
+    "summary":  {
+                    "es":  "Quita Teredo. Algunas VPN y el chat de Xbox lo usan.",
+                    "en":  "Removes Teredo. Some VPNs and Xbox party chat use it."
+                },
+    "risk":  "advanced",
+    "presets":  [
+
+                ],
+    "requiresAdmin":  true,
+    "reboot":  false,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "snapshot"
+             },
+    "actions":  [
+                    {
+                        "service":  "iphlpsvc",
+                        "startup":  "Disabled",
+                        "default":  "Auto"
+                    }
+                ],
+    "details":  {
+                    "es":  "Quita Teredo y los túneles IPv6. Algunas VPN y el chat de grupo de Xbox lo usan; si no, es un proceso menos.",
+                    "en":  "Removes Teredo and IPv6 tunnels. Some VPNs and Xbox party chat use it; otherwise it\u0027s one less process."
+                }
+}

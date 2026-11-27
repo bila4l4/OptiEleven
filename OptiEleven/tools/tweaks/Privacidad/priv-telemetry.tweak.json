@@ -1,0 +1,174 @@
+{
+    "id":  "priv-telemetry",
+    "kind":  "tweak",
+    "category":  "Privacidad",
+    "order":  10,
+    "name":  {
+                 "es":  "Telemetría mínima",
+                 "en":  "Minimal telemetry"
+             },
+    "summary":  {
+                    "es":  "Lo mínimo que permite tu edición de Windows.",
+                    "en":  "The minimum your Windows edition allows."
+                },
+    "risk":  "safe",
+    "presets":  [
+                    "recommended",
+                    "advanced"
+                ],
+    "requiresAdmin":  true,
+    "reboot":  false,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "snapshot"
+             },
+    "actions":  [
+                    {
+                        "registry":  "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection",
+                        "name":  "AllowTelemetry",
+                        "type":  "DWord",
+                        "value":  0,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection",
+                        "name":  "DoNotShowFeedbackNotifications",
+                        "type":  "DWord",
+                        "value":  1,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection",
+                        "name":  "AllowDeviceNameInTelemetry",
+                        "type":  "DWord",
+                        "value":  0,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection",
+                        "name":  "LimitDiagnosticLogCollection",
+                        "type":  "DWord",
+                        "value":  1,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection",
+                        "name":  "DisableOneSettingsDownloads",
+                        "type":  "DWord",
+                        "value":  1,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection",
+                        "name":  "LimitDumpCollection",
+                        "type":  "DWord",
+                        "value":  1,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKLM:\\SOFTWARE\\Policies\\Microsoft\\SQMClient\\Windows",
+                        "name":  "CEIPEnable",
+                        "type":  "DWord",
+                        "value":  0,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\AppCompat",
+                        "name":  "AITEnable",
+                        "type":  "DWord",
+                        "value":  0,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\AppCompat",
+                        "name":  "DisableInventory",
+                        "type":  "DWord",
+                        "value":  1,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\AppCompat",
+                        "name":  "DisableUAR",
+                        "type":  "DWord",
+                        "value":  1,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKLM:\\SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting",
+                        "name":  "Disabled",
+                        "type":  "DWord",
+                        "value":  1,
+                        "default":  null
+                    },
+                    {
+                        "task":  "\\Microsoft\\Windows\\Application Experience\\Microsoft Compatibility Appraiser"
+                    },
+                    {
+                        "task":  "\\Microsoft\\Windows\\Application Experience\\MareBackup"
+                    },
+                    {
+                        "task":  "\\Microsoft\\Windows\\Application Experience\\PcaPatchDbTask"
+                    },
+                    {
+                        "task":  "\\Microsoft\\Windows\\Windows Error Reporting\\QueueReporting"
+                    },
+                    {
+                        "task":  "\\Microsoft\\Windows\\Device Information\\Device"
+                    },
+                    {
+                        "task":  "\\Microsoft\\Windows\\Device Information\\Device User"
+                    },
+                    {
+                        "task":  "\\Microsoft\\Windows\\CloudExperienceHost\\CreateObjectTask"
+                    },
+                    {
+                        "task":  "\\Microsoft\\Windows\\Flighting\\FeatureConfig\\UsageDataReporting"
+                    },
+                    {
+                        "task":  "\\Microsoft\\Windows\\Flighting\\FeatureConfig\\UsageDataFlushing"
+                    },
+                    {
+                        "task":  "\\Microsoft\\Windows\\Maps\\MapsToastTask"
+                    },
+                    {
+                        "task":  "\\Microsoft\\Windows\\Maps\\MapsUpdateTask"
+                    },
+                    {
+                        "task":  "\\Microsoft\\Windows\\PI\\Sqm-Tasks"
+                    },
+                    {
+                        "task":  "\\Microsoft\\Office\\OfficeTelemetryAgentLogOn2016"
+                    },
+                    {
+                        "task":  "\\Microsoft\\Office\\OfficeTelemetryAgentFallBack2016"
+                    },
+                    {
+                        "task":  "\\Microsoft\\Windows\\Application Experience\\Microsoft Compatibility Appraiser Exp"
+                    },
+                    {
+                        "task":  "\\Microsoft\\Windows\\Application Experience\\ProgramDataUpdater"
+                    },
+                    {
+                        "task":  "\\Microsoft\\Windows\\Customer Experience Improvement Program\\Consolidator"
+                    },
+                    {
+                        "task":  "\\Microsoft\\Windows\\Customer Experience Improvement Program\\UsbCeip"
+                    },
+                    {
+                        "task":  "\\Microsoft\\Windows\\DiskDiagnostic\\Microsoft-Windows-DiskDiagnosticDataCollector"
+                    },
+                    {
+                        "task":  "\\Microsoft\\Windows\\Feedback\\Siuf\\DmClient"
+                    },
+                    {
+                        "task":  "\\Microsoft\\Windows\\Feedback\\Siuf\\DmClientOnScenarioDownload"
+                    },
+                    {
+                        "task":  "\\Microsoft\\Windows\\Autochk\\Proxy"
+                    }
+                ],
+    "details":  {
+                    "es":  "Diagnósticos al mínimo que permite Windows Pro, sin programa de mejora (CEIP), sin inventario de apps y sin las tareas programadas que recogen datos.",
+                    "en":  "Diagnostics at the minimum Windows Pro allows, no improvement program (CEIP), no app inventory and none of the scheduled tasks that collect data."
+                }
+}

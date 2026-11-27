@@ -1,0 +1,44 @@
+{
+    "id":  "wu-feature",
+    "kind":  "tweak",
+    "category":  "Actualizaciones",
+    "order":  310,
+    "name":  {
+                 "es":  "Versiones nuevas un año después",
+                 "en":  "Feature updates a year later"
+             },
+    "summary":  {
+                    "es":  "Sigues recibiendo los parches de seguridad.",
+                    "en":  "You still get security patches."
+                },
+    "risk":  "moderate",
+    "presets":  [
+
+                ],
+    "requiresAdmin":  true,
+    "reboot":  false,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "snapshot"
+             },
+    "actions":  [
+                    {
+                        "registry":  "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate",
+                        "name":  "DeferFeatureUpdates",
+                        "type":  "DWord",
+                        "value":  1,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate",
+                        "name":  "DeferFeatureUpdatesPeriodInDays",
+                        "type":  "DWord",
+                        "value":  365,
+                        "default":  null
+                    }
+                ],
+    "details":  {
+                    "es":  "Sigues recibiendo los parches de seguridad, pero las actualizaciones grandes (25H2, 26H2...) llegan 365 días después, ya pulidas.",
+                    "en":  "You still get security patches, but the big updates (25H2, 26H2...) arrive 365 days later, already polished."
+                }
+}

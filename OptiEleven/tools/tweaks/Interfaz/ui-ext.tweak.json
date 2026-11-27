@@ -1,0 +1,38 @@
+{
+    "id":  "ui-ext",
+    "kind":  "tweak",
+    "category":  "Interfaz",
+    "order":  320,
+    "name":  {
+                 "es":  "Extensiones de archivo visibles",
+                 "en":  "Show file extensions"
+             },
+    "summary":  {
+                    "es":  "Ver .exe y .pdf también es más seguro.",
+                    "en":  "Seeing .exe and .pdf is safer too."
+                },
+    "risk":  "safe",
+    "presets":  [
+                    "recommended",
+                    "advanced"
+                ],
+    "requiresAdmin":  true,
+    "reboot":  false,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "snapshot"
+             },
+    "actions":  [
+                    {
+                        "registry":  "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+                        "name":  "HideFileExt",
+                        "type":  "DWord",
+                        "value":  0,
+                        "default":  null
+                    }
+                ],
+    "details":  {
+                    "es":  "Ver \".exe\", \".pdf\"... también es más seguro (evita archivos \"foto.jpg.exe\").",
+                    "en":  "Seeing \".exe\", \".pdf\"... is also safer (avoids \"photo.jpg.exe\" files)."
+                }
+}

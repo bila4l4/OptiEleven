@@ -1,0 +1,39 @@
+{
+    "id":  "repair",
+    "kind":  "tool",
+    "category":  "repair",
+    "order":  10,
+    "name":  {
+                 "es":  "Reparar Windows",
+                 "en":  "Repair Windows"
+             },
+    "title":  {
+                  "es":  "Reparar Windows",
+                  "en":  "Repair Windows"
+              },
+    "summary":  {
+                    "es":  "SFC, DISM, red, Windows Update y Store.",
+                    "en":  "SFC, DISM, network, Windows Update and Store."
+                },
+    "icon":  "wrench",
+    "color":  "Cat-Latencia",
+    "view":  "New-RepairPage",
+    "risk":  "moderate",
+    "requiresAdmin":  true,
+    "reversible":  false,
+    "undo":  {
+                 "type":  "none",
+                 "note":  {
+                              "es":  "Son reparaciones de Windows (SFC, DISM...). Crea antes un punto de restauración si quieres poder volver.",
+                              "en":  "These are Windows repairs (SFC, DISM...). Create a restore point first if you want a way back."
+                          }
+             },
+    "keywords":  [
+                     "sfc",
+                     "dism",
+                     "chkdsk",
+                     "reparar",
+                     "fix",
+                     "repair"
+                 ]
+}

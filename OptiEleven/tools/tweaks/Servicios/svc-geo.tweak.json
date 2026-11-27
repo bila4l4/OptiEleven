@@ -1,0 +1,35 @@
+{
+    "id":  "svc-geo",
+    "kind":  "tweak",
+    "category":  "Servicios",
+    "order":  120,
+    "name":  {
+                 "es":  "Sin ubicación",
+                 "en":  "Location off"
+             },
+    "summary":  {
+                    "es":  "Sin zona horaria automática ni tiempo local.",
+                    "en":  "No automatic time zone or local weather."
+                },
+    "risk":  "moderate",
+    "presets":  [
+                    "advanced"
+                ],
+    "requiresAdmin":  true,
+    "reboot":  false,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "snapshot"
+             },
+    "actions":  [
+                    {
+                        "service":  "lfsvc",
+                        "startup":  "Disabled",
+                        "default":  "Manual"
+                    }
+                ],
+    "details":  {
+                    "es":  "Desactiva la geolocalización. Deja de funcionar la zona horaria automática y el tiempo local.",
+                    "en":  "Turns off geolocation. Automatic time zone and local weather stop working."
+                }
+}

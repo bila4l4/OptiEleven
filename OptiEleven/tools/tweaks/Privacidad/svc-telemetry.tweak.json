@@ -1,0 +1,56 @@
+{
+    "id":  "svc-telemetry",
+    "kind":  "tweak",
+    "category":  "Privacidad",
+    "order":  70,
+    "name":  {
+                 "es":  "Sin servicios de telemetría",
+                 "en":  "Telemetry services off"
+             },
+    "summary":  {
+                    "es":  "DiagTrack, informes de errores e inventario.",
+                    "en":  "DiagTrack, error reporting and inventory."
+                },
+    "risk":  "safe",
+    "presets":  [
+                    "recommended",
+                    "advanced"
+                ],
+    "requiresAdmin":  true,
+    "reboot":  false,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "snapshot"
+             },
+    "actions":  [
+                    {
+                        "service":  "DiagTrack",
+                        "startup":  "Disabled",
+                        "default":  "Auto"
+                    },
+                    {
+                        "service":  "dmwappushservice",
+                        "startup":  "Disabled",
+                        "default":  "Delayed"
+                    },
+                    {
+                        "service":  "WerSvc",
+                        "startup":  "Disabled",
+                        "default":  "Manual"
+                    },
+                    {
+                        "service":  "InventorySvc",
+                        "startup":  "Disabled",
+                        "default":  "Delayed"
+                    },
+                    {
+                        "service":  "diagnosticshub.standardcollector.service",
+                        "startup":  "Disabled",
+                        "default":  "Manual"
+                    }
+                ],
+    "details":  {
+                    "es":  "DiagTrack (experiencias del usuario conectado), dmwappushservice, InventorySvc (inventario de apps para Microsoft) y WerSvc.",
+                    "en":  "DiagTrack (connected user experiences), dmwappushservice, InventorySvc (app inventory for Microsoft) and WerSvc."
+                }
+}

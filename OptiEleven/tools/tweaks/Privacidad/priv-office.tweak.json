@@ -1,0 +1,59 @@
+{
+    "id":  "priv-office",
+    "kind":  "tweak",
+    "category":  "Privacidad",
+    "order":  470,
+    "name":  {
+                 "es":  "Office sin telemetría",
+                 "en":  "Office telemetry off"
+             },
+    "summary":  {
+                    "es":  "Word, Excel y compañía no envían datos de uso.",
+                    "en":  "Word, Excel and the rest stop sending usage data."
+                },
+    "risk":  "safe",
+    "presets":  [
+                    "recommended",
+                    "advanced"
+                ],
+    "requiresAdmin":  true,
+    "reboot":  false,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "snapshot"
+             },
+    "actions":  [
+                    {
+                        "registry":  "HKCU:\\Software\\Policies\\Microsoft\\Office\\16.0\\Common\\ClientTelemetry",
+                        "name":  "DisableTelemetry",
+                        "type":  "DWord",
+                        "value":  1,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKCU:\\Software\\Policies\\Microsoft\\Office\\16.0\\Common\\ClientTelemetry",
+                        "name":  "SendTelemetry",
+                        "type":  "DWord",
+                        "value":  3,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKCU:\\Software\\Policies\\Microsoft\\Office\\16.0\\Common\\Feedback",
+                        "name":  "Enabled",
+                        "type":  "DWord",
+                        "value":  0,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKCU:\\Software\\Policies\\Microsoft\\Office\\Common\\ClientTelemetry",
+                        "name":  "SendTelemetry",
+                        "type":  "DWord",
+                        "value":  3,
+                        "default":  null
+                    }
+                ],
+    "details":  {
+                    "es":  "Word, Excel y compañía dejan de enviar datos de uso y de pedir opinión. Si no tienes Office, no hace nada.",
+                    "en":  "Word, Excel and the rest stop sending usage data and asking for feedback. Does nothing if you don\u0027t have Office."
+                }
+}

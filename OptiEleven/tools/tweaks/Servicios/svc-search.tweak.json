@@ -1,0 +1,35 @@
+{
+    "id":  "svc-search",
+    "kind":  "tweak",
+    "category":  "Servicios",
+    "order":  100,
+    "name":  {
+                 "es":  "Sin indexación de búsqueda",
+                 "en":  "Search indexing off"
+             },
+    "summary":  {
+                    "es":  "Buscar archivos será más lento.",
+                    "en":  "Searching files gets slower."
+                },
+    "risk":  "moderate",
+    "presets":  [
+                    "advanced"
+                ],
+    "requiresAdmin":  true,
+    "reboot":  false,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "snapshot"
+             },
+    "actions":  [
+                    {
+                        "service":  "WSearch",
+                        "startup":  "Disabled",
+                        "default":  "Delayed"
+                    }
+                ],
+    "details":  {
+                    "es":  "Quita el indexador. Las apps siguen saliendo en Inicio, pero buscar archivos y correos será más lento.",
+                    "en":  "Removes the indexer. Apps still show up in Start, but searching files and mail will be slower."
+                }
+}

@@ -1,0 +1,45 @@
+{
+    "id":  "svc-netdisc",
+    "kind":  "tweak",
+    "category":  "Servicios",
+    "order":  520,
+    "name":  {
+                 "es":  "Sin descubrimiento de red",
+                 "en":  "Network discovery off"
+             },
+    "summary":  {
+                    "es":  "Deja de buscar televisores e impresoras sin parar.",
+                    "en":  "Stops constantly looking for TVs and printers."
+                },
+    "risk":  "moderate",
+    "presets":  [
+                    "advanced"
+                ],
+    "requiresAdmin":  true,
+    "reboot":  false,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "snapshot"
+             },
+    "actions":  [
+                    {
+                        "service":  "SSDPSRV",
+                        "startup":  "Disabled",
+                        "default":  "Manual"
+                    },
+                    {
+                        "service":  "upnphost",
+                        "startup":  "Disabled",
+                        "default":  "Manual"
+                    },
+                    {
+                        "service":  "FDResPub",
+                        "startup":  "Disabled",
+                        "default":  "Manual"
+                    }
+                ],
+    "details":  {
+                    "es":  "SSDP y el host UPnP buscan televisores, impresoras y NAS en tu red sin parar. Si no compartes nada en la red de casa, sobran. El UPnP de los juegos (abrir puertos del router) no depende de ellos.",
+                    "en":  "SSDP and the UPnP host keep scanning your network for TVs, printers and NAS boxes. If you don\u0027t share anything on your home network, you don\u0027t need them. Game UPnP (opening router ports) doesn\u0027t depend on them."
+                }
+}

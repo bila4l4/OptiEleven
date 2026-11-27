@@ -1,0 +1,40 @@
+[
+    { "id": "start", "order": 0 },
+    { "id": "optimize", "order": 10, "icon": "gauge",
+      "name": { "es": "Optimizar", "en": "Optimize" },
+      "summary": { "es": "Rendimiento, latencia y juegos.", "en": "Performance, latency and games." },
+      "tweaks": [
+        { "id": "Rendimiento", "order": 10, "icon": "gauge", "name": { "es": "Rendimiento", "en": "Performance" }, "summary": { "es": "Energía, prioridades y procesos en segundo plano.", "en": "Power, priorities and background processes." } },
+        { "id": "Latencia", "order": 20, "icon": "timer", "name": { "es": "Latencia", "en": "Latency" }, "summary": { "es": "USB, PCIe, núcleos e interrupciones. Pruébalos de uno en uno.", "en": "USB, PCIe, cores and interrupts. Try them one at a time." } },
+        { "id": "Juegos", "order": 30, "icon": "game-controller", "name": { "es": "Ajustes de juego", "en": "Game settings" }, "summary": { "es": "GPU, ratón, teclado y grabación.", "en": "GPU, mouse, keyboard and recording." } }
+      ] },
+    { "id": "privacy", "order": 20, "icon": "shield-check",
+      "name": { "es": "Privacidad", "en": "Privacy" },
+      "summary": { "es": "Lo que Windows envía y lo que te enseña.", "en": "What Windows sends and what it shows you." },
+      "tweaks": [
+        { "id": "Privacidad", "order": 10, "icon": "shield-check", "name": { "es": "Privacidad", "en": "Privacy" }, "summary": { "es": "Lo que Windows envía y lo que te enseña.", "en": "What Windows sends and what it shows you." } }
+      ] },
+    { "id": "clean", "order": 30, "icon": "broom",
+      "name": { "es": "Limpiar", "en": "Clean up" },
+      "summary": { "es": "Espacio en disco y apps que sobran.", "en": "Disk space and apps you don't need." },
+      "tweaks": [
+        { "id": "Apps", "order": 30, "icon": "trash", "name": { "es": "Apps preinstaladas", "en": "Preinstalled apps" }, "summary": { "es": "Apps de serie, patrocinadas y componentes antiguos.", "en": "Built-in and sponsored apps, and old components." } }
+      ] },
+    { "id": "install", "order": 40, "icon": "download-simple",
+      "name": { "es": "Instalar", "en": "Install" },
+      "summary": { "es": "Apps con winget.", "en": "Apps with winget." } },
+    { "id": "network", "order": 50, "icon": "wifi-high",
+      "name": { "es": "Red", "en": "Network" },
+      "summary": { "es": "DNS, latencia y velocidad.", "en": "DNS, latency and speed." } },
+    { "id": "repair", "order": 60, "icon": "wrench",
+      "name": { "es": "Reparar", "en": "Repair" },
+      "summary": { "es": "Las reparaciones de Windows de siempre.", "en": "The usual Windows repairs." } },
+    { "id": "system", "order": 70, "icon": "laptop",
+      "name": { "es": "Sistema", "en": "System" },
+      "summary": { "es": "Tu equipo, actualizaciones, interfaz y servicios.", "en": "Your PC, updates, interface and services." },
+      "tweaks": [
+        { "id": "Actualizaciones", "order": 20, "icon": "arrows-clockwise", "name": { "es": "Windows Update", "en": "Windows Update" }, "summary": { "es": "Reinicios, drivers y versiones nuevas.", "en": "Restarts, drivers and new versions." } },
+        { "id": "Interfaz", "order": 30, "icon": "magic-wand", "name": { "es": "Interfaz", "en": "Interface" }, "summary": { "es": "Explorador, menú contextual y barra de tareas.", "en": "File Explorer, context menu and taskbar." } },
+        { "id": "Servicios", "order": 40, "icon": "gear-six", "name": { "es": "Servicios", "en": "Services" }, "summary": { "es": "Servicios que arrancan con Windows y casi nadie usa.", "en": "Services that start with Windows and few people use." } }
+      ] }
+]

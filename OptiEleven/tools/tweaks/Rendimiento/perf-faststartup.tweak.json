@@ -1,0 +1,38 @@
+{
+    "id":  "perf-faststartup",
+    "kind":  "tweak",
+    "category":  "Rendimiento",
+    "order":  190,
+    "name":  {
+                 "es":  "Arranque completo",
+                 "en":  "Full boot"
+             },
+    "summary":  {
+                    "es":  "Sin Inicio rápido: cada arranque empieza de cero.",
+                    "en":  "No Fast Startup: every boot starts clean."
+                },
+    "risk":  "safe",
+    "presets":  [
+                    "recommended",
+                    "advanced"
+                ],
+    "requiresAdmin":  true,
+    "reboot":  true,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "snapshot"
+             },
+    "actions":  [
+                    {
+                        "registry":  "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Power",
+                        "name":  "HiberbootEnabled",
+                        "type":  "DWord",
+                        "value":  0,
+                        "default":  null
+                    }
+                ],
+    "details":  {
+                    "es":  "Cada arranque carga el kernel y los drivers desde cero: evita fallos raros de drivers y de memoria acumulada.",
+                    "en":  "Every boot loads the kernel and drivers from scratch: avoids odd driver bugs and built-up memory."
+                }
+}

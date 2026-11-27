@@ -1,0 +1,45 @@
+{
+    "id":  "game-dvr",
+    "kind":  "tweak",
+    "category":  "Juegos",
+    "order":  240,
+    "name":  {
+                 "es":  "Sin grabación en segundo plano",
+                 "en":  "Background recording off"
+             },
+    "summary":  {
+                    "es":  "La Game Bar deja de grabar sin parar.",
+                    "en":  "Game Bar stops recording all the time."
+                },
+    "risk":  "safe",
+    "presets":  [
+                    "recommended",
+                    "advanced"
+                ],
+    "requiresAdmin":  true,
+    "reboot":  false,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "snapshot"
+             },
+    "actions":  [
+                    {
+                        "registry":  "HKCU:\\System\\GameConfigStore",
+                        "name":  "GameDVR_Enabled",
+                        "type":  "DWord",
+                        "value":  0,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\GameDVR",
+                        "name":  "AllowGameDVR",
+                        "type":  "DWord",
+                        "value":  0,
+                        "default":  null
+                    }
+                ],
+    "details":  {
+                    "es":  "Desactiva la captura continua de la Xbox Game Bar. Si grabas clips con Win+G, déjalo como está.",
+                    "en":  "Turns off the Xbox Game Bar\u0027s continuous capture. If you record clips with Win+G, leave it as it is."
+                }
+}

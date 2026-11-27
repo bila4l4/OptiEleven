@@ -1,0 +1,37 @@
+{
+    "id":  "home",
+    "kind":  "tool",
+    "category":  "start",
+    "order":  0,
+    "name":  {
+                 "es":  "Inicio",
+                 "en":  "Home"
+             },
+    "title":  {
+                  "es":  "Inicio",
+                  "en":  "Home"
+              },
+    "summary":  {
+                    "es":  "Estado del equipo.",
+                    "en":  "Your PC at a glance."
+                },
+    "icon":  "house-line",
+    "color":  "Accent",
+    "view":  "New-HomePage",
+    "risk":  "safe",
+    "requiresAdmin":  false,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "none",
+                 "note":  {
+                              "es":  "No cambia nada del sistema.",
+                              "en":  "Doesn\u0027t change anything on your PC."
+                          }
+             },
+    "keywords":  [
+                     "inicio",
+                     "estado",
+                     "home"
+                 ],
+    "onShow":  "Update-HomeView"
+}

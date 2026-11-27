@@ -1,0 +1,36 @@
+{
+    "id":  "app-xbox",
+    "kind":  "tweak",
+    "category":  "Apps",
+    "order":  590,
+    "name":  {
+                 "es":  "Quitar apps de Xbox",
+                 "en":  "Remove Xbox apps"
+             },
+    "summary":  {
+                    "es":  "No lo hagas si usas Game Pass o juegos de la Store.",
+                    "en":  "Don\u0027t, if you use Game Pass or Store games."
+                },
+    "risk":  "advanced",
+    "presets":  [
+
+                ],
+    "requiresAdmin":  true,
+    "reboot":  false,
+    "reversible":  false,
+    "undo":  {
+                 "type":  "none",
+                 "note":  {
+                              "es":  "No se puede deshacer desde el panel.",
+                              "en":  "Can\u0027t be undone from the panel."
+                          }
+             },
+    "actions":  [
+
+                ],
+    "script":  "app-xbox.tweak.ps1",
+    "details":  {
+                    "es":  "App Xbox, Game Bar y sus complementos. NO lo hagas si usas Game Pass, juegos de la Store, Win+G o el chat de Xbox. Steam, Epic y los juegos normales no se ven afectados.",
+                    "en":  "The Xbox app, Game Bar and their add-ons. DON\u0027T do this if you use Game Pass, Store games, Win+G or Xbox chat. Steam, Epic and regular games aren\u0027t affected."
+                }
+}

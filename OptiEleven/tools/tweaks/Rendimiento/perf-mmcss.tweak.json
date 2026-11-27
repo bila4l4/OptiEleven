@@ -1,0 +1,66 @@
+{
+    "id":  "perf-mmcss",
+    "kind":  "tweak",
+    "category":  "Rendimiento",
+    "order":  160,
+    "name":  {
+                 "es":  "Prioridad para juegos",
+                 "en":  "Game priority"
+             },
+    "summary":  {
+                    "es":  "Más CPU para el juego y menos para tareas de fondo.",
+                    "en":  "More CPU for the game, less for background tasks."
+                },
+    "risk":  "safe",
+    "presets":  [
+                    "recommended",
+                    "advanced"
+                ],
+    "requiresAdmin":  true,
+    "reboot":  false,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "snapshot"
+             },
+    "actions":  [
+                    {
+                        "registry":  "HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile",
+                        "name":  "SystemResponsiveness",
+                        "type":  "DWord",
+                        "value":  10,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games",
+                        "name":  "GPU Priority",
+                        "type":  "DWord",
+                        "value":  8,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games",
+                        "name":  "Priority",
+                        "type":  "DWord",
+                        "value":  6,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games",
+                        "name":  "Scheduling Category",
+                        "type":  "String",
+                        "value":  "High",
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games",
+                        "name":  "SFIO Priority",
+                        "type":  "String",
+                        "value":  "High",
+                        "default":  null
+                    }
+                ],
+    "details":  {
+                    "es":  "Reserva menos CPU para tareas de fondo y da prioridad alta a los hilos de juego registrados.",
+                    "en":  "Reserves less CPU for background tasks and gives registered game threads high priority."
+                }
+}

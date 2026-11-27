@@ -1,0 +1,37 @@
+{
+    "id":  "startup",
+    "kind":  "tool",
+    "category":  "optimize",
+    "order":  60,
+    "name":  {
+                 "es":  "Arranque",
+                 "en":  "Startup apps"
+             },
+    "title":  {
+                  "es":  "Arranque",
+                  "en":  "Startup apps"
+              },
+    "summary":  {
+                    "es":  "Lo que se abre al iniciar Windows.",
+                    "en":  "What opens when Windows starts."
+                },
+    "icon":  "sign-in",
+    "color":  "Cat-Servicios",
+    "view":  "New-StartupPage",
+    "risk":  "safe",
+    "requiresAdmin":  false,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "toggle",
+                 "note":  {
+                              "es":  "Vuelve a activarla en la misma lista.",
+                              "en":  "Turn it back on in the same list."
+                          }
+             },
+    "keywords":  [
+                     "inicio",
+                     "startup",
+                     "autorun",
+                     "arranque"
+                 ]
+}

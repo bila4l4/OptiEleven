@@ -1,0 +1,44 @@
+{
+    "id":  "ui-taskbar",
+    "kind":  "tweak",
+    "category":  "Interfaz",
+    "order":  560,
+    "name":  {
+                 "es":  "Barra de tareas limpia",
+                 "en":  "Clean taskbar"
+             },
+    "summary":  {
+                    "es":  "Sin Vista de tareas y con la búsqueda como icono.",
+                    "en":  "No Task View, and search as an icon."
+                },
+    "risk":  "safe",
+    "presets":  [
+                    "advanced"
+                ],
+    "requiresAdmin":  true,
+    "reboot":  false,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "snapshot"
+             },
+    "actions":  [
+                    {
+                        "registry":  "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+                        "name":  "ShowTaskViewButton",
+                        "type":  "DWord",
+                        "value":  0,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Search",
+                        "name":  "SearchboxTaskbarMode",
+                        "type":  "DWord",
+                        "value":  1,
+                        "default":  null
+                    }
+                ],
+    "details":  {
+                    "es":  "Quita el botón de Vista de tareas y deja la búsqueda solo como icono. Win+Tab y Win+S siguen funcionando.",
+                    "en":  "Removes the Task View button and leaves search as an icon only. Win+Tab and Win+S still work."
+                }
+}

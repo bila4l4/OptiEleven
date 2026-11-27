@@ -1,0 +1,38 @@
+{
+    "id":  "perf-startupdelay",
+    "kind":  "tweak",
+    "category":  "Rendimiento",
+    "order":  270,
+    "name":  {
+                 "es":  "Apps de inicio sin espera",
+                 "en":  "No startup delay"
+             },
+    "summary":  {
+                    "es":  "Las apps de inicio se abren al momento.",
+                    "en":  "Startup apps open right away."
+                },
+    "risk":  "safe",
+    "presets":  [
+                    "recommended",
+                    "advanced"
+                ],
+    "requiresAdmin":  true,
+    "reboot":  false,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "snapshot"
+             },
+    "actions":  [
+                    {
+                        "registry":  "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Serialize",
+                        "name":  "StartupDelayInMSec",
+                        "type":  "DWord",
+                        "value":  0,
+                        "default":  null
+                    }
+                ],
+    "details":  {
+                    "es":  "Windows espera unos segundos antes de abrir las apps de inicio. Con SSD no hace falta.",
+                    "en":  "Windows waits a few seconds before opening startup apps. Not needed with an SSD."
+                }
+}

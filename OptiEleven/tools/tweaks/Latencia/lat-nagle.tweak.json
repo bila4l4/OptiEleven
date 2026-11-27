@@ -1,0 +1,32 @@
+{
+    "id":  "lat-nagle",
+    "kind":  "tweak",
+    "category":  "Latencia",
+    "order":  410,
+    "name":  {
+                 "es":  "Sin algoritmo de Nagle",
+                 "en":  "Nagle\u0027s algorithm off"
+             },
+    "summary":  {
+                    "es":  "Solo ayuda en juegos que usan TCP.",
+                    "en":  "Only helps games that use TCP."
+                },
+    "risk":  "advanced",
+    "presets":  [
+
+                ],
+    "requiresAdmin":  true,
+    "reboot":  true,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "script"
+             },
+    "actions":  [
+
+                ],
+    "script":  "lat-nagle.tweak.ps1",
+    "details":  {
+                    "es":  "TCP envía cada paquete al momento en vez de agruparlos. Solo ayuda en juegos que usan TCP (MMO, MOBA antiguos); los shooters usan UDP.",
+                    "en":  "TCP sends every packet right away instead of batching them. Only helps games that use TCP (MMOs, older MOBAs); shooters use UDP."
+                }
+}

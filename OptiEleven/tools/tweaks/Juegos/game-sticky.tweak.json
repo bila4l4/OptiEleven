@@ -1,0 +1,52 @@
+{
+    "id":  "game-sticky",
+    "kind":  "tweak",
+    "category":  "Juegos",
+    "order":  260,
+    "name":  {
+                 "es":  "Sin atajo de Teclas especiales",
+                 "en":  "Sticky Keys shortcut off"
+             },
+    "summary":  {
+                    "es":  "Pulsar Mayús cinco veces ya no abre el aviso.",
+                    "en":  "Pressing Shift five times no longer pops up the prompt."
+                },
+    "risk":  "safe",
+    "presets":  [
+                    "recommended",
+                    "advanced"
+                ],
+    "requiresAdmin":  true,
+    "reboot":  false,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "snapshot"
+             },
+    "actions":  [
+                    {
+                        "registry":  "HKCU:\\Control Panel\\Accessibility\\StickyKeys",
+                        "name":  "Flags",
+                        "type":  "String",
+                        "value":  "506",
+                        "default":  "510"
+                    },
+                    {
+                        "registry":  "HKCU:\\Control Panel\\Accessibility\\Keyboard Response",
+                        "name":  "Flags",
+                        "type":  "String",
+                        "value":  "122",
+                        "default":  "126"
+                    },
+                    {
+                        "registry":  "HKCU:\\Control Panel\\Accessibility\\ToggleKeys",
+                        "name":  "Flags",
+                        "type":  "String",
+                        "value":  "58",
+                        "default":  "62"
+                    }
+                ],
+    "details":  {
+                    "es":  "Pulsar Mayús cinco veces ya no saca el aviso de Teclas especiales en mitad de la partida.",
+                    "en":  "Pressing Shift five times no longer pops up Sticky Keys in the middle of a match."
+                }
+}

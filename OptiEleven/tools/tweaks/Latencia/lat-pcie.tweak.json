@@ -1,0 +1,32 @@
+{
+    "id":  "lat-pcie",
+    "kind":  "tweak",
+    "category":  "Latencia",
+    "order":  390,
+    "name":  {
+                 "es":  "PCIe sin ahorro de energía",
+                 "en":  "PCIe power saving off"
+             },
+    "summary":  {
+                    "es":  "La GPU y el SSD no bajan de estado.",
+                    "en":  "The GPU and SSD stay at full power."
+                },
+    "risk":  "moderate",
+    "presets":  [
+                    "advanced"
+                ],
+    "requiresAdmin":  true,
+    "reboot":  false,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "script"
+             },
+    "actions":  [
+
+                ],
+    "script":  "lat-pcie.tweak.ps1",
+    "details":  {
+                    "es":  "Desactiva la administración de energía del enlace PCIe: la GPU y el SSD no bajan de estado entre fotogramas. Solo enchufado.",
+                    "en":  "Turns off PCIe link state power management: the GPU and SSD don\u0027t drop power states between frames. Plugged in only."
+                }
+}

@@ -16,10 +16,6 @@ Brand logos are trademarks of their respective owners and are used only to ident
 
 `OptiEleven/assets/apps/*.png` are the apps' own logos, resized to 64 px. Sources: the [UniGetUI icon database](https://github.com/marticliment/UniGetUI) (MIT) and [Dashboard Icons](https://github.com/homarr-labs/dashboard-icons) (Apache-2.0). Each logo is a trademark of its owner and is shown only to identify the app.
 
-## Inter 4.1
-
-https://rsms.me/inter · SIL Open Font License 1.1 · Copyright (c) 2016 The Inter Project Authors. Bundled as `OptiEleven/assets/fonts/*.ttf` (license in `Inter-LICENSE.txt`).
-
 ## OptiEleven logo
 
 Original work, released with the project under the MIT License (`OptiEleven/assets/logo*.svg`, `optieleven.ico`).

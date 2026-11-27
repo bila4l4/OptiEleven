@@ -16,8 +16,35 @@ __APPS__
     public static string TTitle = "__TITLE__", TIntro = "__INTRO__", TCheck = "__CHECK__", TInstalling = "__INSTALLING__", TDone = "__DONE__",
         TAlready = "__ALREADY__", TFail = "__FAIL__", TWait = "__WAIT__", TSummary = "__SUMMARY__", TReady = "__READY__", TClose = "__CLOSE__", TNoWinget = "__NOWINGET__";
 
+    // Prebuilt copy (native\OptiEleven-Apps.exe, made by build/Build.ps1): the panel appends the list and the texts
+    // to the end of the exe instead of compiling it on the user's PC. Layout: UTF-8 text, Int32 length, Magic.
+    // Text: one "T" line with the 12 texts in the order above, then one "A<tab>id<tab>name<tab>args" line per app.
+    const string Magic = "OPTIELEVEN-APPS1";
+    static void LoadAppended() {
+        byte[] all;
+        try { all = System.IO.File.ReadAllBytes(Application.ExecutablePath); } catch { return; }
+        byte[] magic = System.Text.Encoding.ASCII.GetBytes(Magic);
+        int n = all.Length - magic.Length;
+        if (n < 4) return;
+        for (int i = 0; i < magic.Length; i++) if (all[n + i] != magic[i]) return;
+        int len = BitConverter.ToInt32(all, n - 4);
+        if (len <= 0 || len > n - 4) return;
+        string text = System.Text.Encoding.UTF8.GetString(all, n - 4 - len, len);
+        var apps = new System.Collections.Generic.List<string[]>();
+        foreach (string line in text.Split('\n')) {
+            string[] f = line.Split('\t');
+            if (f[0] == "A" && f.Length == 4) apps.Add(new string[] { f[1], f[2], f[3] });
+            else if (f[0] == "T" && f.Length == 13) {
+                TTitle = f[1]; TIntro = f[2]; TCheck = f[3]; TInstalling = f[4]; TDone = f[5]; TAlready = f[6];
+                TFail = f[7]; TWait = f[8]; TSummary = f[9]; TReady = f[10]; TClose = f[11]; TNoWinget = f[12];
+            }
+        }
+        Apps = apps.ToArray();
+    }
+
     [STAThread]
     static void Main(string[] args) {
+        LoadAppended();
         Application.EnableVisualStyles();
         Application.SetCompatibleTextRenderingDefault(false);
         bool quit = args.Length > 0 && args[0] == "-quit-when-done";

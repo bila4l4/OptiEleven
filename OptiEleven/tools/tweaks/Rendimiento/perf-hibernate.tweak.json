@@ -1,0 +1,32 @@
+{
+    "id":  "perf-hibernate",
+    "kind":  "tweak",
+    "category":  "Rendimiento",
+    "order":  540,
+    "name":  {
+                 "es":  "Sin hibernación",
+                 "en":  "Hibernation off"
+             },
+    "summary":  {
+                    "es":  "Libera los GB que ocupa hiberfil.sys.",
+                    "en":  "Frees the GB used by hiberfil.sys."
+                },
+    "risk":  "moderate",
+    "presets":  [
+
+                ],
+    "requiresAdmin":  true,
+    "reboot":  false,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "script"
+             },
+    "actions":  [
+
+                ],
+    "script":  "perf-hibernate.tweak.ps1",
+    "details":  {
+                    "es":  "Borra hiberfil.sys (entre el 40 % y el 100 % de tu RAM, varios GB de disco). Mientras esté apagada tampoco hay inicio rápido; al volver a activarla, el inicio rápido queda como diga \"Desactivar Inicio rápido\". En un portátil, con la batería agotada se apagará en vez de hibernar.",
+                    "en":  "Deletes hiberfil.sys (40% to 100% of your RAM, several GB of disk). While it\u0027s off there\u0027s no Fast Startup either; when you turn it back on, Fast Startup follows \"Turn off Fast Startup\". On a laptop, it will shut down instead of hibernating when the battery runs out."
+                }
+}

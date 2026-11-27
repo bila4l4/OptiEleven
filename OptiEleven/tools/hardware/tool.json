@@ -1,0 +1,39 @@
+{
+    "id":  "hardware",
+    "kind":  "tool",
+    "category":  "system",
+    "order":  10,
+    "name":  {
+                 "es":  "Mi equipo",
+                 "en":  "My PC"
+             },
+    "title":  {
+                  "es":  "Mi equipo",
+                  "en":  "My PC"
+              },
+    "summary":  {
+                    "es":  "Procesador, gráfica, memoria y discos.",
+                    "en":  "Processor, graphics, memory and drives."
+                },
+    "icon":  "laptop",
+    "color":  "Cat-Apps",
+    "view":  "New-HardwarePage",
+    "risk":  "safe",
+    "requiresAdmin":  false,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "none",
+                 "note":  {
+                              "es":  "Solo muestra información.",
+                              "en":  "Only shows information."
+                          }
+             },
+    "keywords":  [
+                     "hardware",
+                     "cpu",
+                     "gpu",
+                     "ram",
+                     "specs",
+                     "equipo"
+                 ]
+}

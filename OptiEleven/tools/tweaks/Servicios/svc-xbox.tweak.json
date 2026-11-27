@@ -1,0 +1,45 @@
+{
+    "id":  "svc-xbox",
+    "kind":  "tweak",
+    "category":  "Servicios",
+    "order":  130,
+    "name":  {
+                 "es":  "Sin servicios de Xbox",
+                 "en":  "Xbox services off"
+             },
+    "summary":  {
+                    "es":  "No lo hagas si usas Game Pass o la app Xbox.",
+                    "en":  "Don\u0027t, if you use Game Pass or the Xbox app."
+                },
+    "risk":  "advanced",
+    "presets":  [
+
+                ],
+    "requiresAdmin":  true,
+    "reboot":  false,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "snapshot"
+             },
+    "actions":  [
+                    {
+                        "service":  "XblAuthManager",
+                        "startup":  "Disabled",
+                        "default":  "Manual"
+                    },
+                    {
+                        "service":  "XblGameSave",
+                        "startup":  "Disabled",
+                        "default":  "Manual"
+                    },
+                    {
+                        "service":  "XboxNetApiSvc",
+                        "startup":  "Disabled",
+                        "default":  "Manual"
+                    }
+                ],
+    "details":  {
+                    "es":  "NO lo actives si usas Game Pass, la app Xbox o juegos de la Microsoft Store. Steam/Epic/Riot no se ven afectados.",
+                    "en":  "DON\u0027T turn this on if you use Game Pass, the Xbox app or Microsoft Store games. Steam/Epic/Riot aren\u0027t affected."
+                }
+}

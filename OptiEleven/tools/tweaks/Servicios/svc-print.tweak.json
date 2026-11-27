@@ -1,0 +1,35 @@
+{
+    "id":  "svc-print",
+    "kind":  "tweak",
+    "category":  "Servicios",
+    "order":  110,
+    "name":  {
+                 "es":  "Sin cola de impresión",
+                 "en":  "Print spooler off"
+             },
+    "summary":  {
+                    "es":  "Solo si no imprimes ni usas Imprimir a PDF.",
+                    "en":  "Only if you don\u0027t print or use Print to PDF."
+                },
+    "risk":  "moderate",
+    "presets":  [
+
+                ],
+    "requiresAdmin":  true,
+    "reboot":  false,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "snapshot"
+             },
+    "actions":  [
+                    {
+                        "service":  "Spooler",
+                        "startup":  "Disabled",
+                        "default":  "Auto"
+                    }
+                ],
+    "details":  {
+                    "es":  "Solo si NO imprimes ni usas \"Imprimir a PDF\".",
+                    "en":  "Only if you DON\u0027T print or use \"Print to PDF\"."
+                }
+}

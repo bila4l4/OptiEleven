@@ -1,0 +1,33 @@
+{
+    "id":  "perf-powermode",
+    "kind":  "tweak",
+    "category":  "Rendimiento",
+    "order":  140,
+    "name":  {
+                 "es":  "Máximo rendimiento",
+                 "en":  "Best performance mode"
+             },
+    "summary":  {
+                    "es":  "El modo de energía de Configuración, en Mejor rendimiento.",
+                    "en":  "Settings\u0027 power mode set to Best performance."
+                },
+    "risk":  "safe",
+    "presets":  [
+                    "recommended",
+                    "advanced"
+                ],
+    "requiresAdmin":  true,
+    "reboot":  false,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "script"
+             },
+    "actions":  [
+
+                ],
+    "script":  "perf-powermode.tweak.ps1",
+    "details":  {
+                    "es":  "Equivale a Configuración \u003e Energía \u003e \"Mejor rendimiento\" para la fuente de energía actual. En batería gasta más; ponlo enchufado.",
+                    "en":  "Same as Settings \u003e Power \u003e \"Best performance\" for the current power source. Uses more battery; set it while plugged in."
+                }
+}

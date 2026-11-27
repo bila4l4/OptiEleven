@@ -1,0 +1,38 @@
+{
+    "id":  "perf-bgapps",
+    "kind":  "tweak",
+    "category":  "Rendimiento",
+    "order":  180,
+    "name":  {
+                 "es":  "Apps de la Store en pausa",
+                 "en":  "Store apps paused"
+             },
+    "summary":  {
+                    "es":  "No se ejecutan en segundo plano.",
+                    "en":  "They don\u0027t run in the background."
+                },
+    "risk":  "moderate",
+    "presets":  [
+                    "recommended",
+                    "advanced"
+                ],
+    "requiresAdmin":  true,
+    "reboot":  false,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "snapshot"
+             },
+    "actions":  [
+                    {
+                        "registry":  "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\AppPrivacy",
+                        "name":  "LetAppsRunInBackground",
+                        "type":  "DWord",
+                        "value":  2,
+                        "default":  null
+                    }
+                ],
+    "details":  {
+                    "es":  "Las apps de la Store no se ejecutan en segundo plano. Sus notificaciones (WhatsApp de la Store, Correo...) pueden no llegar.",
+                    "en":  "Store apps don\u0027t run in the background. Their notifications (Store WhatsApp, Mail...) may not arrive."
+                }
+}

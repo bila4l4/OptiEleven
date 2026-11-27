@@ -1,0 +1,38 @@
+{
+    "id":  "game-hags",
+    "kind":  "tweak",
+    "category":  "Juegos",
+    "order":  230,
+    "name":  {
+                 "es":  "Programación de GPU (HAGS)",
+                 "en":  "GPU scheduling (HAGS)"
+             },
+    "summary":  {
+                    "es":  "La GPU gestiona su propia cola: menos latencia.",
+                    "en":  "The GPU manages its own queue: lower latency."
+                },
+    "risk":  "safe",
+    "presets":  [
+                    "recommended",
+                    "advanced"
+                ],
+    "requiresAdmin":  true,
+    "reboot":  true,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "snapshot"
+             },
+    "actions":  [
+                    {
+                        "registry":  "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers",
+                        "name":  "HwSchMode",
+                        "type":  "DWord",
+                        "value":  2,
+                        "default":  null
+                    }
+                ],
+    "details":  {
+                    "es":  "La GPU gestiona su propia cola de trabajo: menos latencia y menos carga de CPU. Necesario para Frame Generation.",
+                    "en":  "The GPU manages its own work queue: lower latency and less CPU load. Required for Frame Generation."
+                }
+}

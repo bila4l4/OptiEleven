@@ -1,0 +1,37 @@
+{
+    "id":  "app-debloat",
+    "kind":  "tweak",
+    "category":  "Apps",
+    "order":  350,
+    "name":  {
+                 "es":  "Quitar apps preinstaladas",
+                 "en":  "Remove preinstalled apps"
+             },
+    "summary":  {
+                    "es":  "Unas 60 apps: Noticias, Tiempo, Clipchamp…",
+                    "en":  "About 60 apps: News, Weather, Clipchamp…"
+                },
+    "risk":  "moderate",
+    "presets":  [
+                    "recommended",
+                    "advanced"
+                ],
+    "requiresAdmin":  true,
+    "reboot":  false,
+    "reversible":  false,
+    "undo":  {
+                 "type":  "none",
+                 "note":  {
+                              "es":  "No se puede deshacer desde el panel.",
+                              "en":  "Can\u0027t be undone from the panel."
+                          }
+             },
+    "actions":  [
+
+                ],
+    "script":  "app-debloat.tweak.ps1",
+    "details":  {
+                    "es":  "Unas 60 apps para todos los usuarios: Noticias, Tiempo, Clipchamp, Solitaire, Teams personal, Copilot, Outlook (nuevo), Office Hub, To Do, Mapas, Dev Home, Widgets, Skype, Correo y Calendar antiguos, y las patrocinadas (Candy Crush, TikTok, Facebook, Disney+...). Se quedan Fotos, Paint, Bloc de notas, Recortes, Calculadora, Cámara y la Store.",
+                    "en":  "About 60 apps for all users: News, Weather, Clipchamp, Solitaire, personal Teams, Copilot, Outlook (new), Office Hub, To Do, Maps, Dev Home, Widgets, Skype, old Mail and Calendar, and the sponsored ones (Candy Crush, TikTok, Facebook, Disney+...). Photos, Paint, Notepad, Snipping Tool, Calculator, Camera and the Store stay."
+                }
+}

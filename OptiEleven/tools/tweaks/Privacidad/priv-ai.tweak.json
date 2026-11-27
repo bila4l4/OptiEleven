@@ -1,0 +1,99 @@
+{
+    "id":  "priv-ai",
+    "kind":  "tweak",
+    "category":  "Privacidad",
+    "order":  30,
+    "name":  {
+                 "es":  "Sin Copilot ni Recall",
+                 "en":  "No Copilot or Recall"
+             },
+    "summary":  {
+                    "es":  "Desactiva la IA integrada en Windows.",
+                    "en":  "Turns off the AI built into Windows."
+                },
+    "risk":  "safe",
+    "presets":  [
+                    "recommended",
+                    "advanced"
+                ],
+    "requiresAdmin":  true,
+    "reboot":  false,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "snapshot"
+             },
+    "actions":  [
+                    {
+                        "registry":  "HKCU:\\Software\\Policies\\Microsoft\\Windows\\WindowsCopilot",
+                        "name":  "TurnOffWindowsCopilot",
+                        "type":  "DWord",
+                        "value":  1,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsCopilot",
+                        "name":  "TurnOffWindowsCopilot",
+                        "type":  "DWord",
+                        "value":  1,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsAI",
+                        "name":  "DisableAIDataAnalysis",
+                        "type":  "DWord",
+                        "value":  1,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsAI",
+                        "name":  "AllowRecallEnablement",
+                        "type":  "DWord",
+                        "value":  0,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKCU:\\Software\\Policies\\Microsoft\\Windows\\WindowsAI",
+                        "name":  "DisableClickToDo",
+                        "type":  "DWord",
+                        "value":  1,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKLM:\\SOFTWARE\\Policies\\WindowsNotepad",
+                        "name":  "DisableAIFeatures",
+                        "type":  "DWord",
+                        "value":  1,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\Paint",
+                        "name":  "DisableCocreator",
+                        "type":  "DWord",
+                        "value":  1,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\Paint",
+                        "name":  "DisableGenerativeFill",
+                        "type":  "DWord",
+                        "value":  1,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\Paint",
+                        "name":  "DisableImageCreator",
+                        "type":  "DWord",
+                        "value":  1,
+                        "default":  null
+                    },
+                    {
+                        "service":  "WSAIFabricSvc",
+                        "startup":  "Manual",
+                        "default":  "Auto"
+                    }
+                ],
+    "details":  {
+                    "es":  "Desactiva Copilot, Recall, Click to Do, la IA de Paint y del Bloc de notas, y el servicio de IA que arranca con Windows (WSAIFabricSvc).",
+                    "en":  "Turns off Copilot, Recall, Click to Do, the AI in Paint and Notepad, and the AI service that starts with Windows (WSAIFabricSvc)."
+                }
+}

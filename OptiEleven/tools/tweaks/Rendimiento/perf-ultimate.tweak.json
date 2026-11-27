@@ -1,0 +1,32 @@
+{
+    "id":  "perf-ultimate",
+    "kind":  "tweak",
+    "category":  "Rendimiento",
+    "order":  150,
+    "name":  {
+                 "es":  "Plan Rendimiento máximo",
+                 "en":  "Ultimate Performance plan"
+             },
+    "summary":  {
+                    "es":  "La CPU nunca baja de frecuencia. Para sobremesa.",
+                    "en":  "The CPU never clocks down. For desktops."
+                },
+    "risk":  "advanced",
+    "presets":  [
+
+                ],
+    "requiresAdmin":  true,
+    "reboot":  false,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "script"
+             },
+    "actions":  [
+
+                ],
+    "script":  "perf-ultimate.tweak.ps1",
+    "details":  {
+                    "es":  "Crea y activa el plan oculto Ultimate Performance: la CPU nunca baja de frecuencia. Solo para jugar enchufado; más calor y ruido.",
+                    "en":  "Creates and activates the hidden Ultimate Performance plan: the CPU never clocks down. Only for gaming plugged in; more heat and noise."
+                }
+}

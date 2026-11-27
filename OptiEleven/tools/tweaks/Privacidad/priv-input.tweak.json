@@ -1,0 +1,66 @@
+{
+    "id":  "priv-input",
+    "kind":  "tweak",
+    "category":  "Privacidad",
+    "order":  440,
+    "name":  {
+                 "es":  "Escritura y voz privadas",
+                 "en":  "Private typing and voice"
+             },
+    "summary":  {
+                    "es":  "Windows no aprende de lo que escribes o dictas.",
+                    "en":  "Windows stops learning from what you type or say."
+                },
+    "risk":  "safe",
+    "presets":  [
+                    "recommended",
+                    "advanced"
+                ],
+    "requiresAdmin":  true,
+    "reboot":  false,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "snapshot"
+             },
+    "actions":  [
+                    {
+                        "registry":  "HKCU:\\Software\\Microsoft\\InputPersonalization",
+                        "name":  "RestrictImplicitInkCollection",
+                        "type":  "DWord",
+                        "value":  1,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKCU:\\Software\\Microsoft\\InputPersonalization",
+                        "name":  "RestrictImplicitTextCollection",
+                        "type":  "DWord",
+                        "value":  1,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKCU:\\Software\\Microsoft\\InputPersonalization\\TrainedDataStore",
+                        "name":  "HarvestContacts",
+                        "type":  "DWord",
+                        "value":  0,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKCU:\\Software\\Microsoft\\Personalization\\Settings",
+                        "name":  "AcceptedPrivacyPolicy",
+                        "type":  "DWord",
+                        "value":  0,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKCU:\\Software\\Microsoft\\Speech_OneCore\\Settings\\OnlineSpeechPrivacy",
+                        "name":  "HasAccepted",
+                        "type":  "DWord",
+                        "value":  0,
+                        "default":  null
+                    }
+                ],
+    "details":  {
+                    "es":  "Windows deja de aprender de lo que escribes y dibujas, de leer tus contactos para el teclado y de mandar la voz a Microsoft.",
+                    "en":  "Windows stops learning from what you type and draw, reading your contacts for the keyboard, and sending your voice to Microsoft."
+                }
+}

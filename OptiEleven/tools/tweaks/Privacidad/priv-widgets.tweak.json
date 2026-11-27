@@ -1,0 +1,38 @@
+{
+    "id":  "priv-widgets",
+    "kind":  "tweak",
+    "category":  "Privacidad",
+    "order":  60,
+    "name":  {
+                 "es":  "Sin widgets",
+                 "en":  "Widgets off"
+             },
+    "summary":  {
+                    "es":  "Quita el panel de noticias y su proceso.",
+                    "en":  "Removes the news panel and its process."
+                },
+    "risk":  "safe",
+    "presets":  [
+                    "recommended",
+                    "advanced"
+                ],
+    "requiresAdmin":  true,
+    "reboot":  false,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "snapshot"
+             },
+    "actions":  [
+                    {
+                        "registry":  "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Dsh",
+                        "name":  "AllowNewsAndInterests",
+                        "type":  "DWord",
+                        "value":  0,
+                        "default":  null
+                    }
+                ],
+    "details":  {
+                    "es":  "Desactiva el panel de Widgets (y su proceso WebView en segundo plano).",
+                    "en":  "Turns off the Widgets board (and its background WebView process)."
+                }
+}

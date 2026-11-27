@@ -1,0 +1,37 @@
+{
+    "id":  "wu-drivers",
+    "kind":  "tweak",
+    "category":  "Actualizaciones",
+    "order":  300,
+    "name":  {
+                 "es":  "Drivers fuera de Windows Update",
+                 "en":  "No drivers from Windows Update"
+             },
+    "summary":  {
+                    "es":  "Windows no cambia el driver de tu gráfica.",
+                    "en":  "Windows won\u0027t replace your graphics driver."
+                },
+    "risk":  "moderate",
+    "presets":  [
+                    "advanced"
+                ],
+    "requiresAdmin":  true,
+    "reboot":  false,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "snapshot"
+             },
+    "actions":  [
+                    {
+                        "registry":  "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate",
+                        "name":  "ExcludeWUDriversInQualityUpdate",
+                        "type":  "DWord",
+                        "value":  1,
+                        "default":  null
+                    }
+                ],
+    "details":  {
+                    "es":  "Evita que Windows sustituya el driver de AMD/NVIDIA que instalaste. Los drivers de chipset, Wi-Fi y audio tendrás que ponerlos tú.",
+                    "en":  "Stops Windows from replacing the AMD/NVIDIA driver you installed. You\u0027ll have to install chipset, Wi-Fi and audio drivers yourself."
+                }
+}

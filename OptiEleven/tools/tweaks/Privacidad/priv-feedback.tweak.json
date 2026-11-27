@@ -1,0 +1,45 @@
+{
+    "id":  "priv-feedback",
+    "kind":  "tweak",
+    "category":  "Privacidad",
+    "order":  450,
+    "name":  {
+                 "es":  "Sin encuestas",
+                 "en":  "No feedback prompts"
+             },
+    "summary":  {
+                    "es":  "Windows deja de pedir tu opinión.",
+                    "en":  "Windows stops asking for feedback."
+                },
+    "risk":  "safe",
+    "presets":  [
+                    "recommended",
+                    "advanced"
+                ],
+    "requiresAdmin":  true,
+    "reboot":  false,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "snapshot"
+             },
+    "actions":  [
+                    {
+                        "registry":  "HKCU:\\Software\\Microsoft\\Siuf\\Rules",
+                        "name":  "NumberOfSIUFInPeriod",
+                        "type":  "DWord",
+                        "value":  0,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKCU:\\Software\\Microsoft\\Siuf\\Rules",
+                        "name":  "PeriodInNanoSeconds",
+                        "type":  "DWord",
+                        "value":  0,
+                        "default":  null
+                    }
+                ],
+    "details":  {
+                    "es":  "Windows no te vuelve a preguntar \"¿qué te parece...?\" ni manda la respuesta.",
+                    "en":  "Windows stops asking \"how do you like...?\" and doesn\u0027t send the answer."
+                }
+}

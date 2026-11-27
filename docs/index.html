@@ -4,63 +4,124 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>OptiEleven</title>
-<meta name="description" content="Reversible Windows 11 optimizer for gaming. Open it with one PowerShell command.">
+<meta name="description" content="OptiEleven: your Windows 11, in one place. Download it or open it with one PowerShell command.">
 <link rel="icon" href="logo.png">
 <style>
-  :root { --paper: #09090d; --paper2: #111117; --paper3: #1a1a23; --ink: #ededf2; --ink2: #c3c3cf; --muted: #8a8a9c; --rule: #22222d; --accent: #7c5cff; --accent-ink: #ffffff; }
-  @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) { --paper: #f6f6f9; --paper2: #ffffff; --paper3: #eeeef4; --ink: #0b0b12; --ink2: #2e2e3a; --muted: #6b6b7d; --rule: #e3e3ec; --accent: #6d4aff; } }
+  /* Web de descarga: el logo, una frase, el comando para copiar, el botón de descarga y una captura. Mismo verde azulado que la app. */
+  :root { --bg: #f6f7f7; --card: #ffffff; --ink: #1a1c1c; --ink2: #4b5150; --muted: #6b7271; --line: #e1e4e3; --accent: #0d7a72; --accent-ink: #ffffff; --accent-soft: #e2f1ef; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #1b1d1d; --card: #232626; --ink: #edf0ef; --ink2: #c3c9c7; --muted: #959d9b; --line: #323736; --accent: #4cc3b6; --accent-ink: #04211e; --accent-soft: #19302d; } }
   * { box-sizing: border-box; }
-  html { background: var(--paper); }
-  body { margin: 0; background: var(--paper); color: var(--ink); font-size: 0; font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif; }
-  main { font-size: 17px; line-height: 1.5; max-width: 980px; margin: 0 auto; padding: 56px 16px 72px; }
-  .brand { display: flex; align-items: center; gap: 14px; }
-  .brand img { width: 56px; height: 56px; border-radius: 13px; }
-  h1 { font-size: 44px; line-height: 1.1; margin: 0; letter-spacing: -0.01em; }
-  .lede { font-size: 21px; color: var(--ink2); margin: 22px 0 30px; max-width: 640px; }
-  .cmd { display: flex; align-items: stretch; border: 1.5px solid var(--accent); border-radius: 12px; background: var(--paper2); overflow: hidden; max-width: 680px; }
-  .cmd code { flex: 1; padding: 16px 18px; font: 600 17px/1.4 "Cascadia Mono", Consolas, monospace; color: var(--ink); overflow-x: auto; white-space: nowrap; }
-  .cmd button { border: 0; background: var(--accent); color: var(--accent-ink); font: 700 15px "Segoe UI", system-ui, sans-serif; padding: 0 22px; cursor: pointer; }
-  .hint { color: var(--muted); font-size: 15px; margin: 12px 0 0; }
-  .links { display: flex; flex-wrap: wrap; gap: 10px; margin: 28px 0 44px; }
-  .links a { color: var(--ink); text-decoration: none; border: 1px solid var(--rule); background: var(--paper2); border-radius: 9px; padding: 10px 16px; font-weight: 600; font-size: 15px; }
-  .links a:hover { border-color: var(--accent); }
-  .shot { width: 100%; border-radius: 12px; border: 1px solid var(--rule); display: block; }
-  ul { padding-left: 20px; color: var(--ink2); }
+  html { background: var(--bg); }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-size: 0; font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif; }
+  main { font-size: 16px; line-height: 1.55; max-width: 960px; margin: 0 auto; padding: 40px 16px 64px; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .brand { display: flex; align-items: center; gap: 12px; font: 600 20px "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif; }
+  .brand img { width: 36px; height: 36px; border-radius: 8px; }
+  .lang { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: var(--card); }
+  .lang button { border: 0; background: transparent; color: var(--ink2); font: 600 13px "Segoe UI", system-ui, sans-serif; padding: 6px 12px; cursor: pointer; }
+  .lang button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); }
+  h1 { font: 600 44px/1.1 "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif; margin: 56px 0 0; letter-spacing: -0.01em; }
+  .lede { font-size: 20px; color: var(--ink2); margin: 14px 0 32px; max-width: 620px; }
+  .label { font-size: 13px; font-weight: 600; color: var(--muted); margin: 0 0 8px; }
+  .cmd { display: flex; align-items: stretch; border: 1px solid var(--line); border-radius: 8px; background: var(--card); overflow: hidden; max-width: 620px; }
+  .cmd code { flex: 1; padding: 14px 16px; font: 600 16px/1.4 "Cascadia Mono", Consolas, monospace; color: var(--ink); overflow-x: auto; white-space: nowrap; }
+  .cmd button { border: 0; border-left: 1px solid var(--line); background: var(--card); color: var(--accent); font: 600 14px "Segoe UI", system-ui, sans-serif; padding: 0 20px; cursor: pointer; }
+  .cmd button:hover { background: var(--accent-soft); }
+  .hint { color: var(--muted); font-size: 14px; margin: 10px 0 0; max-width: 620px; }
+  .or { display: flex; align-items: center; gap: 12px; max-width: 620px; color: var(--muted); font-size: 13px; margin: 24px 0; }
+  .or::before, .or::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; border-radius: 6px; padding: 11px 18px; font-weight: 600; font-size: 15px; border: 1px solid var(--line); color: var(--ink); background: var(--card); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .btn:hover { border-color: var(--accent); }
+  .req { color: var(--muted); font-size: 14px; margin: 12px 0 0; }
+  picture img { width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--line); display: block; margin-top: 48px; }
+  ul { padding-left: 20px; color: var(--ink2); max-width: 680px; margin: 28px 0 0; }
   li { margin: 6px 0; }
-  footer { color: var(--muted); font-size: 14px; margin-top: 40px; }
-  @media (max-width: 600px) { h1 { font-size: 34px; } .lede { font-size: 18px; } .cmd { flex-direction: column; } .cmd button { padding: 12px; } }
+  footer { color: var(--muted); font-size: 13px; margin-top: 40px; }
+  footer a { color: var(--muted); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media (max-width: 600px) { h1 { font-size: 34px; margin-top: 40px; } .lede { font-size: 18px; } .cmd { flex-direction: column; } .cmd button { border-left: 0; border-top: 1px solid var(--line); padding: 12px; } }
 </style>
 </head>
 <body>
 <main>
-  <div class="brand"><img src="logo.png" alt=""><h1>OptiEleven</h1></div>
-  <p class="lede">A reversible Windows 11 optimizer for gaming. Strip telemetry and bloat, free RAM before you play, and undo any change with one click.</p>
-  <div class="cmd"><code id="cmd">irm bila4l4.github.io/OptiEleven | iex</code><button id="copy" type="button">Copy</button></div>
-  <p class="hint">Right-click Start, open <strong>Terminal</strong>, paste it and press Enter. It downloads the latest release and opens the panel as administrator.</p>
-  <div class="links">
-    <a href="https://github.com/bila4l4/OptiEleven/releases/latest/download/OptiEleven.zip">Download ZIP</a>
-    <a href="https://github.com/bila4l4/OptiEleven">Source on GitHub</a>
-    <a href="https://github.com/bila4l4/OptiEleven/blob/main/run.ps1">Read the script</a>
+  <header>
+    <div class="brand"><img src="logo.png" alt="">OptiEleven</div>
+    <div class="lang" role="group" aria-label="Language"><button type="button" data-lang="en" aria-pressed="true">EN</button><button type="button" data-lang="es" aria-pressed="false">ES</button></div>
+  </header>
+
+  <h1 data-t="title">Your Windows 11, in one place.</h1>
+  <p class="lede" data-t="lede">Clean up, free memory, tune privacy and performance, install apps and repair Windows. Every change can be undone.</p>
+
+  <p class="label" data-t="cmdLabel">Open it with PowerShell</p>
+  <div class="cmd"><code id="cmd">irm optieleven.app | iex</code><button id="copy" type="button" data-t="copy">Copy</button></div>
+  <p class="hint" data-t="hint">Right-click Start, open Terminal, paste it and press Enter. It downloads the latest version, checks it and opens the panel.</p>
+
+  <div class="or" data-t="or">or</div>
+
+  <div class="actions">
+    <a class="btn primary" href="https://github.com/bila4l4/OptiEleven/releases/latest/download/OptiEleven.zip" data-t="download">Download OptiEleven</a>
+    <a class="btn" href="https://github.com/bila4l4/OptiEleven" data-t="source">Source code</a>
   </div>
-  <img class="shot" src="screenshots/settings-dark.png" alt="OptiEleven settings page with the change preview and the change sheet">
+  <p class="req" data-t="req">Windows 11 · Free and open source (MIT) · Unzip it and open OptiEleven.</p>
+
+  <picture>
+    <source srcset="screenshots/home-dark.png" media="(prefers-color-scheme: dark)">
+    <img src="screenshots/home-light.png" width="1256" height="728" alt="OptiEleven home: a PC health ring with privacy, performance, space and startup, and a Free up memory button" data-t-alt="shotAlt">
+  </picture>
+
   <ul>
-    <li>60 tweaks with a preview of every registry value, service and task they change.</li>
-    <li>Everything is backed up and can be reverted, even months later.</li>
-    <li>Boost FPS, Game Booster, cleanup, network, repairs and per-game settings.</li>
-    <li>English and Spanish, dark and light themes. MIT licensed.</li>
+    <li data-t="f1">A health score for your PC, and one button to free memory and temp files.</li>
+    <li data-t="f2">60 tweaks for privacy, performance and games, each one with what it changes.</li>
+    <li data-t="f3">History of every change with its date, and undo for each one.</li>
+    <li data-t="f4">Cleanup, disk space, app installer, network, repairs and a game session mode.</li>
   </ul>
-  <footer>Not affiliated with Microsoft.</footer>
+
+  <footer><span data-t="foot">Not affiliated with Microsoft.</span> · <a href="https://github.com/bila4l4/OptiEleven/blob/main/run.ps1" data-t="script">Read the install script</a></footer>
 </main>
 <script>
+  var T = {
+    es: {
+      title: 'Tu Windows 11, en un solo sitio.',
+      lede: 'Limpia, libera memoria, ajusta la privacidad y el rendimiento, instala apps y repara Windows. Todo se puede deshacer.',
+      cmdLabel: 'Ábrelo con PowerShell', copy: 'Copiar', copied: 'Copiado',
+      hint: 'Clic derecho en Inicio, abre Terminal, pégalo y pulsa Enter. Descarga la última versión, la comprueba y abre el panel.',
+      or: 'o', download: 'Descargar OptiEleven', source: 'Código fuente',
+      req: 'Windows 11 · Gratis y de código abierto (MIT) · Descomprímelo y abre OptiEleven.',
+      shotAlt: 'Inicio de OptiEleven: un anillo con la salud del PC (privacidad, rendimiento, espacio y arranque) y el botón Liberar memoria',
+      f1: 'Una nota de salud para tu PC y un botón para liberar memoria y temporales.',
+      f2: '60 ajustes de privacidad, rendimiento y juegos, cada uno con lo que cambia.',
+      f3: 'Historial de cada cambio con su fecha, y deshacer para cada uno.',
+      f4: 'Limpieza, espacio en disco, instalador de apps, red, reparaciones y un modo para jugar.',
+      foot: 'No está afiliado a Microsoft.', script: 'Leer el script de instalación'
+    },
+    en: { copy: 'Copy', copied: 'Copied' }
+  };
+  var lang = 'en';
+  document.querySelectorAll('[data-t]').forEach(function (el) { T.en[el.dataset.t] = el.textContent; });
+  document.querySelectorAll('[data-t-alt]').forEach(function (el) { T.en[el.dataset.tAlt] = el.alt; });
+  function setLang(l) {
+    lang = l; document.documentElement.lang = l;
+    document.querySelectorAll('[data-t]').forEach(function (el) { var v = T[l][el.dataset.t]; if (v) el.textContent = v; });
+    document.querySelectorAll('[data-t-alt]').forEach(function (el) { var v = T[l][el.dataset.tAlt]; if (v) el.alt = v; });
+    document.querySelectorAll('.lang button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.lang === l)); });
+    try { localStorage.setItem('lang', l); } catch (e) {}
+  }
+  document.querySelectorAll('.lang button').forEach(function (b) { b.addEventListener('click', function () { setLang(b.dataset.lang); }); });
+  var saved = null; try { saved = localStorage.getItem('lang'); } catch (e) {}
+  setLang(saved || ((navigator.language || '').toLowerCase().indexOf('es') === 0 ? 'es' : 'en'));
   document.getElementById('copy').addEventListener('click', function () {
-    var b = this; navigator.clipboard.writeText(document.getElementById('cmd').textContent).then(function () { b.textContent = 'Copied'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });
+    var b = this, text = document.getElementById('cmd').textContent;
+    function done() { b.textContent = T[lang].copied; setTimeout(function () { b.textContent = T[lang].copy; }, 1500); }
+    if (navigator.clipboard) { navigator.clipboard.writeText(text).then(done, function () {}); }
   });
 </script>
 <div hidden>
 <!-- Lo de abajo es el mismo run.ps1: esta página es a la vez HTML y PowerShell.
      Para PowerShell, todo el HTML de arriba está dentro de un comentario de bloque. #>
 # OptiEleven one-line launcher
-#   irm bila4l4.github.io/OptiEleven | iex
+#   irm optieleven.app | iex
 #
 # First run: downloads the latest release from GitHub into %LOCALAPPDATA%\OptiEleven and opens it.
 # Later runs: a quick check on GitHub; if there's a newer release it's installed first, then the panel
@@ -90,12 +151,42 @@
             $rs = $rq.GetResponse(); $loc = $rs.Headers['Location']; $rs.Close()
             if ($loc -match '/releases/tag/([^/?#]+)$') {
                 $tag = [Uri]::UnescapeDataString($Matches[1])
-                return [pscustomobject]@{ Tag = $tag; Url = "https://github.com/$repo/releases/download/$tag/OptiEleven.zip" }
+                $base = "https://github.com/$repo/releases/download/$tag"
+                return [pscustomobject]@{ Tag = $tag; Url = "$base/OptiEleven.zip"; Sums = "$base/SHA256SUMS.txt" }
             }
             Write-Step "Couldn't read the latest version from GitHub."
         }
         catch { Write-Step "Couldn't reach GitHub: $($_.Exception.Message)" }
         $null
+    }
+
+    # Releases since 2.0 carry SHA256SUMS.txt: the zip must match it, or nothing is installed. Older releases
+    # (1.9 and before) have no such file and install as they always did.
+    function Test-Release($Latest, [string]$Zip, [string]$Tmp) {
+        $sums = Join-Path $Tmp 'SHA256SUMS.txt'
+        try { Invoke-WebRequest $Latest.Sums -OutFile $sums -UseBasicParsing -TimeoutSec 60 }
+        catch {
+            $r = $_.Exception.Response
+            if ($r -and [int]$r.StatusCode -eq 404) { Write-Step 'This release has no SHA256SUMS.txt (older release): hash not checked.'; return }
+            throw "couldn't download SHA256SUMS.txt to check the download: $($_.Exception.Message)"
+        }
+        $want = $null
+        foreach ($line in (Get-Content -LiteralPath $sums)) { if ($line -match '^([0-9a-fA-F]{64}) [ *]?OptiEleven\.zip\s*$') { $want = $Matches[1].ToLowerInvariant() } }
+        if (-not $want) { throw 'SHA256SUMS.txt has no line for OptiEleven.zip. Nothing was installed.' }
+        $got = (Get-FileHash -LiteralPath $Zip -Algorithm SHA256).Hash.ToLowerInvariant()
+        if ($got -ne $want) { throw "OptiEleven.zip does not match SHA256SUMS.txt (expected $want, got $got). The download may be damaged or altered. Nothing was installed." }
+        Write-Step 'Download verified (SHA256).'
+    }
+
+    # Signed scripts must have a valid signature; if any file is signed, all of them must be. Unsigned releases are
+    # still accepted for now.
+    function Test-Signatures([string]$Dir) {
+        $sigs = @(Get-ChildItem -LiteralPath $Dir -Recurse -File | Where-Object { $_.Extension -in '.ps1', '.psm1' } | Get-AuthenticodeSignature)
+        $signed = @($sigs | Where-Object { $_.SignerCertificate })
+        if (-not $signed) { Write-Step 'Note: this release is not code-signed yet.'; return }
+        $bad = @($sigs | Where-Object { $_.Status -ne 'Valid' })
+        if ($bad) { throw "$($bad.Count) script(s) without a valid signature, e.g. $($bad[0].Path) ($($bad[0].Status)). Nothing was installed." }
+        Write-Step "Signature valid: $($signed[0].SignerCertificate.Subject)"
     }
 
     # downloads a release into $Dest (replacing it) and returns $true if it worked
@@ -105,9 +196,11 @@
         try {
             $zip = Join-Path $tmp 'OptiEleven.zip'
             Invoke-WebRequest $Latest.Url -OutFile $zip -UseBasicParsing -TimeoutSec 120
+            Test-Release $Latest $zip $tmp
             Expand-Archive -LiteralPath $zip -DestinationPath $tmp -Force
             $src = Join-Path $tmp 'OptiEleven'
             if (-not (Test-Path (Join-Path $src 'OptiEleven.ps1'))) { throw 'the download does not look like an OptiEleven release' }
+            Test-Signatures $src
             Get-ChildItem -LiteralPath $src -Recurse -File | Unblock-File
             Set-Content -LiteralPath (Join-Path $src 'version.txt') -Value $Latest.Tag
             New-Item -ItemType Directory -Path $home_ -Force | Out-Null
@@ -121,9 +214,10 @@
 
     function Open-Panel {
         $a = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-WindowStyle', 'Hidden', '-File', "`"$entry`"")
+        $exe = Join-Path $app 'OptiEleven.exe'   # 2.0 and later; it asks for administrator itself
         try {
             Write-Step 'Opening the panel (accept the administrator prompt)...'
-            Start-Process powershell.exe -ArgumentList $a -Verb RunAs
+            if (Test-Path $exe) { Start-Process $exe } else { Start-Process powershell.exe -ArgumentList $a -Verb RunAs }
         }
         catch {
             # administrator prompt declined: the panel still opens, in read-only mode

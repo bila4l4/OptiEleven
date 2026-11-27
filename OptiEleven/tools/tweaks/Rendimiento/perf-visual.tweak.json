@@ -1,0 +1,51 @@
+{
+    "id":  "perf-visual",
+    "kind":  "tweak",
+    "category":  "Rendimiento",
+    "order":  200,
+    "name":  {
+                 "es":  "Menos efectos visuales",
+                 "en":  "Fewer visual effects"
+             },
+    "summary":  {
+                    "es":  "Sin transparencias ni animaciones de ventanas.",
+                    "en":  "No transparency or window animations."
+                },
+    "risk":  "safe",
+    "presets":  [
+                    "advanced"
+                ],
+    "requiresAdmin":  true,
+    "reboot":  false,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "snapshot"
+             },
+    "actions":  [
+                    {
+                        "registry":  "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+                        "name":  "EnableTransparency",
+                        "type":  "DWord",
+                        "value":  0,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+                        "name":  "TaskbarAnimations",
+                        "type":  "DWord",
+                        "value":  0,
+                        "default":  null
+                    },
+                    {
+                        "registry":  "HKCU:\\Control Panel\\Desktop\\WindowMetrics",
+                        "name":  "MinAnimate",
+                        "type":  "String",
+                        "value":  "0",
+                        "default":  null
+                    }
+                ],
+    "details":  {
+                    "es":  "Quita las transparencias y las animaciones de ventanas y barra de tareas. Requiere cerrar sesión.",
+                    "en":  "Removes transparency and window and taskbar animations. Needs a sign-out."
+                }
+}

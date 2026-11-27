@@ -1,0 +1,36 @@
+{
+    "id":  "app-phonelink",
+    "kind":  "tweak",
+    "category":  "Apps",
+    "order":  570,
+    "name":  {
+                 "es":  "Quitar Enlace móvil",
+                 "en":  "Remove Phone Link"
+             },
+    "summary":  {
+                    "es":  "La app del móvil que se queda en segundo plano.",
+                    "en":  "The phone app that keeps running in the background."
+                },
+    "risk":  "moderate",
+    "presets":  [
+                    "advanced"
+                ],
+    "requiresAdmin":  true,
+    "reboot":  false,
+    "reversible":  false,
+    "undo":  {
+                 "type":  "none",
+                 "note":  {
+                              "es":  "No se puede deshacer desde el panel.",
+                              "en":  "Can\u0027t be undone from the panel."
+                          }
+             },
+    "actions":  [
+
+                ],
+    "script":  "app-phonelink.tweak.ps1",
+    "details":  {
+                    "es":  "La app que conecta el móvil con el PC y se queda en segundo plano (PhoneExperienceHost, unos 150 MB aquí). Se puede reinstalar desde la Store.",
+                    "en":  "The app that connects your phone to the PC and stays in the background (PhoneExperienceHost, about 150 MB here). It can be reinstalled from the Store."
+                }
+}

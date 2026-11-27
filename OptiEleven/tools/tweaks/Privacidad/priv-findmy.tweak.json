@@ -1,0 +1,37 @@
+{
+    "id":  "priv-findmy",
+    "kind":  "tweak",
+    "category":  "Privacidad",
+    "order":  490,
+    "name":  {
+                 "es":  "Sin Encontrar mi dispositivo",
+                 "en":  "Find my device off"
+             },
+    "summary":  {
+                    "es":  "Windows deja de guardar la ubicación del equipo.",
+                    "en":  "Windows stops saving the PC\u0027s location."
+                },
+    "risk":  "moderate",
+    "presets":  [
+
+                ],
+    "requiresAdmin":  true,
+    "reboot":  false,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "snapshot"
+             },
+    "actions":  [
+                    {
+                        "registry":  "HKLM:\\SOFTWARE\\Policies\\Microsoft\\FindMyDevice",
+                        "name":  "AllowFindMyDevice",
+                        "type":  "DWord",
+                        "value":  0,
+                        "default":  null
+                    }
+                ],
+    "details":  {
+                    "es":  "Windows deja de guardar la ubicación del equipo en tu cuenta. En un portátil es lo que te ayuda si te lo roban.",
+                    "en":  "Windows stops saving your PC\u0027s location to your account. On a laptop, that\u0027s what helps if it gets stolen."
+                }
+}
