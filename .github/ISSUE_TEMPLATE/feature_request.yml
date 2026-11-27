@@ -1,5 +1,5 @@
-﻿name: Feature or tweak request
-description: Suggest a new tweak, page or improvement
+﻿name: Idea for a tool or tweak
+description: Suggest a new tool, tweak or improvement
 labels: [enhancement]
 body:
   - type: textarea
@@ -8,3 +8,17 @@ body:
       label: What you'd like
       description: What it should do, and what it costs or breaks if you know. Links to sources are welcome.
     validations: { required: true }
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What kind of change is it?
+      options:
+        - A new tweak
+        - A new tool or page
+        - An improvement to something that exists
+    validations: { required: true }
+  - type: textarea
+    id: undo
+    attributes:
+      label: How is it undone?
+      description: Every change in OptiEleven has to be reversible. If you know how to put it back, say so.

@@ -1,22 +1,40 @@
 ﻿name: Bug report
-description: Something doesn't work or a tweak broke something
+description: Something doesn't work, or a tweak broke something
 labels: [bug]
 body:
+  - type: markdown
+    attributes:
+      value: Thanks for reporting. Most changes can be undone from **History** in the panel, so try that first if a tweak broke something.
+  - type: input
+    id: version
+    attributes:
+      label: OptiEleven version
+      description: Shown in the release you downloaded, for example 2.0.0
+    validations: { required: true }
   - type: input
     id: windows
     attributes:
       label: Windows version
-      description: Run `winver` (for example 11 Pro 24H2, build 26100.4061)
+      description: Run `winver`, for example 11 Pro 24H2, build 26100.4061
+    validations: { required: true }
+  - type: dropdown
+    id: how
+    attributes:
+      label: How did you open it?
+      options:
+        - irm optieleven.app | iex
+        - OptiEleven.exe from the zip
+        - OptiEleven.ps1 from a git checkout
     validations: { required: true }
   - type: textarea
     id: what
     attributes:
       label: What happened
-      description: What you did, what you expected and what happened instead. Name the tweak or page if you know it.
+      description: What you did, what you expected and what happened instead. Name the page or tweak if you know it.
     validations: { required: true }
   - type: textarea
     id: log
     attributes:
-      label: Log
-      description: The relevant lines of %ProgramData%\OptiEleven\panel.log (System → Backups → Open folder)
+      label: Activity log
+      description: Turn on *Show technical details*, open **Activity** and paste the relevant lines (also in `%ProgramData%\OptiEleven\panel.log`).
       render: text

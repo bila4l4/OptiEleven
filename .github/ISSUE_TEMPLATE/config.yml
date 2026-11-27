@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security problem privately
+    url: https://github.com/bila4l4/OptiEleven/security/advisories/new
+    about: Please don't open a public issue for security problems.
+  - name: Website and download
+    url: https://optieleven.app
+    about: The one-line install command and the latest release.
