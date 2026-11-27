@@ -5,7 +5,7 @@
     (%ProgramData%\OptiEleven\secure\backup.json) y "Revertir" lo restaura.
   - Uso:
       .\OptiEleven.ps1                          -> abre el panel
-      .\OptiEleven.ps1 -Page m-clean            -> abre directamente un apartado (m-apps, m-startup, m-clean, m-net, m-hw, tools...)
+      .\OptiEleven.ps1 -Page cleanup            -> abre directamente un apartado (el id de su tool.json: install, startup, cleanup, network, hardware, tools...)
       .\OptiEleven.ps1 -Status                  -> muestra el estado de cada ajuste (sin cambiar nada)
       .\OptiEleven.ps1 -Preset Recomendado -NoGui  -> aplica un preset sin interfaz (requiere admin)
       .\OptiEleven.ps1 -Config perfil.json -NoGui  -> aplica un perfil exportado desde el panel (requiere admin)
@@ -1662,31 +1662,58 @@ $BrandColors = @{
 </Window>
 '@
 
-$Pages = [ordered]@{
-    'home'            = @{ Label = 'Inicio'; Icon = 'house-line'; Module = 'New-HomePage'; Title = 'Bienvenido a OptiEleven'; Desc = 'Optimiza Windows 11 para jugar, sin perder la posibilidad de volver atrás.' }
-    'all'             = @{ Label = 'Ajustes'; Icon = 'sliders-horizontal'; Tab = 'Todos'; Title = 'Ajustes'; Desc = 'Elige un ajuste para ver qué cambia. Los cambios se apuntan en la hoja y se aplican juntos.' }
-    'Privacidad'      = @{ Tab = 'Privacidad';  Icon = 'lock-simple';      Title = 'Privacidad';      Desc = 'Telemetría, publicidad, IA y lo que Windows envía sin pedirlo.' }
-    'Servicios'       = @{ Tab = 'Servicios';   Icon = 'gear-six';         Title = 'Servicios';       Desc = 'Servicios que arrancan con Windows y no hacen falta para jugar.' }
-    'Rendimiento'     = @{ Tab = 'Rendimiento'; Icon = 'gauge';            Title = 'Rendimiento';     Desc = 'Energía, prioridades y lo que compite con el juego por la CPU.' }
-    'Latencia'        = @{ Tab = 'Latencia';    Icon = 'timer';            Title = 'Latencia';        Desc = 'Energía de USB y PCIe, núcleos, red e interrupciones. Pruébalos de uno en uno.' }
-    'Juegos'          = @{ Tab = 'Juegos';      Icon = 'game-controller';  Title = 'Juegos';          Desc = 'GPU, ratón, teclado y grabación.' }
-    'Actualizaciones' = @{ Tab = 'Updates';     Icon = 'arrows-clockwise'; Title = 'Windows Update';  Desc = 'Que las actualizaciones lleguen cuando tú quieras, sin reinicios ni drivers cambiados.' }
-    'Interfaz'        = @{ Tab = 'Interfaz';    Icon = 'magic-wand';       Title = 'Interfaz';        Desc = 'Escritorio y barra de tareas. No cambian los FPS.' }
-    'Apps'            = @{ Tab = 'Apps';        Icon = 'app-window';       Title = 'Apps';            Desc = 'Apps de serie, patrocinadas y componentes antiguos.' }
-    'h-jugar'         = @{ Header = 'Para jugar' }
-    'm-boost'         = @{ Label = 'Game Booster';  Icon = 'rocket-launch';   Module = 'New-BoosterPage';  Title = 'Game Booster';        Desc = 'Antes de jugar, cierra lo que sobra y pausa servicios. Al terminar, todo vuelve a como estaba.' }
-    'm-games'         = @{ Label = 'Mis juegos';    Icon = 'joystick';        Module = 'New-GamesPage';    Title = 'Mis juegos';          Desc = 'Tus juegos de Steam, Epic y GOG, con ajustes de Windows para cada uno.' }
-    'h-tools'         = @{ Header = 'Herramientas' }
-    'm-apps'          = @{ Label = 'Instalar apps'; Icon = 'download-simple'; Module = 'New-AppsPage';     Title = 'Instalar apps';       Desc = 'Launchers, Discord, monitorización y librerías para juegos, con winget.' }
-    'm-startup'       = @{ Label = 'Arranque';        Icon = 'sign-in';         Module = 'New-StartupPage';  Title = 'Programas de inicio'; Desc = 'Lo que arranca con Windows y se queda en segundo plano mientras juegas.' }
-    'm-clean'         = @{ Label = 'Limpieza';      Icon = 'broom';           Module = 'New-CleanerPage';  Title = 'Limpieza';            Desc = 'Temporales, cachés y restos de actualizaciones. Primero ves cuánto ocupa cada cosa.' }
-    'm-disk'          = @{ Label = 'Espacio en disco'; Icon = 'hard-drives'; Module = 'New-DiskPage'; Title = 'Espacio en disco'; Desc = 'Qué carpetas y archivos ocupan más en cada disco, como WinDirStat.' }
-    'm-net'           = @{ Label = 'Red';           Icon = 'wifi-high';       Module = 'New-NetworkPage';  Title = 'Red y DNS';           Desc = 'Tu conexión, la latencia al router y a los DNS públicos, y con cuál quedarte.' }
-    'm-repair'        = @{ Label = 'Reparar';       Icon = 'wrench';          Module = 'New-RepairPage';   Title = 'Reparar Windows';     Desc = 'Las reparaciones de siempre, cada una en su ventana para que veas lo que hace.' }
-    'm-hw'            = @{ Label = 'Equipo';        Icon = 'laptop';          Module = 'New-HardwarePage'; Title = 'Tu equipo';           Desc = 'Procesador, gráfica, memoria, discos y el estado de Windows que afecta a los juegos.' }
-    'tools'           = @{ Label = 'Sistema';       Icon = 'floppy-disk';     Title = 'Sistema';  Desc = 'Copias de seguridad, perfiles para otros equipos y el Explorador.' }
-    'log'             = @{ Label = 'Actividad';     Icon = 'scroll';          Title = 'Actividad'; Desc = 'Todo lo que ha hecho el panel en esta sesión.' }
+# ---------- herramientas: cada carpeta de tools\ trae su tool.json y su tool.ps1; el núcleo no conoce ninguna por su nombre
+$script:AppDir = $PSScriptRoot
+function Get-ToolText($Value) {
+    # textos del manifiesto: { "es": "...", "en": "..." } (o un texto suelto); si falta el idioma, el español
+    if ($null -eq $Value -or $Value -is [string]) { return [string]$Value }
+    $x = $Value.$($script:LangCode); if (-not $x) { $x = $Value.es }
+    [string]$x
 }
+function Get-Tools([string]$Dir) {
+    $seen = @{}
+    foreach ($f in Get-ChildItem -LiteralPath $Dir -Filter 'tool.json' -Recurse -ErrorAction SilentlyContinue | Sort-Object FullName) {
+        try {
+            $m = [IO.File]::ReadAllText($f.FullName, [Text.Encoding]::UTF8) | ConvertFrom-Json
+            $miss = @('id', 'kind', 'category', 'name', 'icon', 'view', 'risk', 'requiresAdmin', 'reversible', 'undo' | Where-Object { $null -eq $m.$_ })
+            if ($miss.Count) { throw "faltan $($miss -join ', ')" }
+            if ($m.risk -notin 'safe', 'moderate', 'advanced') { throw "riesgo desconocido: $($m.risk)" }
+            if ($seen.ContainsKey($m.id)) { throw "id repetido: $($m.id)" }
+            # las claves de página no distinguen mayúsculas: "apps" pisaría la pestaña de ajustes "Apps"
+            if ($m.id -in (@('all', 'tools', 'log') + @($Tweaks | ForEach-Object { $_.Cat })) -or $m.id -like 'h-*') { throw "id reservado: $($m.id)" }
+            $seen[$m.id] = $true
+            $m | Add-Member -NotePropertyName Dir -NotePropertyValue $f.DirectoryName
+            $m
+        } catch { Write-Log "Herramienta no cargada ($($f.Directory.Name)): $($_.Exception.Message)" 'WARN' }   # una rota no tumba las demás
+    }
+}
+$script:Tools = @(Get-Tools (Join-Path $PSScriptRoot 'tools'))
+# PS 5.1: ConvertFrom-Json devuelve la lista como un solo objeto; sacarla por una variable la desenrolla
+$ToolCats = @(try { $j = [IO.File]::ReadAllText((Join-Path $PSScriptRoot 'tools\categories.json'), [Text.Encoding]::UTF8) | ConvertFrom-Json; $j } catch { })
+function ConvertTo-PageDef($m) {
+    @{ Label = Get-ToolText $m.name; Icon = $m.icon; Module = $m.view; Color = $m.color; OnShow = $m.onShow; Tool = $m
+       Title = $(if ($m.title) { Get-ToolText $m.title } else { Get-ToolText $m.name }); Desc = Get-ToolText $m.summary }
+}
+function Get-CatTools([string]$Cat) { @($script:Tools | Where-Object category -eq $Cat | Sort-Object { [int]$_.order }) }
+
+$Pages = [ordered]@{}
+foreach ($m in Get-CatTools 'start') { $Pages[$m.id] = ConvertTo-PageDef $m }
+$Pages['all'] = @{ Label = 'Ajustes'; Icon = 'sliders-horizontal'; Tab = 'Todos'; Title = 'Ajustes'; Desc = 'Elige un ajuste para ver qué cambia. Los cambios se apuntan en la hoja y se aplican juntos.' }
+$Pages['Privacidad'] = @{ Tab = 'Privacidad';  Icon = 'lock-simple';      Title = 'Privacidad';      Desc = 'Telemetría, publicidad, IA y lo que Windows envía sin pedirlo.' }
+$Pages['Servicios'] = @{ Tab = 'Servicios';   Icon = 'gear-six';         Title = 'Servicios';       Desc = 'Servicios que arrancan con Windows y no hacen falta para jugar.' }
+$Pages['Rendimiento'] = @{ Tab = 'Rendimiento'; Icon = 'gauge';            Title = 'Rendimiento';     Desc = 'Energía, prioridades y lo que compite con el juego por la CPU.' }
+$Pages['Latencia'] = @{ Tab = 'Latencia';    Icon = 'timer';            Title = 'Latencia';        Desc = 'Energía de USB y PCIe, núcleos, red e interrupciones. Pruébalos de uno en uno.' }
+$Pages['Juegos'] = @{ Tab = 'Juegos';      Icon = 'game-controller';  Title = 'Juegos';          Desc = 'GPU, ratón, teclado y grabación.' }
+$Pages['Actualizaciones'] = @{ Tab = 'Updates';     Icon = 'arrows-clockwise'; Title = 'Windows Update';  Desc = 'Que las actualizaciones lleguen cuando tú quieras, sin reinicios ni drivers cambiados.' }
+$Pages['Interfaz'] = @{ Tab = 'Interfaz';    Icon = 'magic-wand';       Title = 'Interfaz';        Desc = 'Escritorio y barra de tareas. No cambian los FPS.' }
+$Pages['Apps'] = @{ Tab = 'Apps';        Icon = 'app-window';       Title = 'Apps';            Desc = 'Apps de serie, patrocinadas y componentes antiguos.' }
+foreach ($c in @($ToolCats | Where-Object id -ne 'start' | Sort-Object { [int]$_.order })) {
+    $list = Get-CatTools $c.id; if (-not $list.Count) { continue }
+    $Pages["h-$($c.id)"] = @{ Header = Get-ToolText $c.name }
+    foreach ($m in $list) { $Pages[$m.id] = ConvertTo-PageDef $m }
+}
+$Pages['tools'] = @{ Label = 'Sistema';       Icon = 'floppy-disk';     Title = 'Sistema';  Desc = 'Copias de seguridad, perfiles para otros equipos y el Explorador.' }
+$Pages['log'] = @{ Label = 'Actividad';     Icon = 'scroll';          Title = 'Actividad'; Desc = 'Todo lo que ha hecho el panel en esta sesión.' }
 
 $ToolDefs = @(
     @{ Icon = 'clock-counter-clockwise'; Name = 'Punto de restauración'; Desc = 'Una copia del sistema a la que volver si algo sale mal.'; Button = 'Crear punto'; Admin = $true
@@ -1983,7 +2010,7 @@ try {
         $i = 0
         foreach ($it in $Items) { if ($i -ge $Max) { break }; if ($it.Visibility -eq 'Visible') { Start-FadeIn $it ($i * 28) 8; $i++ } }
     }
-    foreach ($m in Get-ChildItem -LiteralPath (Join-Path $PSScriptRoot 'modules') -Filter *.ps1 -ErrorAction SilentlyContinue) { . $m.FullName }
+    foreach ($tool in $script:Tools) { $p = Join-Path $tool.Dir 'tool.ps1'; if (Test-Path -LiteralPath $p) { . $p } }
 
     # ---------- tema
     function Get-Luma([string]$Hex) { $c = [Windows.Media.ColorConverter]::ConvertFromString($Hex); (0.2126 * $c.R + 0.7152 * $c.G + 0.0722 * $c.B) / 255 }
@@ -2132,8 +2159,8 @@ try {
     else { $ui.AdminIcon.Content = (New-Icon 'lock-simple' 18 'Ink2'); $ui.AdminTitle.Text = (T 'Solo lectura'); $ui.AdminChip.ToolTip = (T 'Ábrelo con OptiEleven.cmd para aplicar cambios.') }
 
     # ---------- navegación: cada apartado con su color
-    $NavColors = @{ 'home' = 'Accent'; 'all' = 'Accent'; 'm-boost' = 'Cat-Rendimiento'; 'm-games' = 'Cat-Juegos'; 'm-apps' = 'Cat-Actualizaciones'; 'm-startup' = 'Cat-Servicios'
-                    'm-clean' = 'Cat-Interfaz'; 'm-disk' = 'Cat-Apps'; 'm-net' = 'Cat-Privacidad'; 'm-repair' = 'Cat-Latencia'; 'm-hw' = 'Cat-Apps'; 'tools' = 'Cat-Servicios'; 'log' = 'Ink2' }
+    $NavColors = @{ 'all' = 'Accent'; 'tools' = 'Cat-Servicios'; 'log' = 'Ink2' }
+    foreach ($k in $Pages.Keys) { if ($Pages[$k].Color) { $NavColors[$k] = $Pages[$k].Color } }   # el de cada herramienta, de su tool.json
     $script:NavParts = @{}
     foreach ($key in $Pages.Keys) {
         $pg = $Pages[$key]
@@ -2529,12 +2556,7 @@ try {
             $ui.ModuleHost.Content = $script:ModuleCache[$Key]
             $ui.ModulePage.ScrollToTop()
             if ($ui.ModuleHost.Content -is [Windows.Controls.Panel]) { Start-Stagger @($ui.ModuleHost.Content.Children) 10 } else { Start-FadeIn $ui.ModuleHost }
-            if ($Key -eq 'm-clean' -and $script:CleanFirstScan) {
-                $script:CleanFirstScan = $false
-                # el análisis bloquea unos segundos: si el panel aún está arrancando, se hace al terminar de comprobar los ajustes
-                if ($script:StatusReady) { [void]$window.Dispatcher.BeginInvoke([Action] { Invoke-CleanScan }, [System.Windows.Threading.DispatcherPriority]::Background) }
-                else { $script:CleanPending = $true }
-            }
+            if ($pg.OnShow) { try { & $pg.OnShow } catch { Write-Log "$($pg.Title): $($_.Exception.Message)" 'ERROR' } }   # "onShow" del tool.json
         }
     }
     $ui.Nav.Add_SelectionChanged({ Update-NavColors; if ($ui.Nav.SelectedItem) { Show-Page $ui.Nav.SelectedItem.Tag } })

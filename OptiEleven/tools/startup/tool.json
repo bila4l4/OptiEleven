@@ -1,0 +1,31 @@
+{
+    "id":  "startup",
+    "kind":  "tool",
+    "category":  "tools",
+    "order":  20,
+    "name":  {
+                 "es":  "Arranque",
+                 "en":  "Startup"
+             },
+    "title":  {
+                  "es":  "Programas de inicio",
+                  "en":  "Startup programs"
+              },
+    "summary":  {
+                    "es":  "Lo que arranca con Windows y se queda en segundo plano mientras juegas.",
+                    "en":  "What starts with Windows and stays in the background while you play."
+                },
+    "icon":  "sign-in",
+    "color":  "Cat-Servicios",
+    "view":  "New-StartupPage",
+    "risk":  "safe",
+    "requiresAdmin":  false,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "toggle",
+                 "note":  {
+                              "es":  "Vuelve a activarla en la misma lista.",
+                              "en":  "Turn it back on in the same list."
+                          }
+             }
+}

@@ -1,0 +1,31 @@
+{
+    "id":  "install",
+    "kind":  "tool",
+    "category":  "tools",
+    "order":  10,
+    "name":  {
+                 "es":  "Instalar apps",
+                 "en":  "Install apps"
+             },
+    "title":  {
+                  "es":  "Instalar apps",
+                  "en":  "Install apps"
+              },
+    "summary":  {
+                    "es":  "Launchers, Discord, monitorización y librerías para juegos, con winget.",
+                    "en":  "Launchers, Discord, monitoring and game runtimes, with winget."
+                },
+    "icon":  "download-simple",
+    "color":  "Cat-Actualizaciones",
+    "view":  "New-AppsPage",
+    "risk":  "safe",
+    "requiresAdmin":  false,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "manual",
+                 "note":  {
+                              "es":  "Las apps se desinstalan desde Configuración \u003e Aplicaciones.",
+                              "en":  "Uninstall apps from Settings \u003e Apps."
+                          }
+             }
+}

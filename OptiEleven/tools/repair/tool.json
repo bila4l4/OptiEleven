@@ -1,0 +1,31 @@
+{
+    "id":  "repair",
+    "kind":  "tool",
+    "category":  "tools",
+    "order":  60,
+    "name":  {
+                 "es":  "Reparar",
+                 "en":  "Repair"
+             },
+    "title":  {
+                  "es":  "Reparar Windows",
+                  "en":  "Repair Windows"
+              },
+    "summary":  {
+                    "es":  "Las reparaciones de siempre, cada una en su ventana para que veas lo que hace.",
+                    "en":  "The classic repairs, each in its own window so you can see what it does."
+                },
+    "icon":  "wrench",
+    "color":  "Cat-Latencia",
+    "view":  "New-RepairPage",
+    "risk":  "moderate",
+    "requiresAdmin":  true,
+    "reversible":  false,
+    "undo":  {
+                 "type":  "none",
+                 "note":  {
+                              "es":  "Son reparaciones de Windows (SFC, DISM...). Crea antes un punto de restauración si quieres poder volver.",
+                              "en":  "These are Windows repairs (SFC, DISM...). Create a restore point first if you want a way back."
+                          }
+             }
+}

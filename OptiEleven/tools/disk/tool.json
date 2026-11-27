@@ -1,0 +1,31 @@
+{
+    "id":  "disk",
+    "kind":  "tool",
+    "category":  "tools",
+    "order":  40,
+    "name":  {
+                 "es":  "Espacio en disco",
+                 "en":  "Disk space"
+             },
+    "title":  {
+                  "es":  "Espacio en disco",
+                  "en":  "Disk space"
+              },
+    "summary":  {
+                    "es":  "Qué carpetas y archivos ocupan más en cada disco, como WinDirStat.",
+                    "en":  "Which folders and files take the most space on each drive, like WinDirStat."
+                },
+    "icon":  "hard-drives",
+    "color":  "Cat-Apps",
+    "view":  "New-DiskPage",
+    "risk":  "moderate",
+    "requiresAdmin":  false,
+    "reversible":  "partial",
+    "undo":  {
+                 "type":  "recycle-bin",
+                 "note":  {
+                              "es":  "Lo que va a la papelera se recupera desde ahí. Eliminar para siempre no se puede deshacer.",
+                              "en":  "What goes to the Recycle Bin can be restored from there. Delete permanently cannot be undone."
+                          }
+             }
+}

@@ -1,0 +1,22 @@
+[
+    {
+        "id":  "start",
+        "order":  0
+    },
+    {
+        "id":  "gaming",
+        "order":  10,
+        "name":  {
+                     "es":  "Para jugar",
+                     "en":  "For gaming"
+                 }
+    },
+    {
+        "id":  "tools",
+        "order":  20,
+        "name":  {
+                     "es":  "Herramientas",
+                     "en":  "Tools"
+                 }
+    }
+]

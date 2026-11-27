@@ -1,0 +1,31 @@
+{
+    "id":  "games",
+    "kind":  "tool",
+    "category":  "gaming",
+    "order":  20,
+    "name":  {
+                 "es":  "Mis juegos",
+                 "en":  "My games"
+             },
+    "title":  {
+                  "es":  "Mis juegos",
+                  "en":  "My games"
+              },
+    "summary":  {
+                    "es":  "Tus juegos de Steam, Epic y GOG, con ajustes de Windows para cada uno.",
+                    "en":  "Your Steam, Epic and GOG games, with Windows settings for each one."
+                },
+    "icon":  "joystick",
+    "color":  "Cat-Juegos",
+    "view":  "New-GamesPage",
+    "risk":  "safe",
+    "requiresAdmin":  false,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "toggle",
+                 "note":  {
+                              "es":  "Cada ajuste se quita con el mismo interruptor.",
+                              "en":  "Turn each setting off with the same switch."
+                          }
+             }
+}

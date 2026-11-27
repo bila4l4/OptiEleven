@@ -239,7 +239,7 @@ Read-Host ($($m.Close)) | Out-Null
 # Se compila aquí mismo (assets\installer.cs) con el compilador de C# que trae Windows, sin descargar nada.
 function ConvertTo-CsString([string]$x) { $x.Replace('\', '\\').Replace('"', '\"') }
 function Save-AppInstallerExe([object[]]$Apps, [string]$Path) {
-    $assets = Join-Path (Split-Path $PSScriptRoot -Parent) 'assets'
+    $assets = Join-Path $script:AppDir 'assets'
     $rows = ($Apps | ForEach-Object { '        new string[] {{ "{0}", "{1}", "{2}" }},' -f (ConvertTo-CsString $_.Id), (ConvertTo-CsString (T $_.Name)), (ConvertTo-CsString ([string]$_.Args)) }) -join "`r`n"
     $m = [ordered]@{
         '__TITLE__' = T 'OptiEleven - instalador de apps'; '__INTRO__' = T 'Instalando {0} apps con winget. Puedes dejarlo trabajando.'
@@ -271,7 +271,7 @@ function Get-SelectedApps { @(foreach ($grp in $AppCatalog.Values) { foreach ($a
 
 # logo real de la app (assets\apps\<id>.png, de la base de iconos de UniGetUI y de Dashboard Icons); si no hay, el icono vectorial
 function New-AppLogo($App, [double]$Box = 40) {
-    $file = Join-Path (Split-Path $PSScriptRoot -Parent) "assets\apps\$(($App.Id.ToLower() -replace '[^a-z0-9.-]', '_')).png"
+    $file = Join-Path $script:AppDir "assets\apps\$(($App.Id.ToLower() -replace '[^a-z0-9.-]', '_')).png"
     if (-not (Test-Path -LiteralPath $file)) { return (New-IconWell $App.Icon $Box) }
     $w = [Windows.Controls.Border]::new(); $w.Width = $Box; $w.Height = $Box; $w.CornerRadius = 10; $w.VerticalAlignment = 'Center'
     $w.SetResourceReference([Windows.Controls.Border]::BackgroundProperty, 'Paper3')

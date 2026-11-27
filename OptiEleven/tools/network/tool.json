@@ -1,0 +1,31 @@
+{
+    "id":  "network",
+    "kind":  "tool",
+    "category":  "tools",
+    "order":  50,
+    "name":  {
+                 "es":  "Red",
+                 "en":  "Network"
+             },
+    "title":  {
+                  "es":  "Red y DNS",
+                  "en":  "Network and DNS"
+              },
+    "summary":  {
+                    "es":  "Tu conexión, la latencia al router y a los DNS públicos, y con cuál quedarte.",
+                    "en":  "Your connection, latency to the router and to public DNS, and which one to keep."
+                },
+    "icon":  "wifi-high",
+    "color":  "Cat-Privacidad",
+    "view":  "New-NetworkPage",
+    "risk":  "safe",
+    "requiresAdmin":  true,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "toggle",
+                 "note":  {
+                              "es":  "Elige Automático para volver a los DNS de tu router.",
+                              "en":  "Pick Automatic to go back to your router\u0027s DNS."
+                          }
+             }
+}

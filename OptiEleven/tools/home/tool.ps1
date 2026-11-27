@@ -2,11 +2,11 @@
 
 $HomeFeatures = @(
     @{ Key = 'all';      Icon = 'sliders-horizontal'; Color = 'Accent';              Title = 'Tweaks';        Desc = '60 ajustes de privacidad, servicios, rendimiento y latencia, todos reversibles.' }
-    @{ Key = 'm-boost';  Icon = 'rocket-launch';      Color = 'Cat-Rendimiento';     Title = 'Game Booster';  Desc = 'Boost FPS de un clic: libera RAM, cierra lo que sobra y limpia antes de jugar.' }
-    @{ Key = 'm-apps';   Icon = 'download-simple';    Color = 'Cat-Actualizaciones'; Title = 'Instalar apps'; Desc = 'Más de 100 apps con su logo y un instalador único, como Ninite.' }
-    @{ Key = 'm-clean';  Icon = 'broom';              Color = 'Cat-Interfaz';        Title = 'Limpieza';      Desc = 'Temporales, cachés y restos de actualizaciones. Ves cuánto ocupa antes de borrar.' }
-    @{ Key = 'm-net';    Icon = 'wifi-high';          Color = 'Cat-Privacidad';      Title = 'Red';           Desc = 'Test de velocidad, latencia y DNS más rápidos con un clic.' }
-    @{ Key = 'm-repair'; Icon = 'wrench';             Color = 'Cat-Latencia';        Title = 'Reparar';       Desc = 'DISM, SFC, red, Windows Update y Store: las reparaciones de siempre.' }
+    @{ Key = 'booster';  Icon = 'rocket-launch';      Color = 'Cat-Rendimiento';     Title = 'Game Booster';  Desc = 'Boost FPS de un clic: libera RAM, cierra lo que sobra y limpia antes de jugar.' }
+    @{ Key = 'install';   Icon = 'download-simple';    Color = 'Cat-Actualizaciones'; Title = 'Instalar apps'; Desc = 'Más de 100 apps con su logo y un instalador único, como Ninite.' }
+    @{ Key = 'cleanup';  Icon = 'broom';              Color = 'Cat-Interfaz';        Title = 'Limpieza';      Desc = 'Temporales, cachés y restos de actualizaciones. Ves cuánto ocupa antes de borrar.' }
+    @{ Key = 'network';    Icon = 'wifi-high';          Color = 'Cat-Privacidad';      Title = 'Red';           Desc = 'Test de velocidad, latencia y DNS más rápidos con un clic.' }
+    @{ Key = 'repair'; Icon = 'wrench';             Color = 'Cat-Latencia';        Title = 'Reparar';       Desc = 'DISM, SFC, red, Windows Update y Store: las reparaciones de siempre.' }
 )
 
 function New-HomePage {
@@ -17,7 +17,7 @@ function New-HomePage {
     $hero = [Windows.Controls.Border]::new(); $hero.CornerRadius = 18; $hero.Padding = '32,30,32,30'; $hero.Margin = '0,0,0,16'; $hero.BorderThickness = 1
     $hero.SetResourceReference($BgP, 'Glass'); $hero.SetResourceReference($BrP, 'GlassEdge')
     $hg = New-Cols @('Auto', '*')
-    $logoFile = Join-Path (Split-Path $PSScriptRoot -Parent) 'assets\logo-tile-512.png'
+    $logoFile = Join-Path $script:AppDir 'assets\logo-tile-512.png'
     if (Test-Path $logoFile) {
         $bi = [Windows.Media.Imaging.BitmapImage]::new(); $bi.BeginInit(); $bi.CacheOption = 'OnLoad'; $bi.UriSource = [Uri]$logoFile; $bi.DecodePixelWidth = 192; $bi.EndInit(); $bi.Freeze()
         $img = [Windows.Controls.Image]::new(); $img.Source = $bi; $img.Width = 84; $img.Height = 84; $img.VerticalAlignment = 'Top'; $img.Margin = '0,4,26,0'
@@ -43,7 +43,7 @@ function New-HomePage {
     $b1.ToolTip = (T 'Marca los tweaks seguros en la hoja de cambios. Nada se aplica hasta que pulses Aplicar cambios.')
     $b1.Add_Click({ Select-NavKey 'all'; Select-Preset 'R' 'Recomendado' })
     $b2 = New-Btn 'Boost FPS'; $b2.MinHeight = 48; $b2.FontSize = 15; $b2.Padding = '22,0'; $b2.Margin = '0,0,10,0'
-    $b2.Add_Click({ Select-NavKey 'm-boost' })
+    $b2.Add_Click({ Select-NavKey 'booster' })
     $b3 = New-Btn 'Ver todos los tweaks'; $b3.MinHeight = 48; $b3.FontSize = 15; $b3.Padding = '22,0'
     $b3.Add_Click({ Select-NavKey 'all' })
     foreach ($b in $b1, $b2, $b3) { [void]$btns.Children.Add($b) }

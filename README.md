@@ -89,7 +89,7 @@ Requirements: Windows 11. PowerShell 5.1 and .NET are already part of Windows. W
 .\OptiEleven.ps1 -Status                         # show the state of every tweak, changes nothing
 .\OptiEleven.ps1 -Preset Recomendado -NoGui      # apply a preset without the UI (admin)
 .\OptiEleven.ps1 -Config profile.json -NoGui     # apply an exported profile (admin)
-.\OptiEleven.ps1 -Page m-boost                   # open straight on a page
+.\OptiEleven.ps1 -Page booster                   # open straight on a page (the id in its tool.json)
 ```
 
 ## Is it safe?

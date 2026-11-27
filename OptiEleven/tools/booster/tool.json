@@ -1,0 +1,31 @@
+{
+    "id":  "booster",
+    "kind":  "tool",
+    "category":  "gaming",
+    "order":  10,
+    "name":  {
+                 "es":  "Game Booster",
+                 "en":  "Game Booster"
+             },
+    "title":  {
+                  "es":  "Game Booster",
+                  "en":  "Game Booster"
+              },
+    "summary":  {
+                    "es":  "Antes de jugar, cierra lo que sobra y pausa servicios. Al terminar, todo vuelve a como estaba.",
+                    "en":  "Before you play, close what you don\u0027t need and pause services. When you\u0027re done, everything goes back to how it was."
+                },
+    "icon":  "rocket-launch",
+    "color":  "Cat-Rendimiento",
+    "view":  "New-BoosterPage",
+    "risk":  "moderate",
+    "requiresAdmin":  true,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "auto",
+                 "note":  {
+                              "es":  "Al terminar la sesión vuelven las apps, los servicios y el plan de energía.",
+                              "en":  "When the session ends, apps, services and the power plan come back."
+                          }
+             }
+}

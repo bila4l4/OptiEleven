@@ -1,0 +1,31 @@
+{
+    "id":  "home",
+    "kind":  "tool",
+    "category":  "start",
+    "order":  0,
+    "name":  {
+                 "es":  "Inicio",
+                 "en":  "Home"
+             },
+    "title":  {
+                  "es":  "Bienvenido a OptiEleven",
+                  "en":  "Welcome to OptiEleven"
+              },
+    "summary":  {
+                    "es":  "Optimiza Windows 11 para jugar, sin perder la posibilidad de volver atrás.",
+                    "en":  "Optimize Windows 11 for gaming, without losing the way back."
+                },
+    "icon":  "house-line",
+    "color":  "Accent",
+    "view":  "New-HomePage",
+    "risk":  "safe",
+    "requiresAdmin":  false,
+    "reversible":  true,
+    "undo":  {
+                 "type":  "none",
+                 "note":  {
+                              "es":  "No cambia nada del sistema.",
+                              "en":  "Doesn\u0027t change anything on your PC."
+                          }
+             }
+}

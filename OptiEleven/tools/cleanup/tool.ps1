@@ -263,3 +263,11 @@ function New-CleanerPage {
     $script:CleanFirstScan = $true
     $root
 }
+
+# al abrir Limpieza por primera vez se analiza; el análisis bloquea unos segundos, así que si el panel aún está arrancando se hace al terminar de comprobar los ajustes
+function Invoke-CleanerOnShow {
+    if (-not $script:CleanFirstScan) { return }
+    $script:CleanFirstScan = $false
+    if ($script:StatusReady) { [void]$window.Dispatcher.BeginInvoke([Action] { Invoke-CleanScan }, [System.Windows.Threading.DispatcherPriority]::Background) }
+    else { $script:CleanPending = $true }
+}

@@ -20,6 +20,15 @@ Please include in the PR:
 - What it breaks, if anything. That text goes in the description users read.
 - That you ran `.\OptiEleven.ps1 -Status` without errors, then applied and reverted the tweak on a real machine or VM.
 
+## Adding a tool
+
+A tool is a folder in `OptiEleven/tools/` with two files. The panel finds it on start; you don't touch `OptiEleven.ps1`.
+
+- `tool.json`: `id`, `kind` (`"tool"`), `category` (an `id` from `tools/categories.json`), `order`, `name`, `title`, `summary` (each `{ "es": "...", "en": "..." }`), `icon` (a name from `assets/icons.json`), `color`, `view` (the function that builds the page), `risk` (`safe`, `moderate` or `advanced`), `requiresAdmin`, `reversible` and `undo` (`{ "type": "...", "note": { ... } }`). Optional: `onShow`, a function that runs each time the page opens.
+- `tool.ps1`: defines the `view` function, which returns the page's WPF content.
+
+The `id` is also what `-Page` takes. If a manifest is missing a field or reuses an `id`, the panel skips that tool and says why in Activity.
+
 ## Translations
 
 The code is written in Spanish, and `OptiEleven/lang/<code>.json` translates it:
