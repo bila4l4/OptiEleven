@@ -1726,7 +1726,8 @@ try {
         $vb
     }
     $ui.BrandMark.Content = New-Logo 20
-    $ui.TitleMark.Content = New-Logo 12    try { $window.Icon = [Windows.Media.Imaging.BitmapFrame]::Create([Uri](Join-Path $PSScriptRoot 'assets\optieleven.ico')) } catch {}
+    $ui.TitleMark.Content = New-Logo 12
+    try { $window.Icon = [Windows.Media.Imaging.BitmapFrame]::Create([Uri](Join-Path $PSScriptRoot 'assets\optieleven.ico')) } catch {}
 
     # ---------- idioma (arriba del todo, junto al nombre)
     $ui.LangIcon.Content = (New-Icon 'globe-simple' 16 'Ink2')
