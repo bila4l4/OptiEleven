@@ -1,4 +1,4 @@
-﻿# Módulo "Equipo": ficha del hardware y del estado de Windows relevante para jugar
+﻿# "PC" module: hardware sheet and the Windows state that matters for gaming
 
 function Get-HardwareReport {
     $q = { param($c, $ns) try { if ($ns) { Get-CimInstance -Namespace $ns -ClassName $c -ErrorAction Stop } else { Get-CimInstance $c -ErrorAction Stop } } catch { $null } }
@@ -35,7 +35,7 @@ function Get-HardwareReport {
     }
     $d = [ordered]@{}
     $n = 0
-    # MSFT_PhysicalDisk por CIM directamente: Get-PhysicalDisk carga el módulo Storage y tarda varios segundos
+    # MSFT_PhysicalDisk straight through CIM: Get-PhysicalDisk loads the Storage module and takes several seconds
     $media = @{ 3 = 'HDD'; 4 = 'SSD'; 5 = 'SCM' }; $bus = @{ 1 = 'SCSI'; 3 = 'ATA'; 7 = 'USB'; 8 = 'RAID'; 10 = 'SAS'; 11 = 'SATA'; 12 = 'SD'; 17 = 'NVMe' }
     foreach ($pd in @(& $q MSFT_PhysicalDisk 'root\Microsoft\Windows\Storage')) {
         $n++; $d["Disco $n"] = '{0}, {1:N0} GB, {2}, {3}' -f $pd.FriendlyName, ($pd.Size / 1GB), $(if ($media[[int]$pd.MediaType]) { $media[[int]$pd.MediaType] } else { '?' }), $(if ($bus[[int]$pd.BusType]) { $bus[[int]$pd.BusType] } else { '?' })
@@ -45,7 +45,7 @@ function Get-HardwareReport {
     $sections['Almacenamiento'] = $d
 
     $sb = try { if ((Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\SecureBoot\State' -ErrorAction Stop).UEFISecureBootEnabled -eq 1) { 'activado' } else { 'desactivado' } } catch { 'no disponible' }
-    # sin administrador Windows niega el TPM, pero tarda unos 5 s en decirlo: ni se pregunta
+    # without admin Windows denies the TPM, but takes about 5 s to say so: don't even ask
     $tpm = if ($script:IsAdmin) { & $q Win32_Tpm 'root\cimv2\Security\MicrosoftTpm' } else { $null }
     $tpmTxt = if ($tpm) { "versión $(($tpm.SpecVersion -split ',')[0]), $(if ($tpm.IsEnabled_InitialValue) { 'activado' } else { 'desactivado' })" } elseif (-not $script:IsAdmin) { 'abre el panel como admin para verlo' } else { 'no encontrado' }
     $dg = & $q Win32_DeviceGuard 'root\Microsoft\Windows\DeviceGuard'
@@ -78,7 +78,7 @@ function New-HardwarePage {
     [void]$script:HwBody.Children.Add((New-Loader (T 'Leyendo el equipo...')))
     [void]$root.Children.Add($script:HwBody)
     $script:HwCopy = $bCopy
-    # las consultas de WMI tardan uno o dos segundos: en segundo plano, y la ficha se pinta al llegar
+    # WMI queries take a second or two: in the background, and the sheet is drawn when they arrive
     $work = [scriptblock]::Create("param(`$isAdmin)`n`$script:IsAdmin = `$isAdmin`nfunction Get-HardwareReport {`n${function:Get-HardwareReport}`n}`nGet-HardwareReport")
     Start-Bg $work @($script:IsAdmin) { param($r) Show-HardwareReport $r[0] }
     $root
@@ -93,7 +93,7 @@ function Show-HardwareReport($report) {
     $script:HwCopy.IsEnabled = $true
 
     $secIcons = @{ 'Sistema' = 'windows-logo'; 'Procesador' = 'cpu'; 'Gráficos' = 'graphics-card'; 'Memoria' = 'memory'; 'Almacenamiento' = 'hard-drives'; 'Seguridad y juego' = 'shield-check' }
-    $grid = New-Cols @('*', '*')   # dos columnas; cada par de secciones en su propia fila de altura automática
+    $grid = New-Cols @('*', '*')   # two columns; each pair of sections in its own auto-height row
     $i = 0
     foreach ($sec in $report.Keys) {
         $col = [Windows.Controls.StackPanel]::new()

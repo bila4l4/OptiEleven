@@ -1,5 +1,5 @@
-﻿# Módulo "Game Booster" (idea de Razer Cortex / Hone): antes de jugar cierra apps y pausa servicios;
-# al terminar lo devuelve todo. El estado se guarda en boost.json, así que se puede restaurar aunque el panel se cierre.
+﻿# "Game Booster" module (idea from Razer Cortex / Hone): before playing it closes apps and pauses services;
+# afterwards it puts everything back. The state is saved in boost.json, so it can be restored even if the panel closes.
 
 $BoostApps = @(
     @{ Icon = 'cloud'; Name = 'OneDrive';            Proc = @('OneDrive');                         On = $true;  Desc = 'Sincronización de archivos' }
@@ -21,9 +21,9 @@ $BoostServices = @(
     @{ Icon = 'printer'; Name = 'Spooler';   Label = 'Cola de impresión';               On = $false }
     @{ Icon = 'broadcast'; Name = 'DiagTrack'; Label = 'Telemetría';                      On = $true }
 )
-$script:BoostFile = Join-Path $script:Secure 'boost.json'   # carpeta solo de administradores: guarda servicios y rutas a reabrir
+$script:BoostFile = Join-Path $script:Secure 'boost.json'   # admin-only folder: holds the services and paths to reopen
 
-# vaciar la lista de memoria en espera (lo que hace ISLC): NtSetSystemInformation con MemoryPurgeStandbyList
+# empty the standby memory list (what ISLC does): NtSetSystemInformation with MemoryPurgeStandbyList
 if (-not ('GP.Mem' -as [type])) {
     Add-Type -Namespace GP -Name Mem -MemberDefinition @'
 [DllImport("ntdll.dll")] public static extern int NtSetSystemInformation(int infoClass, ref int info, int length);
@@ -42,8 +42,8 @@ public static int PurgeStandby() {
 '@
 }
 
-# recortar la memoria de trabajo de los procesos abiertos (lo que hacen los "RAM boosters"): Windows pasa a la
-# lista de espera las páginas que no se están usando, y al vaciarla después queda como RAM libre para el juego
+# trim the working set of running processes (what "RAM boosters" do): Windows moves the pages not in use
+# to the standby list, and emptying it afterwards leaves them as free RAM for the game
 if (-not ('GP.Ws' -as [type])) {
     Add-Type -Namespace GP -Name Ws -MemberDefinition '[DllImport("psapi.dll")] public static extern bool EmptyWorkingSet(IntPtr h);'
 }
@@ -51,19 +51,19 @@ function Invoke-TrimWorkingSets {
     $n = 0
     foreach ($p in Get-Process) {
         if ($p.Id -le 4) { continue }
-        try { if ([GP.Ws]::EmptyWorkingSet($p.Handle)) { $n++ } } catch {}   # procesos protegidos: sin acceso, se saltan
+        try { if ([GP.Ws]::EmptyWorkingSet($p.Handle)) { $n++ } } catch {}   # protected processes: no access, skipped
     }
     $n
 }
 function Get-FreeRam { [double](Get-CimInstance Win32_OperatingSystem).FreePhysicalMemory * 1KB }
 
-# Boost FPS: todo de una vez antes de jugar
+# Boost FPS: everything at once before playing
 function Invoke-BoostFps {
     $msg = "Boost FPS va a:`n`n  - Cerrar las apps marcadas abajo y pausar los servicios marcados`n  - Poner el modo de energía al máximo`n  - Liberar la memoria RAM de los procesos abiertos`n  - Hacer la limpieza completa: temporales, cachés, sombreadores, miniaturas y papelera`n`nLa papelera se vacía para siempre, y la primera partida de cada juego puede ir a tirones mientras se rehace la caché de sombreadores.`n`nAl acabar de jugar, pulsa `"Terminar y restaurar`"."
     if ([Windows.MessageBox]::Show($window, (T $msg), 'OptiEleven', 'OKCancel', 'Question') -ne 'OK') { return }
     foreach ($k in $script:FpsSteps.Keys) { $script:FpsSteps[$k].Text = '...'; $script:FpsSteps[$k].SetResourceReference($FgProp, 'Muted') }
     $ramBefore = Get-FreeRam
-    $script:BoostPower.IsChecked = $true; $script:BoostPurge.IsChecked = $false   # la memoria se vacía al final, después de recortar
+    $script:BoostPower.IsChecked = $true; $script:BoostPurge.IsChecked = $false   # memory is emptied last, after trimming
     $script:FpsWork = Show-Working 'Boost FPS' (T 'Cerrando apps y pausando servicios...'); Set-WorkingProgress $script:FpsWork 0.08
     if (-not (Get-BoostState)) { Start-Boost }
     $st = Get-BoostState
@@ -82,7 +82,7 @@ function Invoke-BoostFps {
         $script:FpsRam = $freedRam
         $script:FpsSteps.Clean.Text = (T 'borrando...')
         $script:FpsWork.Detail.Text = (T 'Limpiando el disco...'); Set-WorkingProgress $script:FpsWork 0.5; Update-Ui
-        # la limpieza va en segundo plano (la misma que la de Limpieza): la ventana sigue respondiendo
+        # the cleanup runs in the background (the same one as the Cleanup tool): the window stays responsive
         Start-CleanJob $CleanItems -OnTick {
             param($P)
             if ($P.Current) {
@@ -129,7 +129,7 @@ function New-FpsHero {
     [void](Add-At $top $script:FpsBtn 2)
     [void]$outer.Children.Add($top)
 
-    # resultados de cada paso
+    # results of each step
     $grid = New-Cols @('*', '*', '*', '*'); $grid.Margin = '0,20,0,0'
     $script:FpsSteps = [ordered]@{}
     $i = 0
@@ -164,7 +164,7 @@ function Get-AppMemory($App) {
 function Update-BoostView {
     $st = Get-BoostState
     $on = [bool]$st
-    # al cerrar el panel se puede restaurar el booster sin haber abierto su página: entonces no hay nada que pintar
+    # closing the panel can restore the booster without its page ever being opened: then there is nothing to draw
     if (-not $script:BoostTitle) { return }
     $script:BoostTitle.Text = T $(if ($on) { 'Booster activado' } else { 'Booster apagado' })
     $script:BoostSub.Text = T $(if ($on) { "Desde las $(([datetime]$st.Inicio).ToString('HH:mm')). Cerradas $(@($st.Apps).Count) apps y pausados $(@($st.Servicios).Count) servicios." }
@@ -225,7 +225,7 @@ function Stop-Boost {
         foreach ($s in @($st.Servicios)) { if ($s) { Start-Service -Name $s -ErrorAction SilentlyContinue; Write-Log "Booster: reanudado $s" } }
         foreach ($a in @($st.Apps)) {
             foreach ($p in @($a.Paths)) {
-                # se vuelven a abrir sin permisos de administrador, como las abriría Windows (vía el Explorador)
+                # they are reopened without administrator rights, as Windows would open them (through Explorer)
                 if ($p -and (Test-Path -LiteralPath $p)) { Start-Process explorer.exe -ArgumentList "`"$p`""; Write-Log "Booster: reabierta $($a.Name)"; break }
             }
         }
@@ -252,7 +252,7 @@ function New-BoosterPage {
     [void]$root.Children.Add((New-FpsHero))
     [void]$root.Children.Add((New-Section 'O a tu manera'))
 
-    # cabecera de estado
+    # status header
     $head = New-Cols @('*', 'Auto'); $head.Margin = '0,0,0,6'
     $hs = [Windows.Controls.StackPanel]::new()
     $script:BoostTitle = New-Text '' 22 'Ink' 'SemiBold'; $script:BoostTitle.FontFamily = $window.FindResource('Display')
@@ -285,7 +285,7 @@ function New-BoosterPage {
         $script:BoostAppRows += @{ App = $a; Switch = $sw; Mem = $mem }
     }
 
-    # servicios
+    # services
     [void]$root.Children.Add((New-Section 'Servicios que se pausan'))
     [void]$root.Children.Add((New-Ruled))
     foreach ($s in $BoostServices) {

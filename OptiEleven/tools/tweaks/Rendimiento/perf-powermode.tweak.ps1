@@ -1,4 +1,4 @@
-﻿# perf-powermode: lo que no cabe en el .json. Devuelve Backup / Test / Apply / Revert / Diff; las funciones que usa están en OptiEleven.ps1.
+﻿# perf-powermode: what doesn't fit in the .json. Returns Backup / Test / Apply / Revert / Diff; the functions it uses are in OptiEleven.ps1.
 @{
            Backup = { @{ Prev = (Get-OverlayGuid) } }
            Test   = { param($bk) (Get-OverlayGuid) -eq 'ded574b5-45a0-4f42-8737-46345c09c238' }

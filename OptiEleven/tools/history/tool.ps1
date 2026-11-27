@@ -1,5 +1,5 @@
-﻿# Historial: qué ha cambiado el panel y cuándo, agrupado por día. Lo escribe Add-History (OptiEleven.ps1) en history.jsonl.
-# Cada ajuste aplicado se puede deshacer desde su última entrada; deshacer usa la copia de backup.json, no este archivo.
+﻿# History: what the panel changed and when, grouped by day. Written by Add-History (OptiEleven.ps1) to history.jsonl.
+# Each applied tweak can be undone from its latest entry; undo uses the backup in backup.json, not this file.
 
 function New-HistoryPage {
     $root = [Windows.Controls.StackPanel]::new()
@@ -18,7 +18,7 @@ function Get-HistoryTitle($e) {
     T $e.text
 }
 
-# se vuelve a pintar cada vez que se abre la página ("onShow" del tool.json)
+# redrawn every time the page opens ("onShow" in tool.json)
 function Update-HistoryView {
     $b = $script:HistBody; if (-not $b) { return }
     $b.Children.Clear()
@@ -27,7 +27,7 @@ function Update-HistoryView {
         $em = New-Text 'Todavía no hay cambios. Lo que apliques, limpies o borres desde el panel aparecerá aquí, con su fecha.' 14 'Muted'
         $em.TextWrapping = 'Wrap'; [void]$b.Children.Add($em); return
     }
-    # solo la última vez que se aplicó cada ajuste ofrece deshacer
+    # only the latest time each tweak was applied offers undo
     $latest = @{}
     foreach ($e in $list) { if ($e.source -eq 'tweak' -and $e.ok -and -not $latest.ContainsKey($e.id)) { $latest[$e.id] = $e } }
     $day = $null
@@ -47,7 +47,7 @@ function Update-HistoryView {
         $sub = if (-not $e.ok) { [string]$e.error } elseif ($e.source -eq 'tweak' -and $e.text) { T $e.text } elseif ($e.changes) { $n = @($e.changes).Count; if ($n -eq 1) { T '1 cambio' } else { T "$n cambios" } } else { '' }
         if ($sub) { $st = New-Text $sub 12.5 'Muted'; $st.TextWrapping = 'Wrap'; $st.Margin = '0,2,0,0'; [void]$sp.Children.Add($st) }
         [void](Add-At $g $sp 1)
-        if ($e.changes) {   # antes y después de cada cosa, al pasar el ratón
+        if ($e.changes) {   # before and after for each item, on hover
             $row.ToolTip = (@($e.changes | Select-Object -First 15 | ForEach-Object { "$($_.what):  $(T $_.before)  →  $(T $_.after)" }) -join "`n")
         }
         if ($e.action -eq 'apply' -and $latest[$e.id] -eq $e) {

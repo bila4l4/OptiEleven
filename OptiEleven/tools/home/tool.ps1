@@ -1,9 +1,9 @@
-﻿# Inicio: un anillo con la nota de tu PC (0-100) que se dibuja al entrar. Tiene cuatro tramos (privacidad, rendimiento,
-# espacio y arranque), y cada uno se ilumina al pasar el ratón y lleva a su sitio al pulsarlo. Debajo, las categorías y
-# lo que se puede mejorar, cada cosa con un botón. Todo lo que se calcula aquí es rápido.
+﻿# Home: a ring with your PC's score (0-100) that draws itself on entry. It has four segments (privacy, performance,
+# space and startup), and each one lights up on hover and takes you to its page on click. Below, the categories and
+# what can be improved, each with a button. Everything computed here is fast.
 
 $RingSize = 280; $RingRadius = 116; $RingThick = 18
-# cada tramo: nombre, icono, a dónde lleva
+# each segment: name, icon, where it leads
 $RingParts = @(
     @{ Id = 'privacy'; Name = 'Privacidad'; Icon = 'shield-check'; Go = 'c-privacy' }
     @{ Id = 'perf'; Name = 'Rendimiento'; Icon = 'gauge'; Go = 'c-optimize' }
@@ -11,7 +11,7 @@ $RingParts = @(
     @{ Id = 'startup'; Name = 'Arranque'; Icon = 'sign-in'; Go = 'startup' }
 )
 
-# ---------- geometría: ángulos en grados, 0 arriba y en el sentido de las agujas del reloj
+# ---------- geometry: angles in degrees, 0 at the top, clockwise
 function Get-RingPoint([double]$Deg) {
     $rad = ($Deg - 90) * [math]::PI / 180
     [Windows.Point]::new($RingSize / 2 + $RingRadius * [math]::Cos($rad), $RingSize / 2 + $RingRadius * [math]::Sin($rad))
@@ -30,7 +30,7 @@ function New-RingPath([string]$Brush) {
     $p
 }
 
-# ---------- la nota: cada tramo vale de 0 a 1 (los ajustes recomendados aplicados, el espacio libre, cuántas apps arrancan solas)
+# ---------- the score: each segment is worth 0 to 1 (recommended tweaks applied, free space, how many apps start on their own)
 function Get-RingValues {
     $rows = @(if ($script:Rows) { $script:Rows.Values })
     $known = @($rows | Where-Object { $null -ne $_.Applied }).Count -gt 0
@@ -49,8 +49,8 @@ function Get-RingValues {
         Known = $known
         privacy = @{ F = $priv.F; Text = (T "$($priv.A) de $($priv.N) recomendados aplicados") }
         perf = @{ F = $perf.F; Text = (T "$($perf.A) de $($perf.N) recomendados aplicados") }
-        space = @{ F = [math]::Min([double]1, ($free / $total) / 0.25); Text = (T "$(Format-Size $free) libres de $(Format-Size $total)") }   # 25 % libre o más = lleno
-        startup = @{ F = [math]::Max([double]0, [math]::Min([double]1, (12 - $startup) / 9)); Text = (T "$startup apps al iniciar") }   # 3 o menos = lleno, 12 o más = vacío
+        space = @{ F = [math]::Min([double]1, ($free / $total) / 0.25); Text = (T "$(Format-Size $free) libres de $(Format-Size $total)") }   # 25 % free or more = full
+        startup = @{ F = [math]::Max([double]0, [math]::Min([double]1, (12 - $startup) / 9)); Text = (T "$startup apps al iniciar") }   # 3 or fewer = full, 12 or more = empty
     }
 }
 
@@ -58,12 +58,12 @@ function New-HomePage {
     $root = [Windows.Controls.StackPanel]::new()
     $script:HomeInfo = [Windows.Controls.StackPanel]::new(); [void]$root.Children.Add($script:HomeInfo)
 
-    # ---------- anillo
+    # ---------- ring
     $hero = [Windows.Controls.Grid]::new(); $hero.Width = $RingSize; $hero.Height = $RingSize; $hero.HorizontalAlignment = 'Center'; $hero.Margin = '0,8,0,0'
     $cv = [Windows.Controls.Canvas]::new(); $cv.Width = $RingSize; $cv.Height = $RingSize
     $script:RingSeg = @()
     for ($i = 0; $i -lt $RingParts.Count; $i++) {
-        $from = $i * 90 + 5; $to = $i * 90 + 85   # un hueco entre tramos
+        $from = $i * 90 + 5; $to = $i * 90 + 85   # a gap between segments
         $track = New-RingPath 'Track'; $track.Data = Get-ArcGeometry $from $to
         $fill = New-RingPath 'Accent'; $fill.IsHitTestVisible = $false
         foreach ($p in $track, $fill) { [void]$cv.Children.Add($p) }
@@ -75,7 +75,7 @@ function New-HomePage {
         $script:RingSeg += @{ Track = $track; Fill = $fill; From = $from; To = $to; Now = 0.0 }
     }
     [void]$hero.Children.Add($cv)
-    # centro: la nota, o el tramo bajo el ratón
+    # center: the score, or the segment under the mouse
     $mid = [Windows.Controls.StackPanel]::new(); $mid.VerticalAlignment = 'Center'; $mid.HorizontalAlignment = 'Center'; $mid.IsHitTestVisible = $false
     $script:RingIcon = [Windows.Controls.ContentControl]::new(); $script:RingIcon.HorizontalAlignment = 'Center'; $script:RingIcon.Visibility = 'Collapsed'; $script:RingIcon.Margin = '0,0,0,6'
     $num = [Windows.Controls.StackPanel]::new(); $num.Orientation = 'Horizontal'; $num.HorizontalAlignment = 'Center'
@@ -89,11 +89,11 @@ function New-HomePage {
 
     $script:RingSummary = New-Text '' 15 'Ink' 'Medium'; $script:RingSummary.HorizontalAlignment = 'Center'; $script:RingSummary.Margin = '0,14,0,2'
     [void]$root.Children.Add($script:RingSummary)
-    # leyenda: qué es cada tramo y cuánto tiene; también se puede pasar el ratón y pulsar
+    # legend: what each segment is and its value; it also reacts to hover and click
     $script:RingLegend = [Windows.Controls.WrapPanel]::new(); $script:RingLegend.HorizontalAlignment = 'Center'; $script:RingLegend.Margin = '0,6,0,0'
     [void]$root.Children.Add($script:RingLegend)
 
-    # ---------- liberar memoria: el botón de un clic de Inicio. Solo cosas sin efectos duraderos: no toca ningún ajuste
+    # ---------- free memory: Home's one-click button. Only things with no lasting effect: it touches no tweak
     $free = New-Btn '' -Primary; $free.HorizontalAlignment = 'Center'; $free.MinHeight = 44; $free.Padding = '22,0'; $free.FontSize = 15; $free.Margin = '0,18,0,0'
     $fsp = [Windows.Controls.StackPanel]::new(); $fsp.Orientation = 'Horizontal'
     $fi = New-BtnIcon 'lightning' 18; $fi.Margin = '0,0,10,0'; [void]$fsp.Children.Add($fi)
@@ -104,7 +104,7 @@ function New-HomePage {
     $script:FreeResult = New-Text 'RAM, temporales y caché DNS. No cambia ningún ajuste.' 12.5 'Ink2'; $script:FreeResult.HorizontalAlignment = 'Center'; $script:FreeResult.Margin = '0,6,0,0'
     [void]$root.Children.Add($script:FreeResult)
 
-    # ---------- categorías, como accesos rápidos
+    # ---------- categories, as shortcuts
     $cats = [Windows.Controls.WrapPanel]::new(); $cats.HorizontalAlignment = 'Center'; $cats.Margin = '0,20,0,4'
     foreach ($k in @($Pages.Keys | Where-Object { $_ -like 'c-*' })) {
         $pg = $Pages[$k]
@@ -118,13 +118,13 @@ function New-HomePage {
     }
     [void]$root.Children.Add($cats)
 
-    # ---------- qué mejorar
+    # ---------- what to improve
     $st = New-Text 'Qué mejorar' 14 'Ink' 'SemiBold'; $st.Margin = '2,22,0,8'; [void]$root.Children.Add($st)
     $script:HomeSug = [Windows.Controls.StackPanel]::new(); [void]$root.Children.Add($script:HomeSug)
     $root
 }
 
-# el centro del anillo enseña la nota, o el tramo que tienes bajo el ratón (y ese tramo se hace más grueso)
+# the ring's center shows the score, or the segment under the mouse (and that segment gets thicker)
 function Set-RingHover([int]$Index) {
     for ($i = 0; $i -lt $script:RingSeg.Count; $i++) {
         $t = if ($i -eq $Index) { $RingThick + 6 } else { $RingThick }
@@ -142,7 +142,7 @@ function Set-RingHover([int]$Index) {
     $script:RingLabel.Text = (T $part.Name) + "`n" + $v.Text
 }
 
-# animación: los tramos crecen desde donde estaban hasta su valor y la nota cuenta a la vez (~0,9 s, con frenada al final)
+# animation: the segments grow from where they were to their value while the score counts up (~0.9 s, easing out)
 function Start-RingAnimation {
     $vals = $script:RingVals
     if ($script:RingHandler) { [Windows.Media.CompositionTarget]::remove_Rendering($script:RingHandler); $script:RingHandler = $null }
@@ -151,7 +151,7 @@ function Start-RingAnimation {
     $step = {
         $a = $script:RingAnim
         $t = [math]::Min([double]1, $a.Clock.Elapsed.TotalMilliseconds / 900)
-        if (-not [Windows.SystemParameters]::ClientAreaAnimation) { $t = 1 }   # sin animaciones en Windows: directo al final
+        if (-not [Windows.SystemParameters]::ClientAreaAnimation) { $t = 1 }   # animations off in Windows: jump straight to the end
         $e = 1 - [math]::Pow(1 - $t, 3)
         for ($i = 0; $i -lt $script:RingSeg.Count; $i++) {
             $s = $script:RingSeg[$i]; $s.Now = $a.From[$i] + ($a.To[$i] - $a.From[$i]) * $e
@@ -166,7 +166,7 @@ function Start-RingAnimation {
     [Windows.Media.CompositionTarget]::add_Rendering($script:RingHandler)
 }
 
-# el núcleo la llama cuando cambia el estado de los ajustes (al terminar la comprobación o tras aplicar)
+# the core calls it when the tweak state changes (after the check finishes or after applying)
 function Update-HomeStats {
     if (-not $script:RingSeg) { return }
     $script:RingVals = Get-RingValues
@@ -198,8 +198,8 @@ function Update-HomeStats {
     Start-RingAnimation
 }
 
-# Liberar memoria: recorta la RAM de los procesos abiertos, vacía la memoria en espera (con admin), vacía la caché DNS
-# y borra temporales y volcados de errores. Ni papelera (sería para siempre) ni caché de sombreadores (da tirones al jugar).
+# Free memory: trims the RAM of running processes, empties standby memory (with admin), flushes the DNS cache
+# and deletes temp files and crash dumps. Not the recycle bin (that would be permanent) nor the shader cache (causes stutter in games).
 function Invoke-HomeFreeUp {
     if ($script:Busy) { return }
     $ramBefore = Get-FreeRam
@@ -245,10 +245,10 @@ function New-Suggestion([string]$Icon, [string]$Title, [string]$Sub, [string]$Bu
     $row
 }
 
-# "onShow" del tool.json: cada vez que se abre Inicio se recalcula y el anillo se vuelve a dibujar desde cero
+# "onShow" from tool.json: every time Home opens it recalculates and the ring is redrawn from scratch
 function Update-HomeView {
     if (-not $script:RingSeg) { return }
-    # saludo según la hora, con tu usuario de Windows y el nombre del equipo
+    # greeting based on the time of day, with your Windows user name and the PC name
     $hour = (Get-Date).Hour
     $hi = if ($hour -lt 12) { T 'Buenos días' } elseif ($hour -lt 20) { T 'Buenas tardes' } else { T 'Buenas noches' }
     $ui.PageTitle.Text = "$hi, $env:USERNAME"
@@ -264,7 +264,7 @@ function Update-HomeView {
         [void]$script:HomeInfo.Children.Add((New-InfoBar 'lock-simple' 'Ves el estado de todo, pero para aplicar cambios hace falta abrir el panel como administrador.' 'warn' 'Reiniciar como admin' { Restart-AsAdmin }))
     }
 
-    # qué mejorar, de más a menos importante; solo lo que toca en este equipo
+    # what to improve, most important first; only what applies to this PC
     $script:HomeSug.Children.Clear()
     $ready = $script:StatusReady -or @($script:Rows.Values | Where-Object { $null -ne $_.Applied }).Count -gt 0
     $outside = @($script:Rows.Values | Where-Object { $_.Applied -eq $false -and (Get-Backup $_.Tweak.Id) })

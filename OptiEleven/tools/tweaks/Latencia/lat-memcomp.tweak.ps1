@@ -1,4 +1,4 @@
-﻿# lat-memcomp: lo que no cabe en el .json. Devuelve Backup / Test / Apply / Revert / Diff; las funciones que usa están en OptiEleven.ps1.
+﻿# lat-memcomp: what doesn't fit in the .json. Returns Backup / Test / Apply / Revert / Diff; the functions it uses are in OptiEleven.ps1.
 @{
            Test   = { param($bk) try { -not (Get-MMAgent -ErrorAction Stop).MemoryCompression } catch { $null } }
            Apply  = { param($bk) Disable-MMAgent -MemoryCompression -ErrorAction Stop }

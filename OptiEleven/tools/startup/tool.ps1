@@ -1,5 +1,5 @@
-﻿# Módulo "Inicio": programas que arrancan con Windows.
-# Se activan/desactivan igual que en el Administrador de tareas (claves StartupApproved), así que es reversible.
+﻿# "Startup" module: programs that start with Windows.
+# They are enabled/disabled the same way as in Task Manager (StartupApproved keys), so it is reversible.
 
 $StartupSources = @(
     @{ Kind = 'Reg';    Path = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run';

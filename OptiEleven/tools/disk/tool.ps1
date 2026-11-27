@@ -1,11 +1,11 @@
-﻿# Módulo "Espacio en disco": como WinDirStat. Árbol de carpetas desplegable con la proporción de cada una, porcentaje,
-# tamaño, archivos y fecha, y a la derecha el reparto por extensión. El recorrido lo hace [GP.DiskScan] (C#, en
-# OptiEleven.ps1) en segundo plano; aquí solo se pinta, y cada carpeta crea sus filas al desplegarla.
+﻿# "Disk space" module: like WinDirStat. Expandable folder tree with each folder's share, percentage,
+# size, files and date, and on the right the breakdown by extension. The scan is done by [GP.DiskScan] (C#, in
+# OptiEleven.ps1) in the background; this file only draws, and each folder creates its rows when expanded.
 
-$script:DiskCache = @{}   # unidad -> resultado ya analizado
+$script:DiskCache = @{}   # drive -> result already scanned
 $DiskDepthColors = 'Accent', 'Cat-Interfaz', 'Cat-Juegos', 'Cat-Latencia', 'Cat-Privacidad', 'Cat-Rendimiento', 'Cat-Servicios', 'Cat-Apps'
 $DiskCols = @('2*', '1*', '62', '78', '70', '78')
-$DiskMaxKids = 150   # filas por carpeta al desplegar; el resto en una fila "y N más"
+$DiskMaxKids = 150   # rows per folder when expanded; the rest in one "and N more" row
 
 function Start-DiskScan([string]$Root, [double]$Expected) {
     if ($script:DiskCache.ContainsKey($Root)) { $script:DiskRoot = $Root; Show-DiskResult $Root; return }
@@ -30,7 +30,7 @@ function New-DiskTreeRow($Node, [int]$Depth, [double]$ParentSize) {
     $BgP = [Windows.Controls.Border]::BackgroundProperty
     $row = [Windows.Controls.Border]::new(); $row.Padding = '6,4,8,4'; $row.CornerRadius = 6; $row.Background = [Windows.Media.Brushes]::Transparent; $row.Cursor = 'Hand'
     $g = New-Cols $DiskCols
-    # un Grid (no un StackPanel) para que el nombre largo se recorte con "…" en vez de meterse debajo de la barra
+    # a Grid (not a StackPanel) so a long name gets cut with "…" instead of running under the bar
     $name = New-Cols @("$($Depth * 12)", '16', '24', '*'); $name.Margin = '0,0,10,0'
     $canOpen = -not $Node.IsFile -and $Node.Kids -and $Node.Kids.Count -gt 0
     $chev = New-Text $(if ($canOpen) { '▸' } else { '' }) 13 'Muted'; $chev.VerticalAlignment = 'Center'; [void](Add-At $name $chev 1)
@@ -41,7 +41,7 @@ function New-DiskTreeRow($Node, [int]$Depth, [double]$ParentSize) {
     if (-not $Node.IsRest) { $nt.ToolTip = Get-DiskPath $Node }
     [void](Add-At $name $nt 3)
     [void](Add-At $g $name 0)
-    # proporción frente a la carpeta de arriba, con el color de su nivel (como WinDirStat)
+    # share of the parent folder, in its level's color (like WinDirStat)
     $f = if ($ParentSize -gt 0) { [math]::Min([double]1, $Node.Size / $ParentSize) } else { [double]1 }
     $track = [Windows.Controls.Border]::new(); $track.Height = 12; $track.CornerRadius = 3; $track.Margin = '0,0,12,0'; $track.VerticalAlignment = 'Center'; $track.SetResourceReference($BgP, 'Paper3')
     $tg = New-Cols @('*', '*'); $tg.ColumnDefinitions[0].Width = [Windows.GridLength]::new($f, 'Star'); $tg.ColumnDefinitions[1].Width = [Windows.GridLength]::new(1 - $f, 'Star')
@@ -54,10 +54,10 @@ function New-DiskTreeRow($Node, [int]$Depth, [double]$ParentSize) {
     $row.Tag = @{ Node = $Node; Depth = $Depth; Open = $false; Chev = $chev; CanOpen = $canOpen }
     $row.Add_MouseEnter({ param($s) if (@($script:DiskSel) -notcontains $s) { $s.SetResourceReference([Windows.Controls.Border]::BackgroundProperty, 'GlassHi') } })
     $row.Add_MouseLeave({ param($s) if (@($script:DiskSel) -notcontains $s) { $s.Background = [Windows.Media.Brushes]::Transparent } })
-    $row.Add_MouseLeftButtonUp({ param($s, $e) if (-not (Select-DiskRow $s)) { Switch-DiskRow $s } })   # con Ctrl/Mayús solo se elige, no se despliega
-    # clic derecho: el menú de WinDirStat (se llena al abrirlo, para no crear 150 menús de golpe)
+    $row.Add_MouseLeftButtonUp({ param($s, $e) if (-not (Select-DiskRow $s)) { Switch-DiskRow $s } })   # with Ctrl/Shift it only selects, it doesn't expand
+    # right click: the WinDirStat menu (filled when opened, so 150 menus aren't created at once)
     if (-not $Node.IsRest) { $row.ContextMenu = [Windows.Controls.ContextMenu]::new(); $row.Add_ContextMenuOpening({ param($s, $e) Fill-DiskMenu $s }) }
-    $row.Add_MouseLeftButtonDown({   # doble clic: abrir en el Explorador
+    $row.Add_MouseLeftButtonDown({   # double click: open in Explorer
         param($s, $e)
         if ($e.ClickCount -eq 2) {
             $n = $s.Tag.Node
@@ -73,7 +73,7 @@ function Get-DiskPath($Node) {
     if ($Node.IsFile) { "$($Node.Parent.Path.TrimEnd('\'))\$($Node.Name)" } else { $Node.Path }
 }
 
-# lo que nunca se borra desde aquí: la unidad entera y las carpetas de las que depende Windows
+# what is never deleted from here: the whole drive and the folders Windows depends on
 function Test-DiskDeletable($Node) {
     if ($Node.IsRest -or -not $Node.Parent) { return $false }
     $p = (Get-DiskPath $Node).TrimEnd('\')
@@ -83,7 +83,7 @@ function Test-DiskDeletable($Node) {
     $true
 }
 
-# las mismas acciones en el menú de clic derecho y en la barra de arriba del árbol
+# the same actions in the right-click menu and in the bar above the tree
 $DiskActions = @(@('open', 'Abrir', 'play-circle'), @('show', 'Mostrar en el Explorador', 'folder-open'), @('copy', 'Copiar ruta', 'copy'),
     @('term', 'Abrir terminal aquí', 'terminal-window'), @('props', 'Propiedades', 'list-dashes'), '-', @('rescan', 'Volver a analizar', 'arrows-clockwise'), '-',
     @('recycle', 'Mover a la papelera', 'trash-simple'), @('delete', 'Eliminar para siempre', 'warning-octagon'))
@@ -91,7 +91,7 @@ $DiskActions = @(@('open', 'Abrir', 'play-circle'), @('show', 'Mostrar en el Exp
 function Test-DiskAction($Nodes, [string]$Act) {
     $Nodes = @($Nodes)
     if (-not $Nodes.Count -or @($Nodes | Where-Object { $_.IsRest }).Count) { return $false }
-    if ($Act -in 'open', 'show', 'term', 'props', 'rescan' -and $Nodes.Count -gt 1) { return $false }   # estas, de una en una
+    if ($Act -in 'open', 'show', 'term', 'props', 'rescan' -and $Nodes.Count -gt 1) { return $false }   # these, one at a time
     if ($Act -eq 'rescan') { return -not $Nodes[0].IsFile }
     if ($Act -in 'recycle', 'delete') { return -not @($Nodes | Where-Object { -not (Test-DiskDeletable $_) }).Count }
     $true
@@ -99,7 +99,7 @@ function Test-DiskAction($Nodes, [string]$Act) {
 
 function Get-DiskSelNodes { @($script:DiskSel | ForEach-Object { $_.Tag.Node }) }
 
-# marca las filas elegidas (como en WinDirStat) y enciende los botones que valen para ellas
+# highlights the selected rows (like WinDirStat) and enables the buttons that apply to them
 function Set-DiskSelection($Rows) {
     $BgP = [Windows.Controls.Border]::BackgroundProperty
     $Rows = @($Rows | Where-Object { $_ -and $_.Tag.Node -and -not $_.Tag.Node.IsRest })
@@ -115,7 +115,7 @@ function Set-DiskSelection($Rows) {
     }
 }
 
-# clic: uno solo; Ctrl+clic: añadir o quitar; Mayús+clic: todo lo que hay entre medias
+# click: just one; Ctrl+click: add or remove; Shift+click: everything in between
 function Select-DiskRow($Row) {
     $mods = [Windows.Input.Keyboard]::Modifiers
     if ($mods -band [Windows.Input.ModifierKeys]::Control) {
@@ -159,7 +159,7 @@ function Invoke-DiskAction($Nodes, [string]$Act) {
         }
         'rescan' { if (-not $n.Parent) { $script:DiskCache.Remove($script:DiskRoot); Start-DiskScan $script:DiskRoot 0 } else { Start-DiskJob $Nodes 'rescan' } }
         default {
-            # si se eligió una carpeta y algo de dentro, basta con la carpeta
+            # if a folder and something inside it were both selected, the folder is enough
             $Nodes = @($Nodes | Where-Object { $x = $_.Parent; $inside = $false; while ($x) { if ($Nodes -contains $x) { $inside = $true }; $x = $x.Parent }; -not $inside })
             $size = [double](($Nodes | Measure-Object Size -Sum).Sum); $files = [double](($Nodes | Measure-Object Files -Sum).Sum)
             $list = @($Nodes | Select-Object -First 6 | ForEach-Object { Get-DiskPath $_ })
@@ -172,7 +172,7 @@ function Invoke-DiskAction($Nodes, [string]$Act) {
     }
 }
 
-# borra (o vuelve a medir) en segundo plano; lo que quede en el disco se mide otra vez, así el árbol cuadra aunque falle a medias
+# deletes (or re-measures) in the background; what is left on disk is measured again, so the tree adds up even if it fails halfway
 function Start-DiskJob($Nodes, [string]$Act) {
     $script:DiskJobNodes = @($Nodes); $script:DiskJobAct = $Act
     $title = @{ recycle = 'Moviendo a la papelera'; delete = 'Eliminando'; rescan = 'Analizando la carpeta' }[$Act]
@@ -186,7 +186,7 @@ function Start-DiskJob($Nodes, [string]$Act) {
             try {
                 if ($A.Act -eq 'recycle') {
                     Add-Type -AssemblyName Microsoft.VisualBasic
-                    # AllDialogs: Windows avisa si algo no cabe en la papelera, en vez de borrarlo para siempre sin preguntar
+                    # AllDialogs: Windows warns if something doesn't fit in the recycle bin, instead of deleting it for good without asking
                     if ($it.File) { [Microsoft.VisualBasic.FileIO.FileSystem]::DeleteFile($it.Path, 'AllDialogs', 'SendToRecycleBin') }
                     else { [Microsoft.VisualBasic.FileIO.FileSystem]::DeleteDirectory($it.Path, 'AllDialogs', 'SendToRecycleBin') }
                 } elseif ($A.Act -eq 'delete') { Remove-Item -LiteralPath $it.Path -Recurse -Force -ErrorAction Stop }
@@ -218,7 +218,7 @@ function Start-DiskJob($Nodes, [string]$Act) {
     }
 }
 
-# cambia un nodo por otro (o lo quita si $New es $null) y corrige tamaños y archivos de todas las carpetas de arriba
+# replaces one node with another (or removes it if $New is $null) and fixes the sizes and file counts of all parent folders
 function Set-DiskNode($Old, $New) {
     $dS = $(if ($New) { $New.Size } else { 0 }) - $Old.Size; $dF = $(if ($New) { $New.Files } else { 0 }) - $Old.Files
     $par = $Old.Parent; $i = $par.Kids.IndexOf($Old)
@@ -228,7 +228,7 @@ function Set-DiskNode($Old, $New) {
     -$dS
 }
 
-# vuelve a pintar el árbol dejando abiertas las mismas carpetas y elegido lo que siga existiendo
+# redraws the tree keeping the same folders expanded and whatever still exists selected
 function Update-DiskTree($Open, $Sel) {
     $root = $script:DiskCache[$script:DiskRoot].Root; $list = $script:DiskRows
     $list.Children.Clear(); $script:DiskSel = @(); $script:DiskAnchor = $null
@@ -242,7 +242,7 @@ function Switch-DiskRow($Row) {
     $t = $Row.Tag; if (-not $t.CanOpen) { return }
     $list = $script:DiskRows; $idx = $list.Children.IndexOf($Row)
     if ($t.Open) {
-        # plegar: quitar todo lo que cuelga de esta fila
+        # collapse: remove everything under this row
         while ($idx + 1 -lt $list.Children.Count -and $list.Children[$idx + 1].Tag.Depth -gt $t.Depth) { $list.Children.RemoveAt($idx + 1) }
         $t.Open = $false; $t.Chev.Text = '▸'; return
     }
@@ -261,11 +261,11 @@ function Show-DiskResult([string]$Root) {
     $body.Children.Clear()
     $BgP = [Windows.Controls.Border]::BackgroundProperty; $BrP = [Windows.Controls.Border]::BorderBrushProperty
     $grid = New-Cols @('*', '250')
-    # árbol
+    # tree
     $card = [Windows.Controls.Border]::new(); $card.CornerRadius = 8; $card.Padding = '10,10,10,10'; $card.BorderThickness = 1; $card.Margin = '0,0,14,0'
     $card.SetResourceReference($BgP, 'Glass'); $card.SetResourceReference($BrP, 'GlassEdge')
     $cs = [Windows.Controls.StackPanel]::new()
-    # barra de acciones sobre lo elegido (lo mismo que el clic derecho)
+    # action bar for the selection (same as the right click)
     $tools = [Windows.Controls.WrapPanel]::new(); $tools.Margin = '2,0,0,6'; $script:DiskTools = @()
     foreach ($it in $DiskActions) {
         if ($it -eq '-') { $sep = [Windows.Controls.Border]::new(); $sep.Width = 1; $sep.Height = 22; $sep.Margin = '2,0,8,6'; $sep.SetResourceReference($BgP, 'Rule'); [void]$tools.Children.Add($sep); continue }
@@ -289,7 +289,7 @@ function Show-DiskResult([string]$Root) {
     [void]$cs.Children.Add($script:DiskRows)
     $card.Child = $cs
     [void](Add-At $grid $card 0)
-    # extensiones
+    # extensions
     $ec = [Windows.Controls.Border]::new(); $ec.CornerRadius = 8; $ec.Padding = '16,14'; $ec.BorderThickness = 1; $ec.VerticalAlignment = 'Top'
     $ec.SetResourceReference($BgP, 'Glass'); $ec.SetResourceReference($BrP, 'GlassEdge')
     $es = [Windows.Controls.StackPanel]::new()
@@ -307,7 +307,7 @@ function Show-DiskResult([string]$Root) {
     $ec.Child = $es
     [void](Add-At $grid $ec 1)
     [void]$body.Children.Add($grid)
-    # la raíz (la unidad) ya desplegada
+    # the root (the drive) already expanded
     $rootRow = New-DiskTreeRow $res.Root 0 $res.Root.Size
     [void]$script:DiskRows.Children.Add($rootRow)
     Switch-DiskRow $rootRow
@@ -322,7 +322,7 @@ function New-DiskPage {
     if (-not $script:IsAdmin) { $hint.Text += ' ' + (T 'Sin administrador, algunas carpetas del sistema no se pueden medir.') }
     $hint.Margin = '0,0,0,14'
     [void]$root.Children.Add($hint)
-    # un botón grande por disco, con lo que tiene ocupado
+    # one big button per drive, with how much is used
     $grid = [Windows.Controls.Primitives.UniformGrid]::new(); $grid.Columns = 3; $grid.Margin = '0,0,-12,4'
     foreach ($dr in [IO.DriveInfo]::GetDrives() | Where-Object { $_.DriveType -eq 'Fixed' -and $_.IsReady }) {
         $used = [double]($dr.TotalSize - $dr.TotalFreeSpace)
