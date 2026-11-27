@@ -30,8 +30,8 @@ else { Write-Host 'signing skipped (no certificate)'; return }
 
 # native\OptiEleven-Apps.exe is not signed: the panel appends each user's app list to the end of it, which would
 # break a signature anyway (it is the same unsigned file the panel used to compile on the user's PC).
-$files = @(Get-ChildItem -LiteralPath $Path -Recurse -File -Include *.ps1, *.psm1, *.exe, *.dll |
-    Where-Object { $_.Name -ne 'OptiEleven-Apps.exe' } | ForEach-Object { $_.FullName })
+$files = @(Get-ChildItem -LiteralPath $Path -Recurse -File |
+    Where-Object { $_.Extension -in '.ps1', '.psm1', '.exe', '.dll' -and $_.Name -ne 'OptiEleven-Apps.exe' } | ForEach-Object { $_.FullName })
 if (-not $files) { throw "Nothing to sign in $Path" }
 
 $signtool = $env:SIGNTOOL
