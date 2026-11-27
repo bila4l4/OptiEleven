@@ -1943,7 +1943,7 @@ try {
             if ($shown -ge 12) { [void]$sp.Children.Add((New-Text "y $($diff.Count - 12) más" 12 'Ink2')); break }
             $li = New-Cols @('*', 'Auto'); $li.Margin = '0,2,0,2'
             $tg = New-Mono $l.Target 11.5 'Ink2'; $tg.TextTrimming = 'CharacterEllipsis'; $tg.ToolTip = $l.Target; [void](Add-At $li $tg 0)
-            $vv = New-Mono $(if ($l.Same) { "$($l.Before)" } else { "$($l.Before)  →  $($l.After)" }) 11.5 $(if ($l.Same) { 'Muted' } else { 'Ink' }); $vv.Margin = '16,0,0,0'
+            $vv = New-Mono $(if ($l.Same) { T "$($l.Before)" } else { "$(T $l.Before)  →  $(T $l.After)" }) 11.5 $(if ($l.Same) { 'Muted' } else { 'Ink' }); $vv.Margin = '16,0,0,0'
             [void](Add-At $li $vv 1)
             [void]$sp.Children.Add($li); $shown++
         }
