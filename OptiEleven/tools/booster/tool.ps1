@@ -105,21 +105,21 @@ function Invoke-BoostFps {
     finally { if (-not $async) { Close-Working $script:FpsWork; Set-Busy $false; $script:BoostPurge.IsChecked = $true; Update-BoostView } }
 }
 function New-FpsHero {
-    $card = [Windows.Controls.Border]::new(); $card.CornerRadius = 12; $card.Padding = '24,22,24,20'; $card.Margin = '0,0,0,8'
+    $card = [Windows.Controls.Border]::new(); $card.CornerRadius = 8; $card.Padding = '20,18,20,18'; $card.Margin = '0,0,0,8'
     $card.SetResourceReference($BgProp, 'Glass'); $card.SetResourceReference([Windows.Controls.Border]::BorderBrushProperty, 'GlassEdge'); $card.BorderThickness = 1
     $outer = [Windows.Controls.StackPanel]::new()
     $top = New-Cols @('Auto', '*', 'Auto')
-    $well = [Windows.Controls.Border]::new(); $well.Width = 64; $well.Height = 64; $well.CornerRadius = 14; $well.VerticalAlignment = 'Center'
-    $well.SetResourceReference($BgProp, 'Accent')
-    $ic = New-Icon 'rocket-launch' 34 'AccentInk'; $ic.HorizontalAlignment = 'Center'; $well.Child = $ic
+    $well = [Windows.Controls.Border]::new(); $well.Width = 48; $well.Height = 48; $well.CornerRadius = 8; $well.VerticalAlignment = 'Center'
+    $well.SetResourceReference($BgProp, 'AccentSoft')
+    $ic = New-Icon 'rocket-launch' 22 'Accent'; $ic.HorizontalAlignment = 'Center'; $well.Child = $ic
     [void](Add-At $top $well 0)
     $tx = [Windows.Controls.StackPanel]::new(); $tx.VerticalAlignment = 'Center'; $tx.Margin = '18,0,18,0'
-    $h = New-Text 'Boost FPS' 30 'Ink' 'Bold'; $h.FontFamily = $window.FindResource('Display')
+    $h = New-Text 'Boost FPS' 20 'Ink' 'SemiBold'; $h.FontFamily = $window.FindResource('Display')
     $d = New-Text 'Un clic antes de jugar: libera memoria, cierra lo que sobra en segundo plano, pone la energía al máximo y hace la limpieza completa.' 14 'Ink2'; $d.Margin = '0,4,0,0'; $d.MaxWidth = 620; $d.HorizontalAlignment = 'Left'
     [void]$tx.Children.Add($h); [void]$tx.Children.Add($d)
     [void](Add-At $top $tx 1)
     $script:FpsBtn = New-Btn 'Boost FPS' -Primary
-    $script:FpsBtn.FontSize = 18; $script:FpsBtn.FontWeight = 'Bold'; $script:FpsBtn.Padding = '34,0'; $script:FpsBtn.MinHeight = 54; $script:FpsBtn.VerticalAlignment = 'Center'
+    $script:FpsBtn.FontSize = 14; $script:FpsBtn.FontWeight = 'SemiBold'; $script:FpsBtn.Padding = '20,0'; $script:FpsBtn.MinHeight = 36; $script:FpsBtn.VerticalAlignment = 'Center'
     $bc = [Windows.Controls.StackPanel]::new(); $bc.Orientation = 'Horizontal'
     $bi = New-BtnIcon 'lightning' 20; $bi.Margin = '0,0,10,0'
     $bl = [Windows.Controls.TextBlock]::new(); $bl.Text = 'Boost FPS'; $bl.VerticalAlignment = 'Center'

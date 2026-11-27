@@ -155,9 +155,9 @@ function Update-AppCard([string]$Id) {
         $c.Glyph.Visibility = 'Hidden'
     }
     if ($null -eq $script:AppInstalled) { $c.State.Text = (T ''); return }
-    if ($inst -and $sel) { $c.State.Text = (T 'Instalada, se actualizará'); $c.State.SetResourceReference($FgProp, 'Cat-Actualizaciones'); $c.State.FontWeight = 'SemiBold' }
+    if ($inst -and $sel) { $c.State.Text = (T 'Instalada, se actualizará'); $c.State.SetResourceReference($FgProp, 'Accent'); $c.State.FontWeight = 'SemiBold' }
     elseif ($inst) { $c.State.Text = (T 'Instalada'); $c.State.SetResourceReference($FgProp, 'Cat-Rendimiento'); $c.State.FontWeight = 'SemiBold' }
-    elseif ($sel) { $c.State.Text = (T 'Se instalará'); $c.State.SetResourceReference($FgProp, 'Cat-Actualizaciones'); $c.State.FontWeight = 'SemiBold' }
+    elseif ($sel) { $c.State.Text = (T 'Se instalará'); $c.State.SetResourceReference($FgProp, 'Accent'); $c.State.FontWeight = 'SemiBold' }
     else { $c.State.Text = (T 'No instalada'); $c.State.SetResourceReference($FgProp, 'Muted'); $c.State.FontWeight = 'Normal' }
 }
 
@@ -289,15 +289,15 @@ function New-AppsPage {
     $script:AppRunning = $false
 
     # cabecera como la de Ninite: eliges, y sale un instalador con todo
-    $hero = [Windows.Controls.Border]::new(); $hero.CornerRadius = 12; $hero.Padding = '22,18'; $hero.Margin = '0,0,0,6'; $hero.BorderThickness = 1
+    $hero = [Windows.Controls.Border]::new(); $hero.CornerRadius = 8; $hero.Padding = '20,18'; $hero.Margin = '0,0,0,6'; $hero.BorderThickness = 1
     $hero.SetResourceReference([Windows.Controls.Border]::BackgroundProperty, 'Glass'); $hero.SetResourceReference([Windows.Controls.Border]::BorderBrushProperty, 'GlassEdge')
     $hg = New-Cols @('Auto', '*', 'Auto')
-    $hw = [Windows.Controls.Border]::new(); $hw.Width = 56; $hw.Height = 56; $hw.CornerRadius = 13; $hw.VerticalAlignment = 'Center'
-    $hw.SetResourceReference([Windows.Controls.Border]::BackgroundProperty, 'Cat-Actualizaciones')
-    $hi = New-Icon 'package' 30 'AccentInk'; $hi.HorizontalAlignment = 'Center'; $hw.Child = $hi
+    $hw = [Windows.Controls.Border]::new(); $hw.Width = 48; $hw.Height = 48; $hw.CornerRadius = 8; $hw.VerticalAlignment = 'Center'
+    $hw.SetResourceReference([Windows.Controls.Border]::BackgroundProperty, 'AccentSoft')
+    $hi = New-Icon 'package' 22 'Accent'; $hi.HorizontalAlignment = 'Center'; $hw.Child = $hi
     [void](Add-At $hg $hw 0)
     $ht = [Windows.Controls.StackPanel]::new(); $ht.Margin = '16,0,16,0'; $ht.VerticalAlignment = 'Center'
-    $script:AppHeroTitle = New-Text '' 22 'Ink' 'Bold'; $script:AppHeroTitle.FontFamily = $window.FindResource('Display')
+    $script:AppHeroTitle = New-Text '' 20 'Ink' 'SemiBold'; $script:AppHeroTitle.FontFamily = $window.FindResource('Display')
     $script:AppStatus = New-Text '' 13.5 'Ink2'; $script:AppStatus.Margin = '0,4,0,0'
     [void]$ht.Children.Add($script:AppHeroTitle); [void]$ht.Children.Add($script:AppStatus)
     [void](Add-At $hg $ht 1)

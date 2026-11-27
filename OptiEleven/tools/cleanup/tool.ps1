@@ -117,7 +117,7 @@ function Update-CleanTotal {
     foreach ($r in $script:CleanRows.Values) {
         $f = if ($null -ne $r.Bytes -and $r.Bytes -gt 0) { [math]::Max(0.01, $r.Bytes / $max) } else { 0 }
         $r.BarCols[0].Width = [Windows.GridLength]::new($f, 'Star'); $r.BarCols[1].Width = [Windows.GridLength]::new(1 - $f, 'Star')
-        $r.Bar.SetResourceReference([Windows.Controls.Border]::BackgroundProperty, $(if ($r.Switch.IsChecked) { 'Cat-Interfaz' } else { 'RuleStrong' }))
+        $r.Bar.SetResourceReference([Windows.Controls.Border]::BackgroundProperty, $(if ($r.Switch.IsChecked) { 'Accent' } else { 'RuleStrong' }))
     }
 }
 function Invoke-CleanScan {
@@ -163,15 +163,15 @@ function New-CleanerPage {
     $BgP = [Windows.Controls.Border]::BackgroundProperty; $BrP = [Windows.Controls.Border]::BorderBrushProperty
 
     # cabecera grande, como Boost FPS: cuánto se libera y los botones
-    $hero = [Windows.Controls.Border]::new(); $hero.CornerRadius = 14; $hero.Padding = '24,20'; $hero.Margin = '0,0,0,14'; $hero.BorderThickness = 1
+    $hero = [Windows.Controls.Border]::new(); $hero.CornerRadius = 8; $hero.Padding = '20,18'; $hero.Margin = '0,0,0,14'; $hero.BorderThickness = 1
     $hero.SetResourceReference($BgP, 'Glass'); $hero.SetResourceReference($BrP, 'GlassEdge')
     $hg = New-Cols @('Auto', '*', 'Auto')
-    $hw = [Windows.Controls.Border]::new(); $hw.Width = 64; $hw.Height = 64; $hw.CornerRadius = 14; $hw.VerticalAlignment = 'Center'; $hw.SetResourceReference($BgP, 'Cat-Interfaz')
-    $hi = New-Icon 'broom' 34 'AccentInk'; $hi.HorizontalAlignment = 'Center'; $hw.Child = $hi
+    $hw = [Windows.Controls.Border]::new(); $hw.Width = 48; $hw.Height = 48; $hw.CornerRadius = 8; $hw.VerticalAlignment = 'Center'; $hw.SetResourceReference($BgP, 'AccentSoft')
+    $hi = New-Icon 'broom' 22 'Accent'; $hi.HorizontalAlignment = 'Center'; $hw.Child = $hi
     [void](Add-At $hg $hw 0)
     $ht = [Windows.Controls.StackPanel]::new(); $ht.Margin = '18,0,18,0'; $ht.VerticalAlignment = 'Center'
     $tl = New-Text 'Se puede liberar' 13.5 'Ink2' 'SemiBold'
-    $script:CleanTotal = New-Mono '...' 38 'Ink'; $script:CleanTotal.FontWeight = 'Bold'; $script:CleanTotal.Margin = '0,0,0,0'
+    $script:CleanTotal = New-Text '...' 28 'Ink' 'SemiBold'; $script:CleanTotal.FontFamily = $window.FindResource('Display'); $script:CleanTotal.TextWrapping = 'NoWrap'; $script:CleanTotal.Margin = '0,0,0,0'
     $script:CleanCount = New-Text '' 13 'Muted'
     $script:CleanSpin = New-Loader (T 'Analizando el disco...'); $script:CleanSpin.Margin = '0,8,0,0'; $script:CleanSpin.Visibility = 'Collapsed'
     foreach ($x in $tl, $script:CleanTotal, $script:CleanCount, $script:CleanSpin) { [void]$ht.Children.Add($x) }
@@ -190,7 +190,7 @@ function New-CleanerPage {
     $hero.Child = $hg
 
     [void]$root.Children.Add($hero)
-    $script:CleanResult = New-Text '' 13.5 'Cat-Juegos' 'SemiBold'; $script:CleanResult.Margin = '4,0,0,10'; $script:CleanResult.Visibility = 'Collapsed'
+    $script:CleanResult = New-Text '' 13.5 'Green' 'SemiBold'; $script:CleanResult.Margin = '4,0,0,10'; $script:CleanResult.Visibility = 'Collapsed'
     [void]$root.Children.Add($script:CleanResult)
 
     foreach ($it in $CleanItems) {

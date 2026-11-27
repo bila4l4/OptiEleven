@@ -235,20 +235,20 @@ function Start-SpeedTest {
 }
 
 function New-SpeedTestCard {
-    $card = [Windows.Controls.Border]::new(); $card.CornerRadius = 14; $card.Padding = '24,20'; $card.Margin = '0,0,0,18'; $card.BorderThickness = 1
+    $card = [Windows.Controls.Border]::new(); $card.CornerRadius = 8; $card.Padding = '20,18'; $card.Margin = '0,0,0,18'; $card.BorderThickness = 1
     $card.SetResourceReference([Windows.Controls.Border]::BackgroundProperty, 'Glass'); $card.SetResourceReference([Windows.Controls.Border]::BorderBrushProperty, 'GlassEdge')
     $sp = [Windows.Controls.StackPanel]::new()
     $top = New-Cols @('Auto', '*', 'Auto')
-    $w = [Windows.Controls.Border]::new(); $w.Width = 56; $w.Height = 56; $w.CornerRadius = 13; $w.VerticalAlignment = 'Center'
-    $w.SetResourceReference([Windows.Controls.Border]::BackgroundProperty, 'Cat-Privacidad')
-    $wi = New-Icon 'gauge' 30 'AccentInk'; $wi.HorizontalAlignment = 'Center'; $w.Child = $wi
+    $w = [Windows.Controls.Border]::new(); $w.Width = 48; $w.Height = 48; $w.CornerRadius = 8; $w.VerticalAlignment = 'Center'
+    $w.SetResourceReference([Windows.Controls.Border]::BackgroundProperty, 'AccentSoft')
+    $wi = New-Icon 'gauge' 22 'Accent'; $wi.HorizontalAlignment = 'Center'; $w.Child = $wi
     [void](Add-At $top $w 0)
     $tx = [Windows.Controls.StackPanel]::new(); $tx.Margin = '16,0,16,0'; $tx.VerticalAlignment = 'Center'
-    $h = New-Text 'Test de velocidad' 22 'Ink' 'Bold'; $h.FontFamily = $window.FindResource('Display')
+    $h = New-Text 'Test de velocidad' 20 'Ink' 'SemiBold'; $h.FontFamily = $window.FindResource('Display')
     $script:SpeedServer = New-Text 'Con el motor de speed.cloudflare.com. Gasta entre 100 y 500 MB de datos.' 13.5 'Ink2'; $script:SpeedServer.Margin = '0,4,0,0'
     [void]$tx.Children.Add($h); [void]$tx.Children.Add($script:SpeedServer)
     [void](Add-At $top $tx 1)
-    $script:SpeedBtn = New-Btn 'Iniciar test' -Primary; $script:SpeedBtn.MinHeight = 46; $script:SpeedBtn.FontSize = 15; $script:SpeedBtn.Padding = '26,0'; $script:SpeedBtn.VerticalAlignment = 'Center'
+    $script:SpeedBtn = New-Btn 'Iniciar test' -Primary; $script:SpeedBtn.MinHeight = 36; $script:SpeedBtn.Padding = '20,0'; $script:SpeedBtn.VerticalAlignment = 'Center'
     $script:SpeedBtn.Add_Click({ Start-SpeedTest })
     [void](Add-At $top $script:SpeedBtn 2)
     [void]$sp.Children.Add($top)
@@ -257,15 +257,15 @@ function New-SpeedTestCard {
     $script:SpeedVals = @{}
     $i = 0
     foreach ($m in @(@('Down', 'arrow-circle-down', 'Descarga', 'Mbps', 'Cat-Juegos'), @('Up', 'arrow-circle-up', 'Subida', 'Mbps', 'Cat-Interfaz'), @('Ping', 'pulse', 'Ping', 'ms', 'Cat-Latencia'), @('Jitter', 'wave-sine', 'Jitter', 'ms', 'Cat-Servicios'))) {
-        $cell = [Windows.Controls.Border]::new(); $cell.CornerRadius = 10; $cell.Padding = '16,12'; $cell.Margin = $(if ($i -lt 3) { '0,0,10,0' } else { '0' })
-        $cell.SetResourceReference([Windows.Controls.Border]::BackgroundProperty, "Soft$($m[4])")
+        $cell = [Windows.Controls.Border]::new(); $cell.CornerRadius = 4; $cell.Padding = '16,12'; $cell.Margin = $(if ($i -lt 3) { '0,0,10,0' } else { '0' })
+        $cell.SetResourceReference([Windows.Controls.Border]::BackgroundProperty, 'Subtle')
         $cs = [Windows.Controls.StackPanel]::new()
         $hd = [Windows.Controls.StackPanel]::new(); $hd.Orientation = 'Horizontal'
-        $ic = New-Icon $m[1] 18 $m[4]; $ic.Margin = '0,0,8,0'; [void]$hd.Children.Add($ic)
+        $ic = New-Icon $m[1] 16 'Ink2'; $ic.Margin = '0,0,8,0'; [void]$hd.Children.Add($ic)
         [void]$hd.Children.Add((New-Text $m[2] 13 'Ink2' 'SemiBold'))
         [void]$cs.Children.Add($hd)
         $vr = [Windows.Controls.StackPanel]::new(); $vr.Orientation = 'Horizontal'; $vr.Margin = '0,6,0,0'
-        $v = New-Mono '--' 30 'Ink'; $v.FontWeight = 'Bold'
+        $v = New-Text '--' 24 'Ink' 'SemiBold'; $v.FontFamily = $window.FindResource('Display'); $v.TextWrapping = 'NoWrap'
         $u = New-Text $m[3] 13 'Muted'; $u.VerticalAlignment = 'Bottom'; $u.Margin = '6,0,0,5'
         [void]$vr.Children.Add($v); [void]$vr.Children.Add($u)
         [void]$cs.Children.Add($vr)
@@ -277,7 +277,7 @@ function New-SpeedTestCard {
     $script:SpeedTrack = [Windows.Controls.Border]::new(); $script:SpeedTrack.Height = 4; $script:SpeedTrack.CornerRadius = 2; $script:SpeedTrack.Margin = '0,16,0,0'
     $script:SpeedTrack.SetResourceReference([Windows.Controls.Border]::BackgroundProperty, 'Paper3')
     $script:SpeedBar = [Windows.Controls.Border]::new(); $script:SpeedBar.Height = 4; $script:SpeedBar.CornerRadius = 2; $script:SpeedBar.HorizontalAlignment = 'Left'; $script:SpeedBar.Width = 0
-    $script:SpeedBar.SetResourceReference([Windows.Controls.Border]::BackgroundProperty, 'Cat-Privacidad')
+    $script:SpeedBar.SetResourceReference([Windows.Controls.Border]::BackgroundProperty, 'Accent')
     $script:SpeedTrack.Child = $script:SpeedBar
     [void]$sp.Children.Add($script:SpeedTrack)
     $script:SpeedPhase = New-Text 'Pulsa Iniciar test. Cierra descargas y streaming para que el resultado sea real.' 13 'Muted'; $script:SpeedPhase.Margin = '0,8,0,0'
