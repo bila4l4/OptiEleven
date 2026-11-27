@@ -21,7 +21,7 @@ o [descarga OptiEleven.zip](https://github.com/bila4l4/OptiEleven/releases/lates
 
 [English](README.md) · Español
 
-<img src="docs/screenshots/home-dark.png" alt="Inicio de OptiEleven: un anillo con la salud del PC (privacidad, rendimiento, espacio y arranque) y el botón Liberar memoria">
+<img src="docs/demo.gif" width="800" alt="Demo de OptiEleven: el anillo de salud del PC se dibuja, cada parte enseña su detalle, Liberar memoria libera RAM y temporales, y luego la página de Privacidad con sus ajustes">
 
 </div>
 
@@ -56,6 +56,17 @@ o [descarga OptiEleven.zip](https://github.com/bila4l4/OptiEleven/releases/lates
 </tr>
 </table>
 
+## Comparado con otras herramientas
+
+OptiEleven no es la primera herramienta de este tipo, y algunas son mucho más grandes y veteranas:
+
+- **[WinUtil](https://github.com/ChrisTitusTech/winutil)**: la más popular, con un catálogo grande de apps (winget y Chocolatey), ajustes, arreglos y opciones de Windows Update. Elígela si quieres el mayor número de opciones y una comunidad grande.
+- **[Win11Debloat](https://github.com/Raphire/Win11Debloat)**: un script ligero centrado en quitar apps preinstaladas y telemetría. Elígelo para un debloat rápido y automatizable.
+- **[Sophia Script](https://github.com/farag2/Sophia-Script-for-Windows)**: un módulo de PowerShell muy completo para afinar Windows, para quien no tiene problema en editar un script.
+- **[Optimizer](https://github.com/hellzerg/optimizer)**: una app en C# con ajustes, limpieza y edición del archivo hosts.
+
+OptiEleven se centra en otra cosa: ver el cambio exacto antes de hacerlo, un historial con fechas en el que cada cambio se puede deshacer, y las tareas de siempre (memoria, espacio en disco, limpieza, reparaciones) en una app con aspecto nativo. Es nueva y la mantiene una sola persona, así que tiene menos opciones y menos pruebas en equipos reales que esos proyectos.
+
 ## Empezar
 
 1. Clic derecho en el botón Inicio → **Terminal**, pega el comando y pulsa Enter. Acepta el aviso de administrador.
@@ -73,6 +84,20 @@ o [descarga OptiEleven.zip](https://github.com/bila4l4/OptiEleven/releases/lates
 Requisitos: Windows 11 22H2 o posterior. PowerShell 5.1 y .NET ya vienen con Windows. Sin permisos de administrador el panel se abre en solo lectura, así que puedes mirar sin riesgo.
 
 ### Línea de comandos
+
+Mira el estado de cada ajuste en tu PC sin cambiar nada:
+
+```text
+PS> .\OptiEleven.ps1 -Status
+Category    Tweak                             Risk     Presets Applied
+--------    -----                             ----     ------- -------
+Privacy     Minimal telemetry                 Safe     R,A     no
+Privacy     No ads or suggestions             Safe     R,A     no
+Privacy     No Copilot or Recall              Safe     R,A     no
+...
+```
+
+Otras opciones:
 
 ```powershell
 .\OptiEleven.ps1 -Status                         # estado de cada ajuste, no cambia nada
@@ -100,6 +125,18 @@ Las versiones se compilan desde este repositorio con [GitHub Actions](.github/wo
 - Aprobadores: [bila4l4](https://github.com/bila4l4)
 
 Privacidad: OptiEleven no envía información a ningún sitio salvo que tú se lo pidas. Las únicas conexiones de red son las que inicias tú: descargar o actualizar OptiEleven, instalar apps con winget y el test de velocidad de la red.
+
+## Hoja de ruta
+
+Planes, no promesas. Lo que ya ha salido está en el [CHANGELOG](CHANGELOG.md).
+
+- Versiones firmadas con SignPath Foundation (solicitado, pendiente de aprobación).
+- Una página en la web para cada ajuste, generada desde su `.tweak.json`, explicando qué cambia.
+- Traducciones por id, para que añadir un idioma sea más fácil.
+- Más pruebas en instalaciones limpias de Windows 11 y máquinas virtuales.
+- Instalar apps y Reparar sin comandos codificados.
+
+Las ideas y los votos son bienvenidos en las [incidencias](../../issues).
 
 ## Instalación limpia de Windows (opcional)
 

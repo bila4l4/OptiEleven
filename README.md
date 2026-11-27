@@ -21,7 +21,7 @@ or [download OptiEleven.zip](https://github.com/bila4l4/OptiEleven/releases/late
 
 English · [Español](README.es.md)
 
-<img src="docs/screenshots/home-dark.png" alt="OptiEleven home: a PC health ring with privacy, performance, space and startup, and a Free up memory button">
+<img src="docs/demo.gif" width="800" alt="OptiEleven demo: the PC health ring draws in, each part shows its detail, Free up memory frees RAM and temp files, then the Privacy page with its tweaks">
 
 </div>
 
@@ -56,6 +56,17 @@ English · [Español](README.es.md)
 </tr>
 </table>
 
+## How it compares
+
+OptiEleven isn't the first tool of its kind, and some are much bigger and older:
+
+- **[WinUtil](https://github.com/ChrisTitusTech/winutil)**: the most popular, with a large app catalog (winget and Chocolatey), tweaks, fixes and Windows Update settings. Choose it for the widest set of options and a big community.
+- **[Win11Debloat](https://github.com/Raphire/Win11Debloat)**: a lightweight script focused on removing preinstalled apps and telemetry. Choose it for a quick, scriptable debloat.
+- **[Sophia Script](https://github.com/farag2/Sophia-Script-for-Windows)**: a very complete PowerShell module for fine-tuning Windows, for people comfortable editing a script.
+- **[Optimizer](https://github.com/hellzerg/optimizer)**: a C# app with tweaks, cleanup and hosts-file editing.
+
+OptiEleven focuses on something else: seeing the exact change before it happens, a dated history where each change can be undone, and everyday tools (memory, disk space, cleanup, repairs) in one native-looking app. It's new and maintained by one person, so it has fewer options and less real-world testing than those projects.
+
 ## Get started
 
 1. Right-click the Start button → **Terminal**, paste the command and press Enter. Accept the administrator prompt.
@@ -73,6 +84,20 @@ English · [Español](README.es.md)
 Requirements: Windows 11 22H2 or later. PowerShell 5.1 and .NET are already part of Windows. Without administrator rights the panel opens read-only, so you can look around safely first.
 
 ### Command line
+
+See the state of every tweak on your PC without changing anything:
+
+```text
+PS> .\OptiEleven.ps1 -Status
+Category    Tweak                             Risk     Presets Applied
+--------    -----                             ----     ------- -------
+Privacy     Minimal telemetry                 Safe     R,A     no
+Privacy     No ads or suggestions             Safe     R,A     no
+Privacy     No Copilot or Recall              Safe     R,A     no
+...
+```
+
+Other options:
 
 ```powershell
 .\OptiEleven.ps1 -Status                         # show the state of every tweak, changes nothing
@@ -100,6 +125,18 @@ Releases are built from this repository by [GitHub Actions](.github/workflows/re
 - Approvers: [bila4l4](https://github.com/bila4l4)
 
 Privacy: OptiEleven doesn't send any information anywhere unless you ask it to. The only network connections are the ones you start: downloading or updating OptiEleven, installing apps with winget and running the network speed test.
+
+## Roadmap
+
+Plans, not promises. See the [CHANGELOG](CHANGELOG.md) for what already shipped.
+
+- Signed releases through SignPath Foundation (applied, waiting for approval).
+- A page on the website for each tweak, generated from its `.tweak.json`, explaining what it changes.
+- Translations keyed by id, so adding a language is easier.
+- More testing on clean Windows 11 installs and virtual machines.
+- Install apps and Repair without encoded commands.
+
+Ideas and votes are welcome in [issues](../../issues).
 
 ## Clean Windows install (optional)
 
