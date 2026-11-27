@@ -106,6 +106,10 @@ Otras opciones:
 .\OptiEleven.ps1 -Page cleanup                   # abre directamente una página (el id de su tool.json)
 ```
 
+### Desinstalar
+
+Deshaz los ajustes que quieras recuperar (desde **Historial**, o desactívalos y aplica), y borra `%LOCALAPPDATA%\OptiEleven` (la app) y `%ProgramData%\OptiEleven` (copias, historial y registro). No queda nada más.
+
 ## ¿Es seguro?
 
 OptiEleven cambia ajustes del sistema, así que lee qué hace cada uno antes de aplicarlo. El diseño intenta que no te metas en líos:
@@ -144,7 +148,7 @@ Las ideas y los votos son bienvenidos en las [incidencias](../../issues).
 
 ## Contribuir
 
-Los avisos de errores, ajustes nuevos, herramientas nuevas y traducciones son bienvenidos. Cada herramienta y cada ajuste es su propio archivo; mira [CONTRIBUTING.md](CONTRIBUTING.md).
+Los avisos de errores, ajustes nuevos, herramientas nuevas y traducciones son bienvenidos. Cada herramienta y cada ajuste es su propio archivo; mira [CONTRIBUTING.md](CONTRIBUTING.md). También ayuda mucho probarlo en un Windows limpio y contar qué te costó entender: [docs/testing.md](docs/testing.md) es una lista paso a paso, con un archivo para Windows Sandbox.
 
 Si OptiEleven te ha servido, una ⭐ ayuda a que otros lo encuentren.
 

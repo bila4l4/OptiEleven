@@ -1,0 +1,10 @@
+<!-- Windows Sandbox: a clean, throwaway Windows 11 to test OptiEleven from scratch (docs/testing.md).
+     Double-click this file. Networking is on so the install command can download the release.
+     The tester types the install command themselves, like a new user would. -->
+<Configuration>
+  <Networking>Enable</Networking>
+  <ClipboardRedirection>Enable</ClipboardRedirection>
+  <LogonCommand>
+    <Command>explorer.exe https://optieleven.app</Command>
+  </LogonCommand>
+</Configuration>

@@ -106,6 +106,10 @@ Other options:
 .\OptiEleven.ps1 -Page cleanup                   # open straight on a page (the id in its tool.json)
 ```
 
+### Uninstall
+
+Undo the tweaks you want back (from **History**, or turn them off and apply), then delete `%LOCALAPPDATA%\OptiEleven` (the app) and `%ProgramData%\OptiEleven` (backups, history and log). Nothing else is left behind.
+
 ## Is it safe?
 
 OptiEleven changes system settings, so read what each one does before you apply it. The design tries hard to keep you out of trouble:
@@ -144,7 +148,7 @@ Want to start from a clean ISO? There's a step-by-step [NTLite guide](docs/ntlit
 
 ## Contributing
 
-Bug reports, new tweaks, new tools and translations are very welcome. Each tool and each tweak is its own file; see [CONTRIBUTING.md](CONTRIBUTING.md).
+Bug reports, new tweaks, new tools and translations are very welcome. Each tool and each tweak is its own file; see [CONTRIBUTING.md](CONTRIBUTING.md). Trying it on a clean Windows and telling us what was confusing helps a lot: [docs/testing.md](docs/testing.md) is a step-by-step checklist, with a Windows Sandbox file.
 
 If OptiEleven helped your PC, a ⭐ helps other people find it.
 
